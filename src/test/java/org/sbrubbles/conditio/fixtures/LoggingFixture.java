@@ -150,6 +150,10 @@ public class LoggingFixture {
       this.text = text;
     }
 
+    public String getText() {
+      return text;
+    }
+
     @Override
     public boolean equals(Object o) {
       if (this == o) return true;
@@ -184,6 +188,10 @@ public class LoggingFixture {
       return Objects.equals(text, entry.text);
     }
 
+    public String getText() {
+      return text;
+    }
+
     @Override
     public int hashCode() {
       return Objects.hash(text);
@@ -202,6 +210,14 @@ public class LoggingFixture {
     public AnalyzedEntry(Entry entry, String filename) {
       this.entry = entry;
       this.filename = filename;
+    }
+
+    public Entry getEntry() {
+      return entry;
+    }
+
+    public String getFilename() {
+      return filename;
     }
 
     @Override

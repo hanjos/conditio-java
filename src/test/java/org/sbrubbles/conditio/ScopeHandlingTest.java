@@ -16,7 +16,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class ScopeHandlingTest {
@@ -64,31 +64,58 @@ public class ScopeHandlingTest {
   }
 
   @Test
-  public void readBadLogWithNoHandlingAtAll() {
-    assertThrows(RuntimeException.class, () -> fixture.logAnalyzer(BAD_LOG));
+  public void readBadLogWithNoHandlingAtAll() throws Exception {
+    try {
+      fixture.logAnalyzer(BAD_LOG);
+      fail();
+    } catch (HandlerNotFoundException e) {
+      assertEquals(
+        new LoggingFixture.MalformedLogEntry(badLine(2).getText()),
+        e.getSignal());
+    }
   }
 
   @Test
-  public void readBadLogWithNoHandlerFound() {
+  public void readBadLogWithNoHandlerFound() throws Exception {
     fixture.setLogAnalyzer(true);
     fixture.setHandlerMatcher(String.class::isInstance); // won't match MalformedLogEntry
     fixture.setRestartOptionToUse(new UseValue(USE_VALUE_ENTRY)); // should never be called
 
-    assertThrows(RuntimeException.class, () -> fixture.logAnalyzer(BAD_LOG));
+    try {
+      fixture.logAnalyzer(BAD_LOG);
+      fail();
+    } catch (HandlerNotFoundException e) {
+      assertEquals(
+        new LoggingFixture.MalformedLogEntry(badLine(2).getText()),
+        e.getSignal());
+    }
   }
 
   @Test
-  public void readBadLogWithNoRestartFound() {
+  public void readBadLogWithNoRestartFound() throws Exception {
+    final String BAD_RESTART_OPTION = "oops";
+
     fixture.setLogAnalyzer(true);
     fixture.setHandlerMatcher(LoggingFixture.MalformedLogEntry.class::isInstance); // should match now
-    fixture.setRestartOptionToUse("oops"); // no restart will match
+    fixture.setRestartOptionToUse(BAD_RESTART_OPTION); // no restart will match
 
-    assertThrows(RuntimeException.class, () -> fixture.logAnalyzer(BAD_LOG));
+    try {
+      fixture.logAnalyzer(BAD_LOG);
+      fail();
+    } catch (RestartNotFoundException e) {
+      assertEquals(
+        BAD_RESTART_OPTION,
+        e.getRestartOption());
+    }
   }
 
   // helpers
   static LoggingFixture.Entry goodLine(int line) {
     return new LoggingFixture.Entry(String.format("%04d OK", line));
+  }
+
+  static LoggingFixture.Entry badLine(int line) {
+    return new LoggingFixture.Entry(String.format("%04d FAIL", line));
   }
 
   static Stream<Arguments> handleBadLogProvider() {

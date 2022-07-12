@@ -92,7 +92,7 @@ public class Scope implements AutoCloseable {
     return Collections.unmodifiableList(restarts);
   }
 
-  private Object selectRestartFor(Condition c) {
+  private Object selectRestartFor(Condition c) throws HandlerNotFoundException {
     assert c != null;
 
     for (Handler h : getAllHandlers()) {
@@ -102,17 +102,16 @@ public class Scope implements AutoCloseable {
 
       Object restartOption = h.handle(c);
       if (restartOption == null) {
-        continue;
+        continue; // TODO test handler skipping
       }
 
       return restartOption;
     }
 
-    // TODO throw a real exception
-    throw new RuntimeException("No handler could handle signal " + c.getSignal());
+    throw new HandlerNotFoundException(c.getSignal());
   }
 
-  private Object runRestartWith(Object restartOption) {
+  private Object runRestartWith(Object restartOption) throws RestartNotFoundException {
     assert restartOption != null;
 
     for (Restart r : getAllRestarts()) {
@@ -121,8 +120,7 @@ public class Scope implements AutoCloseable {
       }
     }
 
-    // TODO throw a real exception
-    throw new RuntimeException("No restart found for option " + restartOption);
+    throw new RestartNotFoundException(restartOption);
   }
 
   // === scope management ===
