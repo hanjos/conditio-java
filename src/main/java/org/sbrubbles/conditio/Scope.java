@@ -108,6 +108,7 @@ public class Scope implements AutoCloseable {
       return restartOption;
     }
 
+    // TODO throw a real exception
     throw new RuntimeException("No handler could handle signal " + c.getSignal());
   }
 
@@ -120,6 +121,7 @@ public class Scope implements AutoCloseable {
       }
     }
 
+    // TODO throw a real exception
     throw new RuntimeException("No restart found for option " + restartOption);
   }
 
