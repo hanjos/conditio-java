@@ -61,8 +61,8 @@ public class Scope implements AutoCloseable {
 
   public Object signal(Object signal) {
     Condition c = new Condition(signal, this);
-    Object restartOption = findRestartOptionFor(c);
-    return runRestartFor(restartOption);
+    Object restartOption = selectRestartFor(c);
+    return runRestartWith(restartOption);
   }
 
   // === scope search ===
@@ -92,7 +92,7 @@ public class Scope implements AutoCloseable {
     return Collections.unmodifiableList(restarts);
   }
 
-  private Object findRestartOptionFor(Condition c) {
+  private Object selectRestartFor(Condition c) {
     assert c != null;
 
     for (Handler h : getAllHandlers()) {
@@ -111,7 +111,7 @@ public class Scope implements AutoCloseable {
     throw new RuntimeException("No handler could handle signal " + c.getSignal());
   }
 
-  private Object runRestartFor(Object restartOption) {
+  private Object runRestartWith(Object restartOption) {
     assert restartOption != null;
 
     for (Restart r : getAllRestarts()) {
