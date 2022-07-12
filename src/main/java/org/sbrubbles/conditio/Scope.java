@@ -1,5 +1,9 @@
 package org.sbrubbles.conditio;
 
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
 public class Scope implements AutoCloseable {
   // the current scope in execution
   private static Scope current = null;
@@ -7,9 +11,116 @@ public class Scope implements AutoCloseable {
   // this scope's daddy
   private final Scope parent;
 
+  private final List<Handler> handlers;
+  private final List<Restart> restarts;
+
   // private to ensure creation only via #create(), so that current is updated accordingly
   private Scope(Scope parent) {
     this.parent = parent;
+
+    this.handlers = new ArrayList<>();
+    this.restarts = new ArrayList<>();
+  }
+
+  // === main operations ===
+  public <T, S extends T> Scope on(Class<T> restartType, Function<S, ?> body) {
+    Objects.requireNonNull(restartType, "restartType");
+
+    return on(restartType::isInstance, body);
+  }
+
+  public <T, S extends T> Scope on(Predicate<T> matcher, Function<S, ?> body) {
+    return on(new Restart.Impl(matcher, body));
+  }
+
+  public Scope on(Restart restart) {
+    Objects.requireNonNull(restart, "restart");
+
+    this.restarts.add(restart);
+
+    return this;
+  }
+
+  public Scope handle(Class<?> signalType, Function<Condition, ?> body) {
+    Objects.requireNonNull(signalType, "signalType");
+
+    return handle(signalType::isInstance, body);
+  }
+
+  public Scope handle(Predicate<?> matcher, Function<Condition, ?> body) {
+    return handle(new Handler.Impl(matcher, body));
+  }
+
+  public Scope handle(Handler handler) {
+    Objects.requireNonNull(handler, "handler");
+
+    this.handlers.add(handler);
+
+    return this;
+  }
+
+  public Object signal(Object signal) {
+    Condition c = new Condition(signal, this);
+    Object restartOption = findRestartOptionFor(c);
+    return runRestartFor(restartOption);
+  }
+
+  // === scope search ===
+  public Iterable<Handler> getAllHandlers() {
+    return () -> new FullSearchIterator<Handler>(this) {
+      @Override
+      Iterator<Handler> getNextIteratorFrom(Scope scope) {
+        return scope.handlers.iterator();
+      }
+    };
+  }
+
+  public Iterable<Restart> getAllRestarts() {
+    return () -> new FullSearchIterator<Restart>(this) {
+      @Override
+      Iterator<Restart> getNextIteratorFrom(Scope scope) {
+        return scope.restarts.iterator();
+      }
+    };
+  }
+
+  public List<Handler> getHandlers() {
+    return Collections.unmodifiableList(handlers);
+  }
+
+  public List<Restart> getRestarts() {
+    return Collections.unmodifiableList(restarts);
+  }
+
+  private Object findRestartOptionFor(Condition c) {
+    assert c != null;
+
+    for (Handler h : getAllHandlers()) {
+      if (!h.accepts(c.getSignal())) {
+        continue;
+      }
+
+      Object restartOption = h.handle(c);
+      if (restartOption == null) {
+        continue;
+      }
+
+      return restartOption;
+    }
+
+    throw new RuntimeException("No handler could handle signal " + c.getSignal());
+  }
+
+  private Object runRestartFor(Object restartOption) {
+    assert restartOption != null;
+
+    for (Restart r : getAllRestarts()) {
+      if (r.matches(restartOption)) {
+        return r.run(restartOption);
+      }
+    }
+
+    throw new RuntimeException("No restart found for option " + restartOption);
   }
 
   // === scope management ===
@@ -49,5 +160,44 @@ public class Scope implements AutoCloseable {
   @Override
   public void close() {
     current = getParent();
+  }
+}
+
+abstract class FullSearchIterator<T> implements Iterator<T> {
+  private Iterator<T> currentIterator;
+  private Scope currentScope;
+
+  public FullSearchIterator(Scope currentScope) {
+    this.currentScope = Objects.requireNonNull(currentScope, "currentScope");
+    this.currentIterator = getNextIteratorFrom(currentScope);
+  }
+
+  abstract Iterator<T> getNextIteratorFrom(Scope scope);
+
+  @Override
+  public boolean hasNext() {
+    if (this.currentIterator.hasNext()) {
+      return true;
+    }
+
+    do {
+      if (this.currentScope.getParent() == null) {
+        return false;
+      }
+
+      this.currentScope = this.currentScope.getParent();
+      this.currentIterator = getNextIteratorFrom(this.currentScope);
+    } while (!this.currentIterator.hasNext());
+
+    return true;
+  }
+
+  @Override
+  public T next() {
+    if (!hasNext()) {
+      throw new NoSuchElementException();
+    }
+
+    return this.currentIterator.next();
   }
 }
