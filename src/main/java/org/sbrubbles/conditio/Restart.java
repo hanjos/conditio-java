@@ -16,7 +16,7 @@ public interface Restart {
     private final Predicate<?> matcher;
     private final Function<?, ?> body;
 
-    public Impl(Predicate<?> matcher, Function<?, ?> body) {
+    public <T, S extends T> Impl(Predicate<T> matcher, Function<S, ?> body) {
       Objects.requireNonNull(matcher, "matcher");
       Objects.requireNonNull(body, "body");
 

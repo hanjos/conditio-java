@@ -8,7 +8,7 @@ import java.util.function.Predicate;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RestartTest {
-  private final Predicate<?> checker = String.class::isInstance;
+  private final Predicate<String> checker = String.class::isInstance;
   private final Function<String, Object> body = s -> {
     if (!"FAIL".equals(s)) {
       return "OK: " + s;
