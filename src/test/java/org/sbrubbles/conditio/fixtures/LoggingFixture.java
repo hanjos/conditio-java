@@ -8,20 +8,11 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class LoggingFixture {
   private static final Entry SKIP_ENTRY = new Entry(null);
-  // properties for test purposes
-  private boolean analyzeLog;
-  private boolean logAnalyzer;
-  private Object restartOptionToUse;
-
-  public LoggingFixture() {
-    analyzeLog = false;
-    logAnalyzer = false;
-    restartOptionToUse = null;
-  }
 
   public boolean isWellFormed(String entry) {
     return entry != null && !entry.contains("FAIL");
@@ -102,9 +93,22 @@ public class LoggingFixture {
     }
   }
 
+  // properties for test purposes
+  private boolean analyzeLog;
+  private boolean logAnalyzer;
+  private Predicate<?> handlerMatcher;
+  private Object restartOptionToUse;
+
+  public LoggingFixture() {
+    analyzeLog = false;
+    logAnalyzer = false;
+    handlerMatcher = null;
+    restartOptionToUse = null;
+  }
+
   // parameterization for test purposes
   private void addHandleIn(Scope scope) {
-    scope.handle(MalformedLogEntry.class, condition -> getRestartOptionToUse());
+    scope.handle(getHandlerMatcher(), condition -> getRestartOptionToUse());
   }
 
   public boolean isAnalyzeLog() {
@@ -121,6 +125,14 @@ public class LoggingFixture {
 
   public void setLogAnalyzer(boolean logAnalyzer) {
     this.logAnalyzer = logAnalyzer;
+  }
+
+  public Predicate<?> getHandlerMatcher() {
+    return handlerMatcher;
+  }
+
+  public void setHandlerMatcher(Predicate<?> handlerMatcher) {
+    this.handlerMatcher = handlerMatcher;
   }
 
   public Object getRestartOptionToUse() {
