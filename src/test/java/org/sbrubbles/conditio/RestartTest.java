@@ -2,28 +2,19 @@ package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.function.Function;
-import java.util.function.Predicate;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RestartTest {
-  private final Predicate<String> checker = String.class::isInstance;
-  private final Function<String, Object> body = s -> {
-    if (!"FAIL".equals(s)) {
-      return "OK: " + s;
-    } else {
-      return "FAIL!";
-    }
-  };
-
-  private final Restart r = new Restart.Impl(checker, body);
+  private final Restart r = new Restart.Impl(String.class::isInstance, this::body);
 
   @Test
   public void nullParametersAreNotAllowed() {
-    assertThrows(NullPointerException.class, () -> new Restart.Impl(null, body), "missing checker");
-    assertThrows(NullPointerException.class, () -> new Restart.Impl(checker, null), "missing body");
-    assertThrows(NullPointerException.class, () -> new Restart.Impl(null, null), "missing both");
+    assertThrows(NullPointerException.class,
+      () -> new Restart.Impl(null, this::body), "missing checker");
+    assertThrows(NullPointerException.class,
+      () -> new Restart.Impl(String.class::isInstance, null), "missing body");
+    assertThrows(NullPointerException.class,
+      () -> new Restart.Impl(null, null), "missing both");
   }
 
   @Test
@@ -46,5 +37,13 @@ public class RestartTest {
     assertEquals(
       "FAIL!",
       r.run("FAIL"));
+  }
+
+  private Object body(String s) {
+    if (!"FAIL".equals(s)) {
+      return "OK: " + s;
+    } else {
+      return "FAIL!";
+    }
   }
 }
