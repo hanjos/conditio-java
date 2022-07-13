@@ -2,7 +2,6 @@ package org.sbrubbles.conditio;
 
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * Provides a strategy to deal with some exceptional situations.
@@ -13,10 +12,10 @@ public interface Restart {
   Object run(Option data);
 
   class Impl implements Restart {
-    private final Predicate<? extends Option> matcher;
+    private final Class<? extends Option> matcher;
     private final Function<? extends Option, ?> body;
 
-    public <T extends Option, S extends T> Impl(Predicate<T> matcher, Function<S, ?> body) {
+    public <T extends Option, S extends T> Impl(Class<T> matcher, Function<S, ?> body) {
       Objects.requireNonNull(matcher, "matcher");
       Objects.requireNonNull(body, "body");
 
@@ -26,7 +25,7 @@ public interface Restart {
 
     @Override
     public boolean matches(Option data) {
-      return ((Predicate) this.matcher).test(data);
+      return this.matcher.isInstance(data);
     }
 
     @Override

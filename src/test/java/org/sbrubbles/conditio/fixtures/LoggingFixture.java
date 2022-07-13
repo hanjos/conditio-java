@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class LoggingFixture {
@@ -28,7 +27,8 @@ public class LoggingFixture {
           .on(UseValue.class, r -> r.value)
           .on(RetryWith.class, r -> parseLogEntry(r.text));
 
-        return (Entry) scope.signal(new MalformedLogEntry(text));
+        Object signal = getSignal() != null ? getSignal() : new MalformedLogEntry(text);
+        return (Entry) scope.signal(signal);
       }
     } catch (RuntimeException e) {
       throw e;
@@ -64,7 +64,7 @@ public class LoggingFixture {
   public List<AnalyzedEntry> analyzeLog(String filename) throws Exception {
     try (Scope scope = Scope.create()) {
       if (isAnalyzeLog()) {
-        addHandleIn(scope);
+        scope.handle(MalformedLogEntry.class, condition -> getRestartOptionToUse());
       }
 
       InputStream in = LoggingFixture.class.getResourceAsStream(filename);
@@ -82,7 +82,7 @@ public class LoggingFixture {
   public List<AnalyzedEntry> logAnalyzer(String... logfiles) throws Exception {
     try (Scope scope = Scope.create()) {
       if (isLogAnalyzer()) {
-        addHandleIn(scope);
+        scope.handle(MalformedLogEntry.class, condition -> getRestartOptionToUse());
       }
 
       List<AnalyzedEntry> logs = new ArrayList<>();
@@ -97,20 +97,19 @@ public class LoggingFixture {
   // properties for test purposes
   private boolean analyzeLog;
   private boolean logAnalyzer;
-  private Predicate<?> handlerMatcher;
+
+  private Object signal;
   private Restart.Option restartOptionToUse;
 
   public LoggingFixture() {
     analyzeLog = false;
     logAnalyzer = false;
-    handlerMatcher = null;
+
+    signal = null;
     restartOptionToUse = null;
   }
 
   // parameterization for test purposes
-  private void addHandleIn(Scope scope) {
-    scope.handle(getHandlerMatcher(), condition -> getRestartOptionToUse());
-  }
 
   public boolean isAnalyzeLog() {
     return analyzeLog;
@@ -128,12 +127,12 @@ public class LoggingFixture {
     this.logAnalyzer = logAnalyzer;
   }
 
-  public Predicate<?> getHandlerMatcher() {
-    return handlerMatcher;
+  public Object getSignal() {
+    return signal;
   }
 
-  public void setHandlerMatcher(Predicate<?> handlerMatcher) {
-    this.handlerMatcher = handlerMatcher;
+  public void setSignal(Object signal) {
+    this.signal = signal;
   }
 
   public Restart.Option getRestartOptionToUse() {

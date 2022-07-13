@@ -7,14 +7,14 @@ import org.sbrubbles.conditio.fixtures.UseValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RestartTest {
-  private final Restart r = new Restart.Impl(UseValue.class::isInstance, this::body);
+  private final Restart r = new Restart.Impl(UseValue.class, this::body);
 
   @Test
   public void nullParametersAreNotAllowed() {
     assertThrows(NullPointerException.class,
       () -> new Restart.Impl(null, this::body), "missing checker");
     assertThrows(NullPointerException.class,
-      () -> new Restart.Impl(UseValue.class::isInstance, null), "missing body");
+      () -> new Restart.Impl(UseValue.class, null), "missing body");
     assertThrows(NullPointerException.class,
       () -> new Restart.Impl(null, null), "missing both");
   }

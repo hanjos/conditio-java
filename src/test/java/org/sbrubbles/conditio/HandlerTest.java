@@ -6,12 +6,12 @@ import org.sbrubbles.conditio.fixtures.UseValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HandlerTest {
-  private final Handler h = new Handler.Impl(String.class::isInstance, this::body);
+  private final Handler h = new Handler.Impl(String.class, this::body);
 
   @Test
   public void nullParametersAreNotAllowed() {
     assertThrows(NullPointerException.class, () -> new Handler.Impl(null, this::body), "missing checker");
-    assertThrows(NullPointerException.class, () -> new Handler.Impl(String.class::isInstance, null), "missing body");
+    assertThrows(NullPointerException.class, () -> new Handler.Impl(String.class, null), "missing body");
     assertThrows(NullPointerException.class, () -> new Handler.Impl(null, null), "missing both");
   }
 

@@ -2,7 +2,6 @@ package org.sbrubbles.conditio;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 public class Scope implements AutoCloseable {
   // the current scope in execution
@@ -23,14 +22,8 @@ public class Scope implements AutoCloseable {
   }
 
   // === main operations ===
-  public <T extends Restart.Option, S extends T> Scope on(Class<T> restartType, Function<S, ?> body) {
-    Objects.requireNonNull(restartType, "restartType");
-
-    return on(restartType::isInstance, body);
-  }
-
-  public <T extends Restart.Option, S extends T> Scope on(Predicate<T> matcher, Function<S, ?> body) {
-    return on(new Restart.Impl(matcher, body));
+  public <T extends Restart.Option, S extends T> Scope on(Class<T> optionType, Function<S, ?> body) {
+    return on(new Restart.Impl(optionType, body));
   }
 
   public Scope on(Restart restart) {
@@ -42,13 +35,7 @@ public class Scope implements AutoCloseable {
   }
 
   public Scope handle(Class<?> signalType, Function<Condition, Restart.Option> body) {
-    Objects.requireNonNull(signalType, "signalType");
-
-    return handle(signalType::isInstance, body);
-  }
-
-  public Scope handle(Predicate<?> matcher, Function<Condition, Restart.Option> body) {
-    return handle(new Handler.Impl(matcher, body));
+    return handle(new Handler.Impl(signalType, body));
   }
 
   public Scope handle(Handler handler) {

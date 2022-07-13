@@ -53,10 +53,10 @@ public class ScopeTest {
   public void getHandlersIsUnmodifiable() {
     try (Scope a = Scope.create()) {
       final List<Handler> hs = a.getHandlers();
-      final Handler h = new Handler.Impl(String.class::isInstance, c -> new UseValue("test"));
+      final Handler h = new Handler.Impl(String.class, c -> new UseValue("test"));
 
-      assertThrows(UnsupportedOperationException.class, () -> { hs.add(h); });
-      assertThrows(UnsupportedOperationException.class, () -> { hs.remove(h); });
+      assertThrows(UnsupportedOperationException.class, () -> hs.add(h));
+      assertThrows(UnsupportedOperationException.class, () -> hs.remove(h));
     }
   }
 
@@ -64,10 +64,10 @@ public class ScopeTest {
   public void getRestartsIsUnmodifiable() {
     try (Scope a = Scope.create()) {
       final List<Restart> rs = a.getRestarts();
-      final Restart r = new Restart.Impl(String.class::isInstance, s -> "test");
+      final Restart r = new Restart.Impl(UseValue.class, u -> "test");
 
-      assertThrows(UnsupportedOperationException.class, () -> { rs.add(r); });
-      assertThrows(UnsupportedOperationException.class, () -> { rs.remove(r); });
+      assertThrows(UnsupportedOperationException.class, () -> rs.add(r));
+      assertThrows(UnsupportedOperationException.class, () -> rs.remove(r));
     }
   }
 }

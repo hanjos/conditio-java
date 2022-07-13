@@ -16,7 +16,6 @@ import org.sbrubbles.conditio.fixtures.UseValue;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -52,9 +51,9 @@ public class ScopeHandlingTest {
 
   @ParameterizedTest
   @MethodSource("handleBadLogProvider")
-  public void handleBadLog(Predicate<?> handlerMatcher, Restart.Option restartOption, List<AnalyzedEntry> expected) throws Exception {
+  public void handleBadLog(MalformedLogEntry signal, Restart.Option restartOption, List<AnalyzedEntry> expected) throws Exception {
     fixture.setLogAnalyzer(true);
-    fixture.setHandlerMatcher(handlerMatcher);
+    fixture.setSignal(signal);
     fixture.setRestartOptionToUse(restartOption);
 
     assertEquals(expected, fixture.logAnalyzer(BAD_LOG));
@@ -82,16 +81,14 @@ public class ScopeHandlingTest {
   @Test
   public void readBadLogWithNoHandlerFound() throws Exception {
     fixture.setLogAnalyzer(true);
-    fixture.setHandlerMatcher(String.class::isInstance); // won't match MalformedLogEntry
+    fixture.setSignal("oops"); // won't match MalformedLogEntry
     fixture.setRestartOptionToUse(new UseValue(USE_VALUE_ENTRY)); // should never be called
 
     try {
       fixture.logAnalyzer(BAD_LOG);
       fail();
     } catch (HandlerNotFoundException e) {
-      assertEquals(
-        new MalformedLogEntry(badLine(2).getText()),
-        e.getSignal());
+      assertEquals("oops", e.getSignal());
     }
   }
 
@@ -100,7 +97,6 @@ public class ScopeHandlingTest {
     final Restart.Option UNKNOWN_RESTART_OPTION = new UnknownRestartOption("oops");
 
     fixture.setLogAnalyzer(true);
-    fixture.setHandlerMatcher(MalformedLogEntry.class::isInstance); // should match now
     fixture.setRestartOptionToUse(UNKNOWN_RESTART_OPTION); // no restart will match
 
     try {
@@ -123,10 +119,9 @@ public class ScopeHandlingTest {
   }
 
   static Stream<Arguments> handleBadLogProvider() {
-    Predicate<?> matcher = MalformedLogEntry.class::isInstance;
     return Stream.of(
       arguments(
-        matcher,
+        null,
         new UseValue(USE_VALUE_ENTRY),
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
@@ -134,7 +129,7 @@ public class ScopeHandlingTest {
           new AnalyzedEntry(goodLine(3), BAD_LOG),
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG))),
       arguments(
-        matcher,
+        null,
         new RetryWith(FIXED_TEXT),
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
@@ -142,7 +137,7 @@ public class ScopeHandlingTest {
           new AnalyzedEntry(goodLine(3), BAD_LOG),
           new AnalyzedEntry(FIXED_ENTRY, BAD_LOG))),
       arguments(
-        matcher,
+        null,
         new SkipEntry(),
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
