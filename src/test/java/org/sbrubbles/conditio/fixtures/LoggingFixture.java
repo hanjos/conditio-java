@@ -1,5 +1,6 @@
 package org.sbrubbles.conditio.fixtures;
 
+import org.sbrubbles.conditio.Handler;
 import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
 
@@ -66,8 +67,16 @@ public class LoggingFixture {
   public List<AnalyzedEntry> analyzeLog(String filename) throws Exception {
     try (Scope scope = Scope.create()) {
       if (isAnalyzeLog()) {
-        scope.handle(MalformedLogEntry.class, condition -> { traceHandler("analyzeLog"); return getRestartOptionToUse(); });
+        scope.handle(MalformedLogEntry.class, condition -> {
+          traceHandler("analyzeLog");
+          return getRestartOptionToUse();
+        });
       }
+
+      scope.handle(OneOffSignal.class, condition -> {
+        traceHandler("analyzeLog");
+        return Handler.SKIP;
+      });
 
       InputStream in = LoggingFixture.class.getResourceAsStream(filename);
       List<Entry> entries = parseLogFile(in);
@@ -84,8 +93,16 @@ public class LoggingFixture {
   public List<AnalyzedEntry> logAnalyzer(String... logfiles) throws Exception {
     try (Scope scope = Scope.create()) {
       if (isLogAnalyzer()) {
-        scope.handle(MalformedLogEntry.class, condition -> { traceHandler("logAnalyzer"); return getRestartOptionToUse(); });
+        scope.handle(MalformedLogEntry.class, condition -> {
+          traceHandler("logAnalyzer");
+          return getRestartOptionToUse();
+        });
       }
+
+      scope.handle(OneOffSignal.class, condition -> {
+        traceHandler("logAnalyzer");
+        return new UseValue(((OneOffSignal) condition.getSignal()).getValue());
+      });
 
       List<AnalyzedEntry> logs = new ArrayList<>();
       for (String filename : logfiles) {
@@ -258,6 +275,36 @@ public class LoggingFixture {
     @Override
     public String toString() {
       return "ANALYZED(" + filename + "): " + entry;
+    }
+  }
+
+  public static class OneOffSignal {
+    private Entry value;
+
+    public OneOffSignal(Entry value) {
+      this.value = value;
+    }
+
+    public Entry getValue() {
+      return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      OneOffSignal that = (OneOffSignal) o;
+      return Objects.equals(getValue(), that.getValue());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(getValue());
+    }
+
+    @Override
+    public String toString() {
+      return "OneOffSignal(" + value + ")";
     }
   }
 }

@@ -45,4 +45,14 @@ public interface Handler {
     }
   }
 
+  /**
+   * To be returned when a handler, for whatever reason, can't handle a particular condition. Then, other handlers,
+   * bound later, will have the chance to handle the condition.
+   */
+  Restart.Option SKIP = new Restart.Option() {
+    @Override
+    public String toString() {
+      return "Handler.SKIP";
+    }
+  };
 }

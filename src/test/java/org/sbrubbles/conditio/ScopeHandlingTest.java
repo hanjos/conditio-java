@@ -9,6 +9,7 @@ import org.sbrubbles.conditio.fixtures.LoggingFixture;
 import org.sbrubbles.conditio.fixtures.LoggingFixture.AnalyzedEntry;
 import org.sbrubbles.conditio.fixtures.LoggingFixture.Entry;
 import org.sbrubbles.conditio.fixtures.LoggingFixture.MalformedLogEntry;
+import org.sbrubbles.conditio.fixtures.LoggingFixture.OneOffSignal;
 import org.sbrubbles.conditio.fixtures.RetryWith;
 import org.sbrubbles.conditio.fixtures.SkipEntry;
 import org.sbrubbles.conditio.fixtures.UseValue;
@@ -39,31 +40,38 @@ public class ScopeHandlingTest {
 
   @Test
   public void readGoodLog() throws Exception {
-    // no signal should be emitted
     List<AnalyzedEntry> expected = Arrays.asList(
       new AnalyzedEntry(goodLine(1), GOOD_LOG),
       new AnalyzedEntry(goodLine(2), GOOD_LOG),
       new AnalyzedEntry(goodLine(3), GOOD_LOG),
       new AnalyzedEntry(goodLine(4), GOOD_LOG));
 
-    assertEquals(expected, fixture.logAnalyzer(GOOD_LOG));
+    List<AnalyzedEntry> actual = fixture.logAnalyzer(GOOD_LOG);
+
+    assertEquals(expected, actual);
+    assertTrue(fixture.getHandlerTrace().isEmpty());
+    assertTrue(fixture.getRestartTrace().isEmpty());
   }
 
   @ParameterizedTest
   @MethodSource("handleBadLogProvider")
   public void handleBadLog(MalformedLogEntry signal, HandlerOption handlerOption, Restart.Option restartOption, List<AnalyzedEntry> expected) throws Exception {
-    switch(handlerOption) {
-      case LOG_ANALYZER: fixture.setLogAnalyzer(true); break;
-      case ANALYZE_LOG: fixture.setAnalyzeLog(true); break;
+    switch (handlerOption) {
+      case LOG_ANALYZER:
+        fixture.setLogAnalyzer(true);
+        break;
+      case ANALYZE_LOG:
+        fixture.setAnalyzeLog(true);
+        break;
     }
 
     fixture.setSignal(signal);
     fixture.setRestartOptionToUse(restartOption);
 
-    assertEquals(expected, fixture.logAnalyzer(BAD_LOG));
+    List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
 
-    // the handler gets called once for each bad line in the log; case in point, two times
-    assertLinesMatch(
+    assertEquals(expected, actual);
+    assertLinesMatch( // the handler gets called once for each bad line in the log; in bad.txt, there's two
       Arrays.asList(handlerOption.getMethodName(), handlerOption.getMethodName()),
       fixture.getHandlerTrace());
   }
@@ -112,6 +120,27 @@ public class ScopeHandlingTest {
         e.getRestartOption());
       assertLinesMatch(Arrays.asList("logAnalyzer"), fixture.getHandlerTrace());
     }
+  }
+
+  @Test
+  public void skipHandlingACondition() throws Exception {
+    final Entry SIGNAL_ENTRY = new Entry("OMG");
+    final OneOffSignal SIGNAL = new OneOffSignal(SIGNAL_ENTRY);
+
+    fixture.setSignal(SIGNAL);
+
+    List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
+
+    assertEquals(
+      Arrays.asList(
+        new AnalyzedEntry(goodLine(1), BAD_LOG),
+        new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG),
+        new AnalyzedEntry(goodLine(3), BAD_LOG),
+        new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG)),
+      actual);
+    assertLinesMatch(
+      Arrays.asList("analyzeLog", "logAnalyzer", "analyzeLog", "logAnalyzer"),
+      fixture.getHandlerTrace());
   }
 
   // helpers
@@ -217,4 +246,5 @@ public class ScopeHandlingTest {
       return "BadRestartOption(" + value + ")";
     }
   }
+
 }

@@ -87,9 +87,10 @@ public class Scope implements AutoCloseable {
         continue;
       }
 
+      // TODO test handler skipping
       Restart.Option restartOption = h.handle(c);
-      if (restartOption == null) {
-        continue; // TODO test handler skipping
+      if (restartOption == Handler.SKIP) {
+        continue;
       }
 
       return restartOption;
@@ -99,8 +100,6 @@ public class Scope implements AutoCloseable {
   }
 
   private Object runRestartWith(Restart.Option restartOption) throws RestartNotFoundException {
-    assert restartOption != null;
-
     for (Restart r : getAllRestarts()) {
       if (r.matches(restartOption)) {
         return r.run(restartOption);
