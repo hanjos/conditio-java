@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -24,11 +25,12 @@ public class LoggingFixture {
         return new Entry(text);
       } else {
         scope
-          .on(UseValue.class, r -> r.value)
-          .on(RetryWith.class, r -> parseLogEntry(r.text));
+          .on(UseValue.class, r -> { traceRestart("UseValue"); return r.value; })
+          .on(RetryWith.class, r -> { traceRestart("RetryWith"); return parseLogEntry(r.text); });
 
         Object signal = getSignal() != null ? getSignal() : new MalformedLogEntry(text);
-        return (Entry) scope.signal(signal);
+        Entry result = (Entry) scope.signal(signal);
+        return result;
       }
     } catch (RuntimeException e) {
       throw e;
@@ -43,7 +45,7 @@ public class LoggingFixture {
       List<String> lines = br.lines().collect(Collectors.toList());
       List<Entry> entries = new ArrayList<>();
 
-      scope.on(SkipEntry.class, r -> SKIP_ENTRY);
+      scope.on(SkipEntry.class, r -> { traceRestart("SkipEntry"); return SKIP_ENTRY; });
 
       for (String line : lines) {
         Entry entry = parseLogEntry(line);
@@ -64,7 +66,7 @@ public class LoggingFixture {
   public List<AnalyzedEntry> analyzeLog(String filename) throws Exception {
     try (Scope scope = Scope.create()) {
       if (isAnalyzeLog()) {
-        scope.handle(MalformedLogEntry.class, condition -> getRestartOptionToUse());
+        scope.handle(MalformedLogEntry.class, condition -> { traceHandler("analyzeLog"); return getRestartOptionToUse(); });
       }
 
       InputStream in = LoggingFixture.class.getResourceAsStream(filename);
@@ -82,7 +84,7 @@ public class LoggingFixture {
   public List<AnalyzedEntry> logAnalyzer(String... logfiles) throws Exception {
     try (Scope scope = Scope.create()) {
       if (isLogAnalyzer()) {
-        scope.handle(MalformedLogEntry.class, condition -> getRestartOptionToUse());
+        scope.handle(MalformedLogEntry.class, condition -> { traceHandler("logAnalyzer"); return getRestartOptionToUse(); });
       }
 
       List<AnalyzedEntry> logs = new ArrayList<>();
@@ -94,12 +96,15 @@ public class LoggingFixture {
     }
   }
 
-  // properties for test purposes
+  // data for test purposes
   private boolean analyzeLog;
   private boolean logAnalyzer;
 
   private Object signal;
   private Restart.Option restartOptionToUse;
+
+  private List<String> handlerTrace;
+  private List<String> restartTrace;
 
   public LoggingFixture() {
     analyzeLog = false;
@@ -107,9 +112,18 @@ public class LoggingFixture {
 
     signal = null;
     restartOptionToUse = null;
+
+    handlerTrace = new ArrayList<>();
+    restartTrace = new ArrayList<>();
   }
 
-  // parameterization for test purposes
+  private void traceHandler(String trace) {
+    handlerTrace.add(trace);
+  }
+
+  private void traceRestart(String trace) {
+    restartTrace.add(trace);
+  }
 
   public boolean isAnalyzeLog() {
     return analyzeLog;
@@ -141,6 +155,14 @@ public class LoggingFixture {
 
   public void setRestartOptionToUse(Restart.Option restartOptionToUse) {
     this.restartOptionToUse = restartOptionToUse;
+  }
+
+  public List<String> getHandlerTrace() {
+    return Collections.unmodifiableList(handlerTrace);
+  }
+
+  public List<String> getRestartTrace() {
+    return Collections.unmodifiableList(restartTrace);
   }
 
   public static class MalformedLogEntry {

@@ -14,12 +14,12 @@ import org.sbrubbles.conditio.fixtures.SkipEntry;
 import org.sbrubbles.conditio.fixtures.UseValue;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class ScopeHandlingTest {
@@ -51,19 +51,21 @@ public class ScopeHandlingTest {
 
   @ParameterizedTest
   @MethodSource("handleBadLogProvider")
-  public void handleBadLog(MalformedLogEntry signal, Restart.Option restartOption, List<AnalyzedEntry> expected) throws Exception {
-    fixture.setLogAnalyzer(true);
+  public void handleBadLog(MalformedLogEntry signal, HandlerOption handlerOption, Restart.Option restartOption, List<AnalyzedEntry> expected) throws Exception {
+    switch(handlerOption) {
+      case LOG_ANALYZER: fixture.setLogAnalyzer(true); break;
+      case ANALYZE_LOG: fixture.setAnalyzeLog(true); break;
+    }
+
     fixture.setSignal(signal);
     fixture.setRestartOptionToUse(restartOption);
 
     assertEquals(expected, fixture.logAnalyzer(BAD_LOG));
 
-    // handle in analyzeLog instead of logAnalyzer...
-    fixture.setLogAnalyzer(false);
-    fixture.setAnalyzeLog(true);
-
-    // ...still works
-    assertEquals(expected, fixture.logAnalyzer(BAD_LOG));
+    // the handler gets called once for each bad line in the log; case in point, two times
+    assertLinesMatch(
+      Arrays.asList(handlerOption.getMethodName(), handlerOption.getMethodName()),
+      fixture.getHandlerTrace());
   }
 
   @Test
@@ -75,6 +77,7 @@ public class ScopeHandlingTest {
       assertEquals(
         new MalformedLogEntry(badLine(2).getText()),
         e.getSignal());
+      assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
     }
   }
 
@@ -89,6 +92,7 @@ public class ScopeHandlingTest {
       fail();
     } catch (HandlerNotFoundException e) {
       assertEquals("oops", e.getSignal());
+      assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
     }
   }
 
@@ -106,6 +110,7 @@ public class ScopeHandlingTest {
       assertEquals(
         UNKNOWN_RESTART_OPTION,
         e.getRestartOption());
+      assertLinesMatch(Arrays.asList("logAnalyzer"), fixture.getHandlerTrace());
     }
   }
 
@@ -118,10 +123,25 @@ public class ScopeHandlingTest {
     return new Entry(String.format("%04d FAIL", line));
   }
 
+  enum HandlerOption {
+    LOG_ANALYZER("logAnalyzer"), ANALYZE_LOG("analyzeLog");
+
+    private String methodName;
+
+    HandlerOption(String methodName) {
+      this.methodName = methodName;
+    }
+
+    public String getMethodName() {
+      return methodName;
+    }
+  }
+
   static Stream<Arguments> handleBadLogProvider() {
     return Stream.of(
       arguments(
         null,
+        HandlerOption.LOG_ANALYZER,
         new UseValue(USE_VALUE_ENTRY),
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
@@ -130,6 +150,16 @@ public class ScopeHandlingTest {
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG))),
       arguments(
         null,
+        HandlerOption.ANALYZE_LOG,
+        new UseValue(USE_VALUE_ENTRY),
+        Arrays.asList(
+          new AnalyzedEntry(goodLine(1), BAD_LOG),
+          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
+          new AnalyzedEntry(goodLine(3), BAD_LOG),
+          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG))),
+      arguments(
+        null,
+        HandlerOption.LOG_ANALYZER,
         new RetryWith(FIXED_TEXT),
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
@@ -138,6 +168,23 @@ public class ScopeHandlingTest {
           new AnalyzedEntry(FIXED_ENTRY, BAD_LOG))),
       arguments(
         null,
+        HandlerOption.ANALYZE_LOG,
+        new RetryWith(FIXED_TEXT),
+        Arrays.asList(
+          new AnalyzedEntry(goodLine(1), BAD_LOG),
+          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG),
+          new AnalyzedEntry(goodLine(3), BAD_LOG),
+          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG))),
+      arguments(
+        null,
+        HandlerOption.LOG_ANALYZER,
+        new SkipEntry(),
+        Arrays.asList(
+          new AnalyzedEntry(goodLine(1), BAD_LOG),
+          new AnalyzedEntry(goodLine(3), BAD_LOG))),
+      arguments(
+        null,
+        HandlerOption.ANALYZE_LOG,
         new SkipEntry(),
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),

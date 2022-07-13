@@ -26,7 +26,7 @@ public class Scope implements AutoCloseable {
     return on(new Restart.Impl(optionType, body));
   }
 
-  public Scope on(Restart restart) {
+  private Scope on(Restart restart) {
     Objects.requireNonNull(restart, "restart");
 
     this.restarts.add(restart);
@@ -35,10 +35,10 @@ public class Scope implements AutoCloseable {
   }
 
   public Scope handle(Class<?> signalType, Function<Condition, Restart.Option> body) {
-    return handle(new Handler.Impl(signalType, body));
+    return handle(new Handler.Impl(signalType, body, this));
   }
 
-  public Scope handle(Handler handler) {
+  private Scope handle(Handler handler) {
     Objects.requireNonNull(handler, "handler");
 
     this.handlers.add(handler);

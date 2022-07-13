@@ -14,13 +14,15 @@ public interface Handler {
   class Impl implements Handler {
     private final Class<?> checker;
     private final Function<Condition, Restart.Option> body;
+    private final Scope scope;
 
-    public Impl(Class<?> checker, Function<Condition, Restart.Option> body) {
+    public Impl(Class<?> checker, Function<Condition, Restart.Option> body, Scope scope) {
       Objects.requireNonNull(checker, "checker");
       Objects.requireNonNull(body, "body");
 
       this.checker = checker;
       this.body = body;
+      this.scope = scope;
     }
 
     @Override
@@ -31,6 +33,15 @@ public interface Handler {
     @Override
     public Restart.Option handle(Condition c) {
       return this.body.apply(c);
+    }
+
+    @Override
+    public String toString() {
+      return "Handler.Impl{" +
+        "checker=" + checker +
+        ", body=" + body +
+        ", scope=" + scope +
+        '}';
     }
   }
 

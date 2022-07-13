@@ -1,18 +1,28 @@
 package org.sbrubbles.conditio;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.UseValue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HandlerTest {
-  private final Handler h = new Handler.Impl(String.class, this::body);
+  private Handler h;
+
+  @BeforeEach
+  public void setUp() {
+    try(Scope a = Scope.create()) {
+      h = new Handler.Impl(String.class, this::body, a);
+    }
+  }
 
   @Test
   public void nullParametersAreNotAllowed() {
-    assertThrows(NullPointerException.class, () -> new Handler.Impl(null, this::body), "missing checker");
-    assertThrows(NullPointerException.class, () -> new Handler.Impl(String.class, null), "missing body");
-    assertThrows(NullPointerException.class, () -> new Handler.Impl(null, null), "missing both");
+    try(Scope scope = Scope.create()) {
+      assertThrows(NullPointerException.class, () -> new Handler.Impl(null, this::body, scope), "missing checker");
+      assertThrows(NullPointerException.class, () -> new Handler.Impl(String.class, null, scope), "missing body");
+      assertThrows(NullPointerException.class, () -> new Handler.Impl(null, null, scope), "missing both");
+    }
   }
 
   @Test
