@@ -6,6 +6,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.LoggingFixture;
+import org.sbrubbles.conditio.fixtures.LoggingFixture.AnalyzedEntry;
+import org.sbrubbles.conditio.fixtures.LoggingFixture.Entry;
+import org.sbrubbles.conditio.fixtures.LoggingFixture.MalformedLogEntry;
 import org.sbrubbles.conditio.fixtures.RetryWith;
 import org.sbrubbles.conditio.fixtures.SkipEntry;
 import org.sbrubbles.conditio.fixtures.UseValue;
@@ -22,8 +25,8 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class ScopeHandlingTest {
   private static final String FIXED_TEXT = "0000 FIXED TEXT";
-  private static final LoggingFixture.Entry FIXED_ENTRY = new LoggingFixture.Entry(FIXED_TEXT);
-  private static final LoggingFixture.Entry USE_VALUE_ENTRY = new LoggingFixture.Entry("1000 USE VALUE ENTRY");
+  private static final Entry FIXED_ENTRY = new Entry(FIXED_TEXT);
+  private static final Entry USE_VALUE_ENTRY = new Entry("1000 USE VALUE ENTRY");
 
   private static final String GOOD_LOG = "../good.txt";
   private static final String BAD_LOG = "../bad.txt";
@@ -38,18 +41,18 @@ public class ScopeHandlingTest {
   @Test
   public void readGoodLog() throws Exception {
     // no signal should be emitted
-    List<LoggingFixture.AnalyzedEntry> expected = Arrays.asList(
-      new LoggingFixture.AnalyzedEntry(goodLine(1), GOOD_LOG),
-      new LoggingFixture.AnalyzedEntry(goodLine(2), GOOD_LOG),
-      new LoggingFixture.AnalyzedEntry(goodLine(3), GOOD_LOG),
-      new LoggingFixture.AnalyzedEntry(goodLine(4), GOOD_LOG));
+    List<AnalyzedEntry> expected = Arrays.asList(
+      new AnalyzedEntry(goodLine(1), GOOD_LOG),
+      new AnalyzedEntry(goodLine(2), GOOD_LOG),
+      new AnalyzedEntry(goodLine(3), GOOD_LOG),
+      new AnalyzedEntry(goodLine(4), GOOD_LOG));
 
     assertEquals(expected, fixture.logAnalyzer(GOOD_LOG));
   }
 
   @ParameterizedTest
   @MethodSource("handleBadLogProvider")
-  public void handleBadLog(Predicate<?> handlerMatcher, Restart.Option restartOption, List<LoggingFixture.AnalyzedEntry> expected) throws Exception {
+  public void handleBadLog(Predicate<?> handlerMatcher, Restart.Option restartOption, List<AnalyzedEntry> expected) throws Exception {
     fixture.setLogAnalyzer(true);
     fixture.setHandlerMatcher(handlerMatcher);
     fixture.setRestartOptionToUse(restartOption);
@@ -71,7 +74,7 @@ public class ScopeHandlingTest {
       fail();
     } catch (HandlerNotFoundException e) {
       assertEquals(
-        new LoggingFixture.MalformedLogEntry(badLine(2).getText()),
+        new MalformedLogEntry(badLine(2).getText()),
         e.getSignal());
     }
   }
@@ -87,7 +90,7 @@ public class ScopeHandlingTest {
       fail();
     } catch (HandlerNotFoundException e) {
       assertEquals(
-        new LoggingFixture.MalformedLogEntry(badLine(2).getText()),
+        new MalformedLogEntry(badLine(2).getText()),
         e.getSignal());
     }
   }
@@ -97,7 +100,7 @@ public class ScopeHandlingTest {
     final Restart.Option UNKNOWN_RESTART_OPTION = new UnknownRestartOption("oops");
 
     fixture.setLogAnalyzer(true);
-    fixture.setHandlerMatcher(LoggingFixture.MalformedLogEntry.class::isInstance); // should match now
+    fixture.setHandlerMatcher(MalformedLogEntry.class::isInstance); // should match now
     fixture.setRestartOptionToUse(UNKNOWN_RESTART_OPTION); // no restart will match
 
     try {
@@ -111,39 +114,39 @@ public class ScopeHandlingTest {
   }
 
   // helpers
-  static LoggingFixture.Entry goodLine(int line) {
-    return new LoggingFixture.Entry(String.format("%04d OK", line));
+  static Entry goodLine(int line) {
+    return new Entry(String.format("%04d OK", line));
   }
 
-  static LoggingFixture.Entry badLine(int line) {
-    return new LoggingFixture.Entry(String.format("%04d FAIL", line));
+  static Entry badLine(int line) {
+    return new Entry(String.format("%04d FAIL", line));
   }
 
   static Stream<Arguments> handleBadLogProvider() {
-    Predicate<?> matcher = LoggingFixture.MalformedLogEntry.class::isInstance;
+    Predicate<?> matcher = MalformedLogEntry.class::isInstance;
     return Stream.of(
       arguments(
         matcher,
         new UseValue(USE_VALUE_ENTRY),
         Arrays.asList(
-          new LoggingFixture.AnalyzedEntry(goodLine(1), BAD_LOG),
-          new LoggingFixture.AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
-          new LoggingFixture.AnalyzedEntry(goodLine(3), BAD_LOG),
-          new LoggingFixture.AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG))),
+          new AnalyzedEntry(goodLine(1), BAD_LOG),
+          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
+          new AnalyzedEntry(goodLine(3), BAD_LOG),
+          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG))),
       arguments(
         matcher,
         new RetryWith(FIXED_TEXT),
         Arrays.asList(
-          new LoggingFixture.AnalyzedEntry(goodLine(1), BAD_LOG),
-          new LoggingFixture.AnalyzedEntry(FIXED_ENTRY, BAD_LOG),
-          new LoggingFixture.AnalyzedEntry(goodLine(3), BAD_LOG),
-          new LoggingFixture.AnalyzedEntry(FIXED_ENTRY, BAD_LOG))),
+          new AnalyzedEntry(goodLine(1), BAD_LOG),
+          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG),
+          new AnalyzedEntry(goodLine(3), BAD_LOG),
+          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG))),
       arguments(
         matcher,
         new SkipEntry(),
         Arrays.asList(
-          new LoggingFixture.AnalyzedEntry(goodLine(1), BAD_LOG),
-          new LoggingFixture.AnalyzedEntry(goodLine(3), BAD_LOG)))
+          new AnalyzedEntry(goodLine(1), BAD_LOG),
+          new AnalyzedEntry(goodLine(3), BAD_LOG)))
     );
   }
 
