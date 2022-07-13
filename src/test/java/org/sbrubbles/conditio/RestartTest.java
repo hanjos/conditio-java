@@ -1,47 +1,46 @@
 package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
+import org.sbrubbles.conditio.fixtures.RetryWith;
+import org.sbrubbles.conditio.fixtures.UseValue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RestartTest {
-  private final Restart r = new Restart.Impl(String.class::isInstance, this::body);
+  private final Restart r = new Restart.Impl(UseValue.class::isInstance, this::body);
 
   @Test
   public void nullParametersAreNotAllowed() {
     assertThrows(NullPointerException.class,
       () -> new Restart.Impl(null, this::body), "missing checker");
     assertThrows(NullPointerException.class,
-      () -> new Restart.Impl(String.class::isInstance, null), "missing body");
+      () -> new Restart.Impl(UseValue.class::isInstance, null), "missing body");
     assertThrows(NullPointerException.class,
       () -> new Restart.Impl(null, null), "missing both");
   }
 
   @Test
   public void matches() {
-    assertTrue(r.matches("string"));
-    assertTrue(r.matches(""));
+    assertTrue(r.matches(new UseValue("string")));
 
     assertFalse(r.matches(null));
-    assertFalse(r.matches(new Object()));
-    assertFalse(r.matches(1));
-    assertFalse(r.matches('t'));
+    assertFalse(r.matches(new RetryWith("nope")));
   }
 
   @Test
   public void run() {
     assertEquals(
       "OK: OMGWTFBBQ",
-      r.run("OMGWTFBBQ"));
+      r.run(new UseValue("OMGWTFBBQ")));
 
     assertEquals(
       "FAIL!",
-      r.run("FAIL"));
+      r.run(new UseValue("FAIL")));
   }
 
-  private Object body(String s) {
-    if (!"FAIL".equals(s)) {
-      return "OK: " + s;
+  private Object body(UseValue u) {
+    if (!"FAIL".equals(u.getValue())) {
+      return "OK: " + u.getValue();
     } else {
       return "FAIL!";
     }

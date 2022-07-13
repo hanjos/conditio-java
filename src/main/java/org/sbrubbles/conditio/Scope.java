@@ -23,13 +23,13 @@ public class Scope implements AutoCloseable {
   }
 
   // === main operations ===
-  public <T, S extends T> Scope on(Class<T> restartType, Function<S, ?> body) {
+  public <T extends Restart.Option, S extends T> Scope on(Class<T> restartType, Function<S, ?> body) {
     Objects.requireNonNull(restartType, "restartType");
 
     return on(restartType::isInstance, body);
   }
 
-  public <T, S extends T> Scope on(Predicate<T> matcher, Function<S, ?> body) {
+  public <T extends Restart.Option, S extends T> Scope on(Predicate<T> matcher, Function<S, ?> body) {
     return on(new Restart.Impl(matcher, body));
   }
 
@@ -111,7 +111,7 @@ public class Scope implements AutoCloseable {
     throw new HandlerNotFoundException(c.getSignal());
   }
 
-  private Object runRestartWith(Object restartOption) throws RestartNotFoundException {
+  private Object runRestartWith(Restart.Option restartOption) throws RestartNotFoundException {
     assert restartOption != null;
 
     for (Restart r : getAllRestarts()) {

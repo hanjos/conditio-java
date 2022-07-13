@@ -8,15 +8,15 @@ import java.util.function.Predicate;
  * Provides a strategy to deal with some exceptional situations.
  */
 public interface Restart {
-  boolean matches(Object data);
+  boolean matches(Option data);
 
-  Object run(Object data);
+  Object run(Option data);
 
   class Impl implements Restart {
-    private final Predicate<?> matcher;
-    private final Function<?, ?> body;
+    private final Predicate<? extends Option> matcher;
+    private final Function<? extends Option, ?> body;
 
-    public <T, S extends T> Impl(Predicate<T> matcher, Function<S, ?> body) {
+    public <T extends Option, S extends T> Impl(Predicate<T> matcher, Function<S, ?> body) {
       Objects.requireNonNull(matcher, "matcher");
       Objects.requireNonNull(body, "body");
 
@@ -25,12 +25,12 @@ public interface Restart {
     }
 
     @Override
-    public boolean matches(Object data) {
+    public boolean matches(Option data) {
       return ((Predicate) this.matcher).test(data);
     }
 
     @Override
-    public Object run(Object data) {
+    public Object run(Option data) {
       return ((Function) this.body).apply(data);
     }
   }

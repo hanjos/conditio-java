@@ -11,6 +11,10 @@ public class UseValue implements Restart.Option {
     this.value = value;
   }
 
+  public Object getValue() {
+    return value;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
