@@ -12,6 +12,7 @@ import org.sbrubbles.conditio.fixtures.UseValue;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -48,7 +49,7 @@ public class ScopeHandlingTest {
 
   @ParameterizedTest
   @MethodSource("handleBadLogProvider")
-  public void handleBadLog(Predicate<?> handlerMatcher, Object restartOption, List<LoggingFixture.AnalyzedEntry> expected) throws Exception {
+  public void handleBadLog(Predicate<?> handlerMatcher, Restart.Option restartOption, List<LoggingFixture.AnalyzedEntry> expected) throws Exception {
     fixture.setLogAnalyzer(true);
     fixture.setHandlerMatcher(handlerMatcher);
     fixture.setRestartOptionToUse(restartOption);
@@ -93,18 +94,18 @@ public class ScopeHandlingTest {
 
   @Test
   public void readBadLogWithNoRestartFound() throws Exception {
-    final String BAD_RESTART_OPTION = "oops";
+    final Restart.Option UNKNOWN_RESTART_OPTION = new UnknownRestartOption("oops");
 
     fixture.setLogAnalyzer(true);
     fixture.setHandlerMatcher(LoggingFixture.MalformedLogEntry.class::isInstance); // should match now
-    fixture.setRestartOptionToUse(BAD_RESTART_OPTION); // no restart will match
+    fixture.setRestartOptionToUse(UNKNOWN_RESTART_OPTION); // no restart will match
 
     try {
       fixture.logAnalyzer(BAD_LOG);
       fail();
     } catch (RestartNotFoundException e) {
       assertEquals(
-        BAD_RESTART_OPTION,
+        UNKNOWN_RESTART_OPTION,
         e.getRestartOption());
     }
   }
@@ -144,5 +145,31 @@ public class ScopeHandlingTest {
           new LoggingFixture.AnalyzedEntry(goodLine(1), BAD_LOG),
           new LoggingFixture.AnalyzedEntry(goodLine(3), BAD_LOG)))
     );
+  }
+
+  static class UnknownRestartOption implements Restart.Option {
+    private Object value;
+
+    public UnknownRestartOption(Object value) {
+      this.value = value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      UnknownRestartOption that = (UnknownRestartOption) o;
+      return Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+      return "BadRestartOption(" + value + ")";
+    }
   }
 }

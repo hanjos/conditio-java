@@ -1,6 +1,8 @@
 package org.sbrubbles.conditio.fixtures;
 
-public class SkipEntry {
+import org.sbrubbles.conditio.Restart;
+
+public class SkipEntry implements Restart.Option {
   public SkipEntry() { }
 
   @Override

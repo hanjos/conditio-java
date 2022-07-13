@@ -34,4 +34,6 @@ public interface Restart {
       return ((Function) this.body).apply(data);
     }
   }
+
+  interface Option {}
 }

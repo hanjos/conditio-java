@@ -1,5 +1,6 @@
 package org.sbrubbles.conditio.fixtures;
 
+import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
 
 import java.io.BufferedReader;
@@ -97,7 +98,7 @@ public class LoggingFixture {
   private boolean analyzeLog;
   private boolean logAnalyzer;
   private Predicate<?> handlerMatcher;
-  private Object restartOptionToUse;
+  private Restart.Option restartOptionToUse;
 
   public LoggingFixture() {
     analyzeLog = false;
@@ -135,11 +136,11 @@ public class LoggingFixture {
     this.handlerMatcher = handlerMatcher;
   }
 
-  public Object getRestartOptionToUse() {
+  public Restart.Option getRestartOptionToUse() {
     return restartOptionToUse;
   }
 
-  public void setRestartOptionToUse(Object restartOptionToUse) {
+  public void setRestartOptionToUse(Restart.Option restartOptionToUse) {
     this.restartOptionToUse = restartOptionToUse;
   }
 

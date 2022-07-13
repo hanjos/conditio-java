@@ -1,28 +1,17 @@
 package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
-
-import java.util.function.Function;
-import java.util.function.Predicate;
+import org.sbrubbles.conditio.fixtures.UseValue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HandlerTest {
-  private final Predicate<?> checker = String.class::isInstance;
-  private final Function<Condition, Object> body = c -> {
-    if (!"FAIL".equals(c.getSignal())) {
-      return "OK: " + c.getSignal();
-    } else {
-      return "FAIL!";
-    }
-  };
-
-  private final Handler h = new Handler.Impl(checker, body);
+  private final Handler h = new Handler.Impl(String.class::isInstance, this::body);
 
   @Test
   public void nullParametersAreNotAllowed() {
-    assertThrows(NullPointerException.class, () -> new Handler.Impl(null, body), "missing checker");
-    assertThrows(NullPointerException.class, () -> new Handler.Impl(checker, null), "missing body");
+    assertThrows(NullPointerException.class, () -> new Handler.Impl(null, this::body), "missing checker");
+    assertThrows(NullPointerException.class, () -> new Handler.Impl(String.class::isInstance, null), "missing body");
     assertThrows(NullPointerException.class, () -> new Handler.Impl(null, null), "missing both");
   }
 
@@ -42,13 +31,21 @@ public class HandlerTest {
     try (Scope scope = Scope.create()) {
       Condition c = new Condition("OMGWTFBBQ", scope);
       assertEquals(
-        "OK: OMGWTFBBQ",
+        new UseValue("OK: OMGWTFBBQ"),
         h.handle(c));
 
       Condition f = new Condition("FAIL", scope);
       assertEquals(
-        "FAIL!",
+        new UseValue("FAIL!"),
         h.handle(f));
+    }
+  }
+
+  private Restart.Option body(Condition c) {
+    if (!"FAIL".equals(c.getSignal())) {
+      return new UseValue( "OK: " + c.getSignal());
+    } else {
+      return new UseValue("FAIL!");
     }
   }
 }

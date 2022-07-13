@@ -41,13 +41,13 @@ public class Scope implements AutoCloseable {
     return this;
   }
 
-  public Scope handle(Class<?> signalType, Function<Condition, ?> body) {
+  public Scope handle(Class<?> signalType, Function<Condition, Restart.Option> body) {
     Objects.requireNonNull(signalType, "signalType");
 
     return handle(signalType::isInstance, body);
   }
 
-  public Scope handle(Predicate<?> matcher, Function<Condition, ?> body) {
+  public Scope handle(Predicate<?> matcher, Function<Condition, Restart.Option> body) {
     return handle(new Handler.Impl(matcher, body));
   }
 
@@ -61,7 +61,7 @@ public class Scope implements AutoCloseable {
 
   public Object signal(Object signal) {
     Condition c = new Condition(signal, this);
-    Object restartOption = selectRestartFor(c);
+    Restart.Option restartOption = selectRestartFor(c);
     return runRestartWith(restartOption);
   }
 
@@ -92,7 +92,7 @@ public class Scope implements AutoCloseable {
     return Collections.unmodifiableList(restarts);
   }
 
-  private Object selectRestartFor(Condition c) throws HandlerNotFoundException {
+  private Restart.Option selectRestartFor(Condition c) throws HandlerNotFoundException {
     assert c != null;
 
     for (Handler h : getAllHandlers()) {
@@ -100,7 +100,7 @@ public class Scope implements AutoCloseable {
         continue;
       }
 
-      Object restartOption = h.handle(c);
+      Restart.Option restartOption = h.handle(c);
       if (restartOption == null) {
         continue; // TODO test handler skipping
       }

@@ -10,13 +10,13 @@ import java.util.function.Predicate;
 public interface Handler {
   boolean accepts(Object signal);
 
-  Object handle(Condition c);
+  Restart.Option handle(Condition c);
 
   class Impl implements Handler {
     private final Predicate<?> checker;
-    private final Function<Condition, ?> body;
+    private final Function<Condition, Restart.Option> body;
 
-    public Impl(Predicate<?> checker, Function<Condition, ?> body) {
+    public Impl(Predicate<?> checker, Function<Condition, Restart.Option> body) {
       Objects.requireNonNull(checker, "checker");
       Objects.requireNonNull(body, "body");
 
@@ -30,8 +30,9 @@ public interface Handler {
     }
 
     @Override
-    public Object handle(Condition c) {
+    public Restart.Option handle(Condition c) {
       return this.body.apply(c);
     }
   }
+
 }

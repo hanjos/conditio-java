@@ -1,6 +1,8 @@
 package org.sbrubbles.conditio.fixtures;
 
-public class RetryWith {
+import org.sbrubbles.conditio.Restart;
+
+public class RetryWith implements Restart.Option{
   String text;
 
   public RetryWith(String text) {
