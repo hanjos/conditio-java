@@ -60,11 +60,11 @@ public class Scope implements AutoCloseable {
   }
 
   public List<Handler> getHandlers() {
-    return Collections.unmodifiableList(handlers);
+    return Collections.unmodifiableList(this.handlers);
   }
 
   public List<Restart> getRestarts() {
-    return Collections.unmodifiableList(restarts);
+    return Collections.unmodifiableList(this.restarts);
   }
 
   private Restart.Option selectRestartFor(Condition c) throws HandlerNotFoundException {

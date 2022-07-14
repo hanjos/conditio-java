@@ -25,12 +25,12 @@ public interface Restart extends Predicate<Restart.Option>, Function<Restart.Opt
 
     @Override
     public boolean test(Option data) {
-      return this.optionType.isInstance(data);
+      return getOptionType().isInstance(data);
     }
 
     @Override
     public Object apply(Option data) {
-      return ((Function) this.body).apply(data);
+      return ((Function) getBody()).apply(data);
     }
 
     public Class<? extends Option> getOptionType() {
@@ -46,5 +46,8 @@ public interface Restart extends Predicate<Restart.Option>, Function<Restart.Opt
     }
   }
 
-  interface Option {}
+  /**
+   * Marker interface "implemented" by all valid restart options.
+   */
+  interface Option { /**/ }
 }

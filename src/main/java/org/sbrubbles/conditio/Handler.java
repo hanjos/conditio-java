@@ -25,12 +25,12 @@ public interface Handler extends Predicate<Object>, Function<Condition, Restart.
 
     @Override
     public boolean test(Object signal) {
-      return this.signalType.isInstance(signal);
+      return getSignalType().isInstance(signal);
     }
 
     @Override
     public Restart.Option apply(Condition c) {
-      return this.body.apply(c);
+      return getBody().apply(c);
     }
 
     public Class<?> getSignalType() {
