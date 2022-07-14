@@ -105,6 +105,20 @@ public class ScopeHandlingTest {
   }
 
   @Test
+  public void readBadLogWithNullRestartOption() throws Exception {
+    fixture.setLogAnalyzer(true);
+    fixture.setRestartOptionToUse(null);
+
+    try {
+      fixture.logAnalyzer(BAD_LOG);
+      fail();
+    } catch (RestartNotFoundException e) {
+      assertNull(e.getRestartOption());
+      assertLinesMatch(Arrays.asList("logAnalyzer"), fixture.getHandlerTrace());
+    }
+  }
+
+  @Test
   public void readBadLogWithNoRestartFound() throws Exception {
     final Restart.Option UNKNOWN_RESTART_OPTION = new UnknownRestartOption("oops");
 
@@ -155,7 +169,7 @@ public class ScopeHandlingTest {
   enum HandlerOption {
     LOG_ANALYZER("logAnalyzer"), ANALYZE_LOG("analyzeLog");
 
-    private String methodName;
+    private final String methodName;
 
     HandlerOption(String methodName) {
       this.methodName = methodName;
@@ -222,7 +236,7 @@ public class ScopeHandlingTest {
   }
 
   static class UnknownRestartOption implements Restart.Option {
-    private Object value;
+    private final Object value;
 
     public UnknownRestartOption(Object value) {
       this.value = value;

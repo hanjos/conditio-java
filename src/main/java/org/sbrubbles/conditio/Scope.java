@@ -87,7 +87,7 @@ public class Scope implements AutoCloseable {
         continue;
       }
 
-      // TODO test handler skipping
+      // TODO Is null a valid restart option? It would work with runRestartWith... What would the semantics be?
       Restart.Option restartOption = h.handle(c);
       if (restartOption == Handler.SKIP) {
         continue;
