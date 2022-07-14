@@ -27,7 +27,7 @@ public class HandlerTest {
   }
 
   @Test
-  public void accepts() {
+  public void test() {
     assertTrue(h.test("string"));
     assertTrue(h.test(""));
 
@@ -38,7 +38,7 @@ public class HandlerTest {
   }
 
   @Test
-  public void handle() {
+  public void apply() {
     try (Scope scope = Scope.create()) {
       Condition c = new Condition("OMGWTFBBQ", scope);
       assertEquals(

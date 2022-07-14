@@ -32,7 +32,7 @@ public class RestartTest {
   }
 
   @Test
-  public void matches() {
+  public void test() {
     assertTrue(r.test(new UseValue("string")));
 
     assertFalse(r.test(null));
@@ -40,7 +40,7 @@ public class RestartTest {
   }
 
   @Test
-  public void run() {
+  public void apply() {
     assertEquals(
       "OK: OMGWTFBBQ",
       r.apply(new UseValue("OMGWTFBBQ")));
