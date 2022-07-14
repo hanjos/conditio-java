@@ -55,7 +55,7 @@ public class SignallingTest {
 
   @ParameterizedTest
   @MethodSource("handleBadLogProvider")
-  public void handleBadLog(MalformedLogEntry signal, HandlerOption handlerOption, Restart.Option restartOption, List<AnalyzedEntry> expected) throws Exception {
+  public void handleBadLog(HandlerOption handlerOption, Restart.Option restartOption, List<AnalyzedEntry> expected) throws Exception {
     switch (handlerOption) {
       case LOG_ANALYZER:
         fixture.setLogAnalyzer(true);
@@ -65,7 +65,6 @@ public class SignallingTest {
         break;
     }
 
-    fixture.setSignal(signal);
     fixture.setRestartOptionToUse(restartOption);
 
     List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
@@ -183,7 +182,6 @@ public class SignallingTest {
   static Stream<Arguments> handleBadLogProvider() {
     return Stream.of(
       arguments(
-        null,
         HandlerOption.LOG_ANALYZER,
         new UseValue(USE_VALUE_ENTRY),
         Arrays.asList(
@@ -192,7 +190,6 @@ public class SignallingTest {
           new AnalyzedEntry(goodLine(3), BAD_LOG),
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG))),
       arguments(
-        null,
         HandlerOption.ANALYZE_LOG,
         new UseValue(USE_VALUE_ENTRY),
         Arrays.asList(
@@ -201,7 +198,6 @@ public class SignallingTest {
           new AnalyzedEntry(goodLine(3), BAD_LOG),
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG))),
       arguments(
-        null,
         HandlerOption.LOG_ANALYZER,
         new RetryWith(FIXED_TEXT),
         Arrays.asList(
@@ -210,7 +206,6 @@ public class SignallingTest {
           new AnalyzedEntry(goodLine(3), BAD_LOG),
           new AnalyzedEntry(FIXED_ENTRY, BAD_LOG))),
       arguments(
-        null,
         HandlerOption.ANALYZE_LOG,
         new RetryWith(FIXED_TEXT),
         Arrays.asList(
@@ -219,14 +214,12 @@ public class SignallingTest {
           new AnalyzedEntry(goodLine(3), BAD_LOG),
           new AnalyzedEntry(FIXED_ENTRY, BAD_LOG))),
       arguments(
-        null,
         HandlerOption.LOG_ANALYZER,
         new SkipEntry(),
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
           new AnalyzedEntry(goodLine(3), BAD_LOG))),
       arguments(
-        null,
         HandlerOption.ANALYZE_LOG,
         new SkipEntry(),
         Arrays.asList(
