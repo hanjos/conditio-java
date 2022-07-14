@@ -10,9 +10,9 @@ import org.sbrubbles.conditio.fixtures.LoggingFixture.AnalyzedEntry;
 import org.sbrubbles.conditio.fixtures.LoggingFixture.Entry;
 import org.sbrubbles.conditio.fixtures.LoggingFixture.MalformedLogEntry;
 import org.sbrubbles.conditio.fixtures.LoggingFixture.OneOffSignal;
-import org.sbrubbles.conditio.fixtures.RetryWith;
 import org.sbrubbles.conditio.fixtures.SkipEntry;
-import org.sbrubbles.conditio.fixtures.UseValue;
+import org.sbrubbles.conditio.restarts.RetryWith;
+import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.util.Arrays;
 import java.util.Collections;

@@ -1,11 +1,11 @@
-package org.sbrubbles.conditio.fixtures;
+package org.sbrubbles.conditio.restarts;
 
 import org.sbrubbles.conditio.Restart;
 
 import java.util.Objects;
 
 public class UseValue implements Restart.Option {
-  Object value;
+  private Object value;
 
   public UseValue(Object value) {
     this.value = value;

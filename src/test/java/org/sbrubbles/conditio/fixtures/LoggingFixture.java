@@ -3,6 +3,8 @@ package org.sbrubbles.conditio.fixtures;
 import org.sbrubbles.conditio.Handler;
 import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
+import org.sbrubbles.conditio.restarts.RetryWith;
+import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -26,8 +28,8 @@ public class LoggingFixture {
         return new Entry(text);
       } else {
         scope
-          .on(UseValue.class, r -> { traceRestart("UseValue"); return r.value; })
-          .on(RetryWith.class, r -> { traceRestart("RetryWith"); return parseLogEntry(r.text); });
+          .on(UseValue.class, r -> { traceRestart("UseValue"); return r.getValue(); })
+          .on(RetryWith.class, r -> { traceRestart("RetryWith"); return parseLogEntry(r.getText()); });
 
         Object signal = getSignal() != null ? getSignal() : new MalformedLogEntry(text);
         Entry result = (Entry) scope.signal(signal);

@@ -2,7 +2,7 @@ package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.sbrubbles.conditio.fixtures.UseValue;
+import org.sbrubbles.conditio.restarts.UseValue;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,12 +1,16 @@
-package org.sbrubbles.conditio.fixtures;
+package org.sbrubbles.conditio.restarts;
 
 import org.sbrubbles.conditio.Restart;
 
 public class RetryWith implements Restart.Option{
-  String text;
+  private final String text;
 
   public RetryWith(String text) {
     this.text = text;
+  }
+
+  public String getText() {
+    return text;
   }
 
   @Override

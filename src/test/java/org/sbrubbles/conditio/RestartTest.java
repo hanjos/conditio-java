@@ -1,8 +1,8 @@
 package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
-import org.sbrubbles.conditio.fixtures.RetryWith;
-import org.sbrubbles.conditio.fixtures.UseValue;
+import org.sbrubbles.conditio.restarts.RetryWith;
+import org.sbrubbles.conditio.restarts.UseValue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
