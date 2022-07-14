@@ -9,25 +9,40 @@ import java.util.function.Predicate;
  */
 public interface Restart extends Predicate<Restart.Option>, Function<Restart.Option, Object> {
   class Impl implements Restart {
-    private final Class<? extends Option> matcher;
+    private final Class<? extends Option> optionType;
     private final Function<? extends Option, ?> body;
+    private final Scope scope;
 
-    public <T extends Option, S extends T> Impl(Class<T> matcher, Function<S, ?> body) {
-      Objects.requireNonNull(matcher, "matcher");
+    public <T extends Option, S extends T> Impl(Class<T> optionType, Function<S, ?> body, Scope scope) {
+      Objects.requireNonNull(optionType, "optionType");
       Objects.requireNonNull(body, "body");
+      Objects.requireNonNull(scope, "scope");
 
-      this.matcher = matcher;
+      this.optionType = optionType;
       this.body = body;
+      this.scope = scope;
     }
 
     @Override
     public boolean test(Option data) {
-      return this.matcher.isInstance(data);
+      return this.optionType.isInstance(data);
     }
 
     @Override
     public Object apply(Option data) {
       return ((Function) this.body).apply(data);
+    }
+
+    public Class<? extends Option> getOptionType() {
+      return optionType;
+    }
+
+    public Function<? extends Option, ?> getBody() {
+      return body;
+    }
+
+    public Scope getScope() {
+      return scope;
     }
   }
 

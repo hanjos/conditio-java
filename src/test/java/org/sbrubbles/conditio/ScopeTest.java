@@ -64,7 +64,7 @@ public class ScopeTest {
   public void getRestartsIsUnmodifiable() {
     try (Scope a = Scope.create()) {
       final List<Restart> rs = a.getRestarts();
-      final Restart r = new Restart.Impl(UseValue.class, u -> "test");
+      final Restart r = new Restart.Impl(UseValue.class, u -> "test", a);
 
       assertThrows(UnsupportedOperationException.class, () -> rs.add(r));
       assertThrows(UnsupportedOperationException.class, () -> rs.remove(r));

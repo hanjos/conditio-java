@@ -16,6 +16,7 @@ public interface Handler extends Predicate<Object>, Function<Condition, Restart.
     public Impl(Class<?> signalType, Function<Condition, Restart.Option> body, Scope scope) {
       Objects.requireNonNull(signalType, "signalType");
       Objects.requireNonNull(body, "body");
+      Objects.requireNonNull(scope, "scope");
 
       this.signalType = signalType;
       this.body = body;
@@ -30,6 +31,18 @@ public interface Handler extends Predicate<Object>, Function<Condition, Restart.
     @Override
     public Restart.Option apply(Condition c) {
       return this.body.apply(c);
+    }
+
+    public Class<?> getSignalType() {
+      return signalType;
+    }
+
+    public Function<Condition, Restart.Option> getBody() {
+      return body;
+    }
+
+    public Scope getScope() {
+      return scope;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.sbrubbles.conditio;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.restarts.RetryWith;
 import org.sbrubbles.conditio.restarts.UseValue;
@@ -7,16 +8,27 @@ import org.sbrubbles.conditio.restarts.UseValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RestartTest {
-  private final Restart r = new Restart.Impl(UseValue.class, this::body);
+  private Restart r;
+
+  @BeforeEach
+  public void setUp() {
+    try (Scope a = Scope.create()) {
+      r = new Restart.Impl(UseValue.class, this::body, a);
+    }
+  }
 
   @Test
   public void nullParametersAreNotAllowed() {
-    assertThrows(NullPointerException.class,
-      () -> new Restart.Impl(null, this::body), "missing checker");
-    assertThrows(NullPointerException.class,
-      () -> new Restart.Impl(UseValue.class, null), "missing body");
-    assertThrows(NullPointerException.class,
-      () -> new Restart.Impl(null, null), "missing both");
+    try (Scope a = Scope.create()) {
+      assertThrows(NullPointerException.class,
+        () -> new Restart.Impl(null, this::body, a), "missing optionType");
+      assertThrows(NullPointerException.class,
+        () -> new Restart.Impl(UseValue.class, null, a), "missing body");
+      assertThrows(NullPointerException.class,
+        () -> new Restart.Impl(UseValue.class, this::body, null), "missing scope");
+      assertThrows(NullPointerException.class,
+        () -> new Restart.Impl(null, null, a), "missing both");
+    }
   }
 
   @Test

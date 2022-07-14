@@ -19,8 +19,9 @@ public class HandlerTest {
   @Test
   public void nullParametersAreNotAllowed() {
     try(Scope scope = Scope.create()) {
-      assertThrows(NullPointerException.class, () -> new Handler.Impl(null, this::body, scope), "missing checker");
+      assertThrows(NullPointerException.class, () -> new Handler.Impl(null, this::body, scope), "missing signalType");
       assertThrows(NullPointerException.class, () -> new Handler.Impl(String.class, null, scope), "missing body");
+      assertThrows(NullPointerException.class, () -> new Handler.Impl(String.class, this::body, null), "missing scope");
       assertThrows(NullPointerException.class, () -> new Handler.Impl(null, null, scope), "missing both");
     }
   }

@@ -23,30 +23,18 @@ public class Scope implements AutoCloseable {
 
   // === main operations ===
   public <T extends Restart.Option, S extends T> Scope on(Class<T> optionType, Function<S, ?> body) {
-    return on(new Restart.Impl(optionType, body));
-  }
-
-  private Scope on(Restart restart) {
-    Objects.requireNonNull(restart, "restart");
-
-    this.restarts.add(restart);
+    this.restarts.add(new Restart.Impl(optionType, body, this));
 
     return this;
   }
 
   public Scope handle(Class<?> signalType, Function<Condition, Restart.Option> body) {
-    return handle(new Handler.Impl(signalType, body, this));
-  }
-
-  private Scope handle(Handler handler) {
-    Objects.requireNonNull(handler, "handler");
-
-    this.handlers.add(handler);
+    this.handlers.add(new Handler.Impl(signalType, body, this));
 
     return this;
   }
 
-  public Object signal(Object signal) {
+  public Object signal(Object signal) throws HandlerNotFoundException, RestartNotFoundException {
     Condition c = new Condition(signal, this);
     Restart.Option restartOption = selectRestartFor(c);
     return runRestartWith(restartOption);
