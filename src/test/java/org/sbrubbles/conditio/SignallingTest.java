@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-public class ScopeHandlingTest {
+public class SignallingTest {
   private static final String FIXED_TEXT = "0000 FIXED TEXT";
   private static final Entry FIXED_ENTRY = new Entry(FIXED_TEXT);
   private static final Entry USE_VALUE_ENTRY = new Entry("1000 USE VALUE ENTRY");
