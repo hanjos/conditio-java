@@ -27,13 +27,13 @@ public class HandlerTest {
 
   @Test
   public void accepts() {
-    assertTrue(h.accepts("string"));
-    assertTrue(h.accepts(""));
+    assertTrue(h.test("string"));
+    assertTrue(h.test(""));
 
-    assertFalse(h.accepts(null));
-    assertFalse(h.accepts(new Object()));
-    assertFalse(h.accepts(1));
-    assertFalse(h.accepts('t'));
+    assertFalse(h.test(null));
+    assertFalse(h.test(new Object()));
+    assertFalse(h.test(1));
+    assertFalse(h.test('t'));
   }
 
   @Test
@@ -42,12 +42,12 @@ public class HandlerTest {
       Condition c = new Condition("OMGWTFBBQ", scope);
       assertEquals(
         new UseValue("OK: OMGWTFBBQ"),
-        h.handle(c));
+        h.apply(c));
 
       Condition f = new Condition("FAIL", scope);
       assertEquals(
         new UseValue("FAIL!"),
-        h.handle(f));
+        h.apply(f));
     }
   }
 

@@ -32,8 +32,7 @@ public class LoggingFixture {
           .on(RetryWith.class, r -> { traceRestart("RetryWith"); return parseLogEntry(r.getText()); });
 
         Object signal = getSignal() != null ? getSignal() : new MalformedLogEntry(text);
-        Entry result = (Entry) scope.signal(signal);
-        return result;
+        return (Entry) scope.signal(signal);
       }
     } catch (RuntimeException e) {
       throw e;
@@ -66,7 +65,7 @@ public class LoggingFixture {
     }
   }
 
-  public List<AnalyzedEntry> analyzeLog(String filename) throws Exception {
+  public List<AnalyzedEntry> analyzeLog(String filename) {
     try (Scope scope = Scope.create()) {
       if (isAnalyzeLog()) {
         scope.handle(MalformedLogEntry.class, condition -> {
@@ -122,8 +121,8 @@ public class LoggingFixture {
   private Object signal;
   private Restart.Option restartOptionToUse;
 
-  private List<String> handlerTrace;
-  private List<String> restartTrace;
+  private final List<String> handlerTrace;
+  private final List<String> restartTrace;
 
   public LoggingFixture() {
     analyzeLog = false;
@@ -281,7 +280,7 @@ public class LoggingFixture {
   }
 
   public static class OneOffSignal {
-    private Entry value;
+    private final Entry value;
 
     public OneOffSignal(Entry value) {
       this.value = value;

@@ -21,21 +21,21 @@ public class RestartTest {
 
   @Test
   public void matches() {
-    assertTrue(r.matches(new UseValue("string")));
+    assertTrue(r.test(new UseValue("string")));
 
-    assertFalse(r.matches(null));
-    assertFalse(r.matches(new RetryWith("nope")));
+    assertFalse(r.test(null));
+    assertFalse(r.test(new RetryWith("nope")));
   }
 
   @Test
   public void run() {
     assertEquals(
       "OK: OMGWTFBBQ",
-      r.run(new UseValue("OMGWTFBBQ")));
+      r.apply(new UseValue("OMGWTFBBQ")));
 
     assertEquals(
       "FAIL!",
-      r.run(new UseValue("FAIL")));
+      r.apply(new UseValue("FAIL")));
   }
 
   private Object body(UseValue u) {

@@ -2,43 +2,40 @@ package org.sbrubbles.conditio;
 
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Handles {@link Condition conditions}, by selecting and returning the {@link Restart restart option} to use.
  */
-public interface Handler {
-  boolean accepts(Object signal);
-
-  Restart.Option handle(Condition c);
-
+public interface Handler extends Predicate<Object>, Function<Condition, Restart.Option> {
   class Impl implements Handler {
-    private final Class<?> checker;
+    private final Class<?> signalType;
     private final Function<Condition, Restart.Option> body;
     private final Scope scope;
 
-    public Impl(Class<?> checker, Function<Condition, Restart.Option> body, Scope scope) {
-      Objects.requireNonNull(checker, "checker");
+    public Impl(Class<?> signalType, Function<Condition, Restart.Option> body, Scope scope) {
+      Objects.requireNonNull(signalType, "signalType");
       Objects.requireNonNull(body, "body");
 
-      this.checker = checker;
+      this.signalType = signalType;
       this.body = body;
       this.scope = scope;
     }
 
     @Override
-    public boolean accepts(Object signal) {
-      return this.checker.isInstance(signal);
+    public boolean test(Object signal) {
+      return this.signalType.isInstance(signal);
     }
 
     @Override
-    public Restart.Option handle(Condition c) {
+    public Restart.Option apply(Condition c) {
       return this.body.apply(c);
     }
 
     @Override
     public String toString() {
       return "Handler.Impl{" +
-        "checker=" + checker +
+        "signalType=" + signalType +
         ", body=" + body +
         ", scope=" + scope +
         '}';
@@ -46,8 +43,8 @@ public interface Handler {
   }
 
   /**
-   * To be returned when a handler, for whatever reason, can't handle a particular condition. Then, other handlers,
-   * bound later, will have the chance to handle the condition.
+   * To be returned when a handler, for whatever reason, can't handle a particular condition. Other handlers,
+   * bound later in the stack, will have the chance to handle the condition.
    */
   Restart.Option SKIP = new Restart.Option() {
     @Override

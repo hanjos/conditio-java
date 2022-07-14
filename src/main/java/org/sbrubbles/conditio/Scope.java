@@ -83,12 +83,12 @@ public class Scope implements AutoCloseable {
     assert c != null;
 
     for (Handler h : getAllHandlers()) {
-      if (!h.accepts(c.getSignal())) {
+      if (!h.test(c.getSignal())) {
         continue;
       }
 
       // TODO Is null a valid restart option? It would work with runRestartWith... What would the semantics be?
-      Restart.Option restartOption = h.handle(c);
+      Restart.Option restartOption = h.apply(c);
       if (restartOption == Handler.SKIP) {
         continue;
       }
@@ -101,8 +101,8 @@ public class Scope implements AutoCloseable {
 
   private Object runRestartWith(Restart.Option restartOption) throws RestartNotFoundException {
     for (Restart r : getAllRestarts()) {
-      if (r.matches(restartOption)) {
-        return r.run(restartOption);
+      if (r.test(restartOption)) {
+        return r.apply(restartOption);
       }
     }
 
