@@ -22,7 +22,7 @@ public class Scope implements AutoCloseable {
   }
 
   // === main operations ===
-  public <T extends Restart.Option, S extends T> Scope on(Class<T> optionType, Function<S, ?> body) {
+  public <T extends Restart.Option, S extends T> Scope on(Class<S> optionType, Function<T, ?> body) {
     this.restarts.add(new Restart.Impl(optionType, body, this));
 
     return this;

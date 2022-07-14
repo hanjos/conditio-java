@@ -13,7 +13,7 @@ public interface Restart extends Predicate<Restart.Option>, Function<Restart.Opt
     private final Function<? extends Option, ?> body;
     private final Scope scope;
 
-    public <T extends Option, S extends T> Impl(Class<T> optionType, Function<S, ?> body, Scope scope) {
+    public <T extends Option, S extends T> Impl(Class<S> optionType, Function<T, ?> body, Scope scope) {
       Objects.requireNonNull(optionType, "optionType");
       Objects.requireNonNull(body, "body");
       Objects.requireNonNull(scope, "scope");

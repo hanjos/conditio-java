@@ -2,59 +2,115 @@ package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.sbrubbles.conditio.restarts.RetryWith;
 import org.sbrubbles.conditio.restarts.UseValue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RestartTest {
-  private Restart r;
+  private Restart rA;
+  private Restart rB;
 
   @BeforeEach
   public void setUp() {
-    try (Scope a = Scope.create()) {
-      r = new Restart.Impl(UseValue.class, this::body, a);
+    try (Scope scope = Scope.create()) {
+      rA = new Restart.Impl(A.class, this::body, scope);
+      rB = new Restart.Impl(B.class, this::body, scope);
     }
   }
 
   @Test
   public void nullParametersAreNotAllowed() {
-    try (Scope a = Scope.create()) {
+    try (Scope scope = Scope.create()) {
       assertThrows(NullPointerException.class,
-        () -> new Restart.Impl(null, this::body, a), "missing optionType");
+        () -> new Restart.Impl(null, this::body, scope), "missing optionType");
       assertThrows(NullPointerException.class,
-        () -> new Restart.Impl(UseValue.class, null, a), "missing body");
+        () -> new Restart.Impl(A.class, null, scope), "missing body");
       assertThrows(NullPointerException.class,
-        () -> new Restart.Impl(UseValue.class, this::body, null), "missing scope");
+        () -> new Restart.Impl(A.class, this::body, null), "missing scope");
       assertThrows(NullPointerException.class,
-        () -> new Restart.Impl(null, null, a), "missing both");
+        () -> new Restart.Impl(null, null, scope), "missing both");
     }
   }
 
   @Test
-  public void test() {
-    assertTrue(r.test(new UseValue("string")));
+  public void testForA() {
+    assertTrue(rA.test(new A("string")));
+    assertTrue(rA.test(new B("string")));
 
-    assertFalse(r.test(null));
-    assertFalse(r.test(new RetryWith("nope")));
+    assertFalse(rA.test(null));
+    assertFalse(rA.test(new UseValue("nope")));
+  }
+
+  @Test
+  public void testForB() {
+    assertTrue(rB.test(new B("string")));
+
+    assertFalse(rB.test(new A("string")));
+    assertFalse(rB.test(null));
+    assertFalse(rB.test(new UseValue("nope")));
   }
 
   @Test
   public void apply() {
     assertEquals(
       "OK: OMGWTFBBQ",
-      r.apply(new UseValue("OMGWTFBBQ")));
+      rA.apply(new A("OMGWTFBBQ")));
+
+    assertEquals(
+      "OK: OMGWTFBBQ",
+      rA.apply(new B("OMGWTFBBQ")));
 
     assertEquals(
       "FAIL!",
-      r.apply(new UseValue("FAIL")));
+      rA.apply(new A("FAIL")));
+
+    assertEquals(
+      "FAIL!",
+      rA.apply(new B("FAIL")));
   }
 
-  private Object body(UseValue u) {
-    if (!"FAIL".equals(u.getValue())) {
-      return "OK: " + u.getValue();
+  @Test
+  public void applyForB() {
+    assertThrows(
+      ClassCastException.class,
+      () -> { rB.apply(new A("OMGWTFBBQ")); });
+
+    assertThrows(
+      ClassCastException.class,
+      () -> { rB.apply(new UseValue("OMGWTFBBQ")); });
+
+    assertEquals(
+      "OK: OMGWTFBBQ",
+      rB.apply(new B("OMGWTFBBQ")));
+
+    assertEquals(
+      "FAIL!",
+      rB.apply(new B("FAIL")));
+  }
+
+  private Object body(A a) {
+    if (!"FAIL".equals(a.getValue())) {
+      return "OK: " + a.getValue();
     } else {
       return "FAIL!";
+    }
+  }
+
+  static class A implements Restart.Option {
+    private final Object value;
+
+    public A(Object value) {
+      this.value = value;
+    }
+
+    public Object getValue() {
+      return value;
+    }
+  }
+
+  static class B extends A {
+    public B(Object value) {
+      super(value);
     }
   }
 }
