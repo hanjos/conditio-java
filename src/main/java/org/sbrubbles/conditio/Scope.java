@@ -3,11 +3,47 @@ package org.sbrubbles.conditio;
 import java.util.*;
 import java.util.function.Function;
 
-public class Scope implements AutoCloseable {
+/**
+ * The <a href='https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html'>resource</a>
+ * responsible for handling {@linkplain Scope#signal(Object) signals} and managing the available
+ * {@linkplain Handler handlers} and {@linkplain Restart restarts}.
+ * <p></p>
+ * The constructor is private; instantiation is handled by {@link Scope#create()}, which, along with Java's
+ * try-with-resources, is used to create nested scopes and {@linkplain #close() leave them} when appropriate. As a
+ * consequence, calling {@literal Scope.create()} outside of a try-with-resource will break the nesting machinery.
+ * <p></p>
+ * The three main operations are:
+ *
+ * <ul>
+ *   <li>{@link #signal(Object)}, which signals that something happened via a condition;</li>
+ *   <li>{@link #handle(Class, Function)}, which registers a {@linkplain Handler handler} that handles conditions by
+ * choosing which {@linkplain Restart restart} to use; and</li>
+ *   <li>{@link #on(Class, Function)}, which registers a restart which provides a possible solution for the
+ *   condition.</li>
+ * </ul>
+ * <p>
+ * Expected usage:
+ * <pre>
+ *   try(Scope scope = Scope.create()) {
+ *     // register a new restart
+ *     scope.on(UseValue.class, u -> u.getValue());
+ *
+ *     // register a new handler
+ *     scope.handle(MalformedEntry.class, condition -> new UseValue("FAIL: " + condition.getSignal()));
+ *
+ *     // signal a condition
+ *     Object result = scope.signal(new MalformedEntry("NOOOOOOOO"));
+ *   }
+ * </pre>
+ *
+ * @see Condition
+ * @see Handler
+ * @see Restart
+ */
+public final class Scope implements AutoCloseable {
   // the current scope in execution
   private static Scope current = null;
 
-  // this scope's daddy
   private final Scope parent;
 
   private final List<Handler> handlers;
