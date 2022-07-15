@@ -151,9 +151,13 @@ public final class Scope implements AutoCloseable {
     return Collections.unmodifiableList(this.restarts);
   }
 
-  /*
+  /**
    * Searches for an active handler which can handle the given condition, from the inside (this scope) out
    * (the root scope). Returns the restart option selected.
+   *
+   * @param c a condition.
+   * @return the restart option selected.
+   * @throws HandlerNotFoundException if no handler was able to handle the given condition.
    */
   private Restart.Option selectRestartFor(Condition c) throws HandlerNotFoundException {
     assert c != null;
@@ -175,9 +179,13 @@ public final class Scope implements AutoCloseable {
     throw new HandlerNotFoundException(c.getSignal());
   }
 
-  /*
+  /**
    * Searches for an active restart which can take the given restart option, from the inside (this scope) out
    * (the root scope). Returns the result to be used in signal().
+   *
+   * @param restartOption identifies which restart to run, ands holds any data required for that restart's operation.
+   * @return the result to be returned by {@link #signal(Object) signal}.
+   * @throws RestartNotFoundException if no restart compatible with {@code restartOption} could be found.
    */
   private Object runRestartWith(Restart.Option restartOption) throws RestartNotFoundException {
     for (Restart r : getAllRestarts()) {
@@ -227,6 +235,9 @@ public final class Scope implements AutoCloseable {
   }
 }
 
+/**
+ * A single iterator to run through all values available in the active call stack.
+ */
 abstract class FullSearchIterator<T> implements Iterator<T> {
   private Iterator<T> currentIterator;
   private Scope currentScope;
@@ -236,6 +247,12 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
     this.currentIterator = getNextIteratorFrom(currentScope);
   }
 
+  /**
+   * Gets an iterator from {@code scope} holding the desired values.
+   *
+   * @param scope the new scope "holding" the desired values.
+   * @return the iterator "holding" the values in {@code scope}.
+   */
   abstract Iterator<T> getNextIteratorFrom(Scope scope);
 
   @Override
