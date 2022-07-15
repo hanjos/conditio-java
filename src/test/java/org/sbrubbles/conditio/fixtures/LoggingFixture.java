@@ -38,7 +38,7 @@ public class LoggingFixture {
             return parseLogEntry(r.getText());
           });
 
-        Condition c = getSignal() != null ? getSignal() : new MalformedLogEntry(text);
+        Condition c = getSignal() != null ? getSignal() : new MalformedLogEntry(text, scope);
         return (Entry) scope.signal(c);
       }
     } catch (RuntimeException e) {
@@ -193,7 +193,9 @@ public class LoggingFixture {
   public static class MalformedLogEntry extends Condition {
     private String text;
 
-    public MalformedLogEntry(String text) {
+    public MalformedLogEntry(String text, Scope scope) {
+      super(scope);
+
       this.text = text;
     }
 
@@ -289,7 +291,8 @@ public class LoggingFixture {
   public static class OneOff extends Condition {
     private final Entry value;
 
-    public OneOff(Entry value) {
+    public OneOff(Entry value, Scope scope) {
+      super(scope);
       this.value = value;
     }
 

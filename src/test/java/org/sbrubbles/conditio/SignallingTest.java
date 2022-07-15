@@ -78,21 +78,26 @@ public class SignallingTest {
 
   @Test
   public void readBadLogWithNoHandlingAtAll() throws Exception {
-    try {
-      fixture.logAnalyzer(BAD_LOG);
-      fail();
-    } catch (HandlerNotFoundException e) {
-      assertMalformedLogEntryEquals(
-        new MalformedLogEntry(badLine(2).getText()),
-        e.getCondition());
-      assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
+    try (Scope s = Scope.create()) {
+      MalformedLogEntry expected = new MalformedLogEntry(badLine(2).getText(), s);
+
+      try {
+        fixture.logAnalyzer(BAD_LOG);
+        fail();
+      } catch (HandlerNotFoundException e) {
+        assertMalformedLogEntryEquals(
+          expected,
+          e.getCondition());
+        assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
+      }
     }
   }
 
   @Test
   public void readBadLogWithNoHandlerFound() throws Exception {
-    try (Scope _ = Scope.create()) {
-      BasicCondition c = new BasicCondition("oops");
+    try (Scope s = Scope.create()) {
+      BasicCondition c = new BasicCondition("oops", s);
+
       fixture.setLogAnalyzer(true);
       fixture.setSignal(c); // won't match MalformedLogEntry
       fixture.setRestartOptionToUse(new UseValue(USE_VALUE_ENTRY)); // should never be called
@@ -141,9 +146,9 @@ public class SignallingTest {
 
   @Test
   public void skipHandlingACondition() throws Exception {
-    try (Scope _ = Scope.create()) {
+    try (Scope scope = Scope.create()) {
       final Entry SIGNAL_ENTRY = new Entry("OMG");
-      final OneOff CONDITION = new OneOff(SIGNAL_ENTRY);
+      final OneOff CONDITION = new OneOff(SIGNAL_ENTRY, scope);
 
       fixture.setSignal(CONDITION);
 

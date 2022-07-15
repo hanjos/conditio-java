@@ -217,15 +217,6 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * Returns the current scope in the call stack.
-   *
-   * @return the current scope in the call stack.
-   */
-  public static Scope current() {
-    return current;
-  }
-
-  /**
    * The {@link Scope} instance wrapping this one. May be {@code null} if this is the topmost {@code Scope}.
    *
    * @return the {@link Scope} instance wrapping this one, or {@code null} if this is a root scope.
