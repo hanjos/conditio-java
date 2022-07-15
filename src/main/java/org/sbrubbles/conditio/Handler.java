@@ -7,42 +7,42 @@ import java.util.function.Predicate;
 /**
  * Handles {@linkplain Condition conditions}, selecting the {@link Restart restart option} to use.
  * <p>
- * A handler can do two things: check if it can handle a given signal (with {@link #test(Object)}), and
+ * A handler can do two things: check if it can handle a given signal (with {@link #test(Condition)}), and
  * analyze a given condition, returning which restart should be used (with {@link #apply(Object)}). A handler
  * works both as a {@linkplain Predicate<Object> predicate} and as a
  * {@linkplain Function<Condition, Restart.Option> function}, so this interface extends both.
  */
-public interface Handler extends Predicate<Object>, Function<Condition, Restart.Option> {
+public interface Handler extends Predicate<Condition>, Function<Condition, Restart.Option> {
   class Impl implements Handler {
-    private final Class<?> signalType;
-    private final Function<Condition, Restart.Option> body;
+    private final Class<? extends Condition> conditionType;
+    private final Function<? extends Condition, Restart.Option> body;
     private final Scope scope;
 
-    public Impl(Class<?> signalType, Function<Condition, Restart.Option> body, Scope scope) {
-      Objects.requireNonNull(signalType, "signalType");
+    public <T extends Condition, S extends T> Impl(Class<S> conditionType, Function<T, Restart.Option> body, Scope scope) {
+      Objects.requireNonNull(conditionType, "conditionType");
       Objects.requireNonNull(body, "body");
       Objects.requireNonNull(scope, "scope");
 
-      this.signalType = signalType;
+      this.conditionType = conditionType;
       this.body = body;
       this.scope = scope;
     }
 
     @Override
-    public boolean test(Object signal) {
-      return getSignalType().isInstance(signal);
+    public boolean test(Condition condition) {
+      return getConditionType().isInstance(condition);
     }
 
     @Override
     public Restart.Option apply(Condition c) {
-      return getBody().apply(c);
+      return ((Function<Condition, Restart.Option>) getBody()).apply(c);
     }
 
-    public Class<?> getSignalType() {
-      return signalType;
+    public Class<? extends Condition> getConditionType() {
+      return conditionType;
     }
 
-    public Function<Condition, Restart.Option> getBody() {
+    public Function<? extends Condition, Restart.Option> getBody() {
       return body;
     }
 
@@ -53,7 +53,7 @@ public interface Handler extends Predicate<Object>, Function<Condition, Restart.
     @Override
     public String toString() {
       return "Handler.Impl{" +
-        "signalType=" + signalType +
+        "conditionType=" + conditionType +
         ", body=" + body +
         ", scope=" + scope +
         '}';

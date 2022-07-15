@@ -5,11 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.LoggingFixture;
 import org.sbrubbles.conditio.fixtures.LoggingFixture.AnalyzedEntry;
 import org.sbrubbles.conditio.fixtures.LoggingFixture.Entry;
 import org.sbrubbles.conditio.fixtures.LoggingFixture.MalformedLogEntry;
-import org.sbrubbles.conditio.fixtures.LoggingFixture.OneOffSignal;
+import org.sbrubbles.conditio.fixtures.LoggingFixture.OneOff;
 import org.sbrubbles.conditio.fixtures.SkipEntry;
 import org.sbrubbles.conditio.restarts.RetryWith;
 import org.sbrubbles.conditio.restarts.UseValue;
@@ -81,25 +82,28 @@ public class SignallingTest {
       fixture.logAnalyzer(BAD_LOG);
       fail();
     } catch (HandlerNotFoundException e) {
-      assertEquals(
+      assertMalformedLogEntryEquals(
         new MalformedLogEntry(badLine(2).getText()),
-        e.getSignal());
+        e.getCondition());
       assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
     }
   }
 
   @Test
   public void readBadLogWithNoHandlerFound() throws Exception {
-    fixture.setLogAnalyzer(true);
-    fixture.setSignal("oops"); // won't match MalformedLogEntry
-    fixture.setRestartOptionToUse(new UseValue(USE_VALUE_ENTRY)); // should never be called
+    try (Scope _ = Scope.create()) {
+      BasicCondition c = new BasicCondition("oops");
+      fixture.setLogAnalyzer(true);
+      fixture.setSignal(c); // won't match MalformedLogEntry
+      fixture.setRestartOptionToUse(new UseValue(USE_VALUE_ENTRY)); // should never be called
 
-    try {
-      fixture.logAnalyzer(BAD_LOG);
-      fail();
-    } catch (HandlerNotFoundException e) {
-      assertEquals("oops", e.getSignal());
-      assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
+      try {
+        fixture.logAnalyzer(BAD_LOG);
+        fail();
+      } catch (HandlerNotFoundException e) {
+        assertBasicConditionEquals(c, e.getCondition());
+        assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
+      }
     }
   }
 
@@ -137,23 +141,25 @@ public class SignallingTest {
 
   @Test
   public void skipHandlingACondition() throws Exception {
-    final Entry SIGNAL_ENTRY = new Entry("OMG");
-    final OneOffSignal SIGNAL = new OneOffSignal(SIGNAL_ENTRY);
+    try (Scope _ = Scope.create()) {
+      final Entry SIGNAL_ENTRY = new Entry("OMG");
+      final OneOff CONDITION = new OneOff(SIGNAL_ENTRY);
 
-    fixture.setSignal(SIGNAL);
+      fixture.setSignal(CONDITION);
 
-    List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
+      List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
 
-    assertEquals(
-      Arrays.asList(
-        new AnalyzedEntry(goodLine(1), BAD_LOG),
-        new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG),
-        new AnalyzedEntry(goodLine(3), BAD_LOG),
-        new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG)),
-      actual);
-    assertLinesMatch(
-      Arrays.asList("analyzeLog", "logAnalyzer", "analyzeLog", "logAnalyzer"),
-      fixture.getHandlerTrace());
+      assertEquals(
+        Arrays.asList(
+          new AnalyzedEntry(goodLine(1), BAD_LOG),
+          new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG),
+          new AnalyzedEntry(goodLine(3), BAD_LOG),
+          new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG)),
+        actual);
+      assertLinesMatch(
+        Arrays.asList("analyzeLog", "logAnalyzer", "analyzeLog", "logAnalyzer"),
+        fixture.getHandlerTrace());
+    }
   }
 
   // helpers
@@ -228,6 +234,20 @@ public class SignallingTest {
     );
   }
 
+  private static void assertBasicConditionEquals(BasicCondition expected, Condition actual) {
+    assertNotNull(actual);
+    assertEquals(BasicCondition.class, actual.getClass());
+
+    assertEquals(expected.getValue(), ((BasicCondition) actual).getValue());
+  }
+
+  private static void assertMalformedLogEntryEquals(MalformedLogEntry expected, Condition actual) {
+    assertNotNull(actual);
+    assertEquals(MalformedLogEntry.class, actual.getClass());
+
+    assertEquals(expected.getText(), ((MalformedLogEntry) actual).getText());
+  }
+
   static class UnknownRestartOption implements Restart.Option {
     private final Object value;
 
@@ -253,5 +273,4 @@ public class SignallingTest {
       return "BadRestartOption(" + value + ")";
     }
   }
-
 }

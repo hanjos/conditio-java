@@ -1,15 +1,15 @@
 package org.sbrubbles.conditio;
 
 public class HandlerNotFoundException extends RuntimeException {
-  private Object signal;
+  private Condition condition;
 
-  public HandlerNotFoundException(Object signal) {
-    super("No handler found for signal " + signal);
+  public HandlerNotFoundException(Condition condition) {
+    super("No handler found for condition " + condition);
 
-    this.signal = signal;
+    this.condition = condition;
   }
 
-  public Object getSignal() {
-    return signal;
+  public Condition getCondition() {
+    return condition;
   }
 }

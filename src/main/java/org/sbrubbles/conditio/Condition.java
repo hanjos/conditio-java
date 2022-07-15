@@ -1,20 +1,18 @@
 package org.sbrubbles.conditio;
 
 /**
- * Represents an exceptional situation, which needs to be signalled, {@link Handler handled} and
- * {@link Restart dealt with}, all of which may happen at different points in the stack.
+ * Represents an exceptional situation, which needs to be {@linkplain Scope#signal(Condition) signalled},
+ * {@linkplain Handler handled} and {@linkplain Restart dealt with}, all of which may happen at different points in
+ * the stack.
+ * <p>
+ * The constructor obtains and stores the current {@linkplain Scope scope}, so any condition should be created inside a
+ * try-with-resources.
  */
-public class Condition {
-  private final Object signal;
+public abstract class Condition {
   private final Scope scope;
 
-  public Condition(Object signal, Scope scope) {
-    this.signal = signal;
-    this.scope = scope;
-  }
-
-  public Object getSignal() {
-    return signal;
+  public Condition() {
+    this.scope = Scope.current();
   }
 
   public Scope getScope() {

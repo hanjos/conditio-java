@@ -1,6 +1,7 @@
 package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
+import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.util.List;
@@ -53,7 +54,7 @@ public class ScopeTest {
   public void getHandlersIsUnmodifiable() {
     try (Scope a = Scope.create()) {
       final List<Handler> hs = a.getHandlers();
-      final Handler h = new Handler.Impl(String.class, c -> new UseValue("test"), a);
+      final Handler h = new Handler.Impl(BasicCondition.class, c -> new UseValue("test"), a);
 
       assertThrows(UnsupportedOperationException.class, () -> hs.add(h));
       assertThrows(UnsupportedOperationException.class, () -> hs.remove(h));

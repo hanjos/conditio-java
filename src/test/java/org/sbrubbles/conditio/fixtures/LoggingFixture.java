@@ -1,5 +1,6 @@
 package org.sbrubbles.conditio.fixtures;
 
+import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Handler;
 import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
@@ -28,11 +29,17 @@ public class LoggingFixture {
         return new Entry(text);
       } else {
         scope
-          .on(UseValue.class, r -> { traceRestart("UseValue"); return r.getValue(); })
-          .on(RetryWith.class, r -> { traceRestart("RetryWith"); return parseLogEntry(r.getText()); });
+          .on(UseValue.class, r -> {
+            traceRestart("UseValue");
+            return r.getValue();
+          })
+          .on(RetryWith.class, r -> {
+            traceRestart("RetryWith");
+            return parseLogEntry(r.getText());
+          });
 
-        Object signal = getSignal() != null ? getSignal() : new MalformedLogEntry(text);
-        return (Entry) scope.signal(signal);
+        Condition c = getSignal() != null ? getSignal() : new MalformedLogEntry(text);
+        return (Entry) scope.signal(c);
       }
     } catch (RuntimeException e) {
       throw e;
@@ -74,7 +81,7 @@ public class LoggingFixture {
         });
       }
 
-      scope.handle(OneOffSignal.class, condition -> {
+      scope.handle(OneOff.class, condition -> {
         traceHandler("analyzeLog");
         return Handler.SKIP;
       });
@@ -100,9 +107,9 @@ public class LoggingFixture {
         });
       }
 
-      scope.handle(OneOffSignal.class, condition -> {
+      scope.handle(OneOff.class, condition -> {
         traceHandler("logAnalyzer");
-        return new UseValue(((OneOffSignal) condition.getSignal()).getValue());
+        return new UseValue(condition.getValue());
       });
 
       List<AnalyzedEntry> logs = new ArrayList<>();
@@ -118,7 +125,7 @@ public class LoggingFixture {
   private boolean analyzeLog;
   private boolean logAnalyzer;
 
-  private Object signal;
+  private Condition signal;
   private Restart.Option restartOptionToUse;
 
   private final List<String> handlerTrace;
@@ -159,11 +166,11 @@ public class LoggingFixture {
     this.logAnalyzer = logAnalyzer;
   }
 
-  public Object getSignal() {
+  public Condition getSignal() {
     return signal;
   }
 
-  public void setSignal(Object signal) {
+  public void setSignal(Condition signal) {
     this.signal = signal;
   }
 
@@ -183,8 +190,8 @@ public class LoggingFixture {
     return Collections.unmodifiableList(restartTrace);
   }
 
-  public static class MalformedLogEntry {
-    String text;
+  public static class MalformedLogEntry extends Condition {
+    private String text;
 
     public MalformedLogEntry(String text) {
       this.text = text;
@@ -279,28 +286,15 @@ public class LoggingFixture {
     }
   }
 
-  public static class OneOffSignal {
+  public static class OneOff extends Condition {
     private final Entry value;
 
-    public OneOffSignal(Entry value) {
+    public OneOff(Entry value) {
       this.value = value;
     }
 
     public Entry getValue() {
       return value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      OneOffSignal that = (OneOffSignal) o;
-      return Objects.equals(getValue(), that.getValue());
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(getValue());
     }
 
     @Override

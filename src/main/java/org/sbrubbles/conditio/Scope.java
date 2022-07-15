@@ -17,7 +17,7 @@ import java.util.function.Function;
  * <p></p>
  * The three main operations are:
  * <ul>
- *   <li>{@link #signal(Object)}, which signals that something happened, and (eventually) returns the result given by
+ *   <li>{@link #signal(Condition)}, which signals that something happened, and (eventually) returns the result given by
  *   the restart;</li>
  *   <li>{@link #handle(Class, Function)}, which establishes a handler that handles conditions by choosing which
  *   restart to use; and</li>
@@ -42,7 +42,6 @@ import java.util.function.Function;
  * @see <a href='https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html'>Beyond Exception Handling: Conditions and Restarts</a>
  */
 public final class Scope implements AutoCloseable {
-  // the current scope in execution
   private static Scope current = null;
 
   private final Scope parent;
@@ -50,7 +49,6 @@ public final class Scope implements AutoCloseable {
   private final List<Handler> handlers;
   private final List<Restart> restarts;
 
-  // private to ensure creation only via #create(), so that current is updated accordingly
   private Scope(Scope parent) {
     this.parent = parent;
 
@@ -63,7 +61,7 @@ public final class Scope implements AutoCloseable {
    *
    * @param optionType the type of {@linkplain Restart.Option restart options} accepted.
    * @param body       the code which will take an instance of {@code optionType} and generate the result to be returned in
-   *                   {@link #signal(Object)}.
+   *                   {@link #signal(Condition)}.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
   public <T extends Restart.Option, S extends T> Scope on(Class<S> optionType, Function<T, ?> body) {
@@ -75,13 +73,13 @@ public final class Scope implements AutoCloseable {
   /**
    * Establishes a new {@linkplain Handler handler} in this scope.
    *
-   * @param signalType the type of signals handled.
-   * @param body       the code which will take a {@linkplain Condition condition} wrapping the signal and return which
-   *                   restart should be used, as an instance of {@link Restart.Option}.
+   * @param conditionType the type of signals handled.
+   * @param body          the code which will take a {@linkplain Condition condition} wrapping the signal and return
+   *                      which restart should be used, as an instance of {@link Restart.Option}.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
-  public Scope handle(Class<?> signalType, Function<Condition, Restart.Option> body) {
-    this.handlers.add(new Handler.Impl(signalType, body, this));
+  public <T extends Condition, S extends T> Scope handle(Class<S> conditionType, Function<T, Restart.Option> body) {
+    this.handlers.add(new Handler.Impl(conditionType, body, this));
 
     return this;
   }
@@ -91,20 +89,22 @@ public final class Scope implements AutoCloseable {
    * <p></p>
    * This method will:
    * <ul>
-   *   <li>create a {@linkplain Condition condition};</li>
    *   <li>search for an {@linkplain Handler handler} to handle it, by deciding which restart
    *   {@linkplain Restart.Option to use}, and</li>
    *   <li>search for the selected {@linkplain Restart restart} and run it, returning its result.</li>
    * </ul>
    *
-   * @param signal represents a situation which code in higher levels in the call stack will decide how to handle.
+   * @param condition a condition, representing a situation which higher-level code in the call stack will decide how
+   *                  to handle.
    * @return the end result, as given by the selected restart.
-   * @throws HandlerNotFoundException If no available handler was able to handle this signal.
+   * @throws NullPointerException     If no condition was given.
+   * @throws HandlerNotFoundException If no available handler was able to handle this condition.
    * @throws RestartNotFoundException If the selected restart could not be found.
    */
-  public Object signal(Object signal) throws HandlerNotFoundException, RestartNotFoundException {
-    Condition c = new Condition(signal, this);
-    Restart.Option restartOption = selectRestartFor(c);
+  public Object signal(Condition condition) throws HandlerNotFoundException, RestartNotFoundException {
+    Objects.requireNonNull(condition, "condition");
+
+    Restart.Option restartOption = selectRestartFor(condition);
     return runRestartWith(restartOption);
   }
 
@@ -166,7 +166,7 @@ public final class Scope implements AutoCloseable {
     assert c != null;
 
     for (Handler h : getAllHandlers()) {
-      if (!h.test(c.getSignal())) {
+      if (!h.test(c)) {
         continue;
       }
 
@@ -179,7 +179,7 @@ public final class Scope implements AutoCloseable {
       return restartOption;
     }
 
-    throw new HandlerNotFoundException(c.getSignal());
+    throw new HandlerNotFoundException(c);
   }
 
   /**
@@ -187,7 +187,7 @@ public final class Scope implements AutoCloseable {
    * (the root scope). Returns the result to be used in signal().
    *
    * @param restartOption identifies which restart to run, ands holds any data required for that restart's operation.
-   * @return the result to be returned by {@link #signal(Object) signal}.
+   * @return the result to be returned by {@link #signal(Condition) signal}.
    * @throws RestartNotFoundException if no restart compatible with {@code restartOption} could be found.
    */
   private Object runRestartWith(Restart.Option restartOption) throws RestartNotFoundException {
@@ -208,6 +208,15 @@ public final class Scope implements AutoCloseable {
   public static Scope create() {
     current = new Scope(current);
 
+    return current;
+  }
+
+  /**
+   * Returns the current scope in the call stack.
+   *
+   * @return the current scope in the call stack.
+   */
+  public static Scope current() {
     return current;
   }
 
