@@ -13,7 +13,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public class LoggingFixture {
@@ -38,7 +38,7 @@ public class LoggingFixture {
             return parseLogEntry(r.getText());
           });
 
-        Condition c = getSignal() != null ? getSignal() : new MalformedLogEntry(text, scope);
+        Condition c = getConditionProvider().apply(scope, text);
         return (Entry) scope.signal(c);
       }
     } catch (RuntimeException e) {
@@ -125,7 +125,7 @@ public class LoggingFixture {
   private boolean analyzeLog;
   private boolean logAnalyzer;
 
-  private Condition signal;
+  private BiFunction<Scope, String, Condition> conditionProvider;
   private Restart.Option restartOptionToUse;
 
   private final List<String> handlerTrace;
@@ -135,7 +135,7 @@ public class LoggingFixture {
     analyzeLog = false;
     logAnalyzer = false;
 
-    signal = null;
+    conditionProvider = MalformedLogEntry::new;
     restartOptionToUse = null;
 
     handlerTrace = new ArrayList<>();
@@ -166,12 +166,12 @@ public class LoggingFixture {
     this.logAnalyzer = logAnalyzer;
   }
 
-  public Condition getSignal() {
-    return signal;
+  public BiFunction<Scope, String, Condition> getConditionProvider() {
+    return conditionProvider;
   }
 
-  public void setSignal(Condition signal) {
-    this.signal = signal;
+  public void setConditionProvider(BiFunction<Scope, String, Condition> provider) {
+    this.conditionProvider = provider;
   }
 
   public Restart.Option getRestartOptionToUse() {
@@ -190,119 +190,4 @@ public class LoggingFixture {
     return Collections.unmodifiableList(restartTrace);
   }
 
-  public static class MalformedLogEntry extends Condition {
-    private String text;
-
-    public MalformedLogEntry(String text, Scope scope) {
-      super(scope);
-
-      this.text = text;
-    }
-
-    public String getText() {
-      return text;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      MalformedLogEntry that = (MalformedLogEntry) o;
-      return Objects.equals(text, that.text);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(text);
-    }
-
-    @Override
-    public String toString() {
-      return "MalformedLogEntry(" + text + ")";
-    }
-  }
-
-  public static class Entry {
-    String text;
-
-    public Entry(String text) {
-      this.text = text;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      Entry entry = (Entry) o;
-      return Objects.equals(text, entry.text);
-    }
-
-    public String getText() {
-      return text;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(text);
-    }
-
-    @Override
-    public String toString() {
-      return "ENTRY: " + text;
-    }
-  }
-
-  public static class AnalyzedEntry {
-    Entry entry;
-    String filename;
-
-    public AnalyzedEntry(Entry entry, String filename) {
-      this.entry = entry;
-      this.filename = filename;
-    }
-
-    public Entry getEntry() {
-      return entry;
-    }
-
-    public String getFilename() {
-      return filename;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      AnalyzedEntry that = (AnalyzedEntry) o;
-      return Objects.equals(entry, that.entry) && Objects.equals(filename, that.filename);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(entry, filename);
-    }
-
-    @Override
-    public String toString() {
-      return "ANALYZED(" + filename + "): " + entry;
-    }
-  }
-
-  public static class OneOff extends Condition {
-    private final Entry value;
-
-    public OneOff(Entry value, Scope scope) {
-      super(scope);
-      this.value = value;
-    }
-
-    public Entry getValue() {
-      return value;
-    }
-
-    @Override
-    public String toString() {
-      return "OneOffSignal(" + value + ")";
-    }
-  }
 }

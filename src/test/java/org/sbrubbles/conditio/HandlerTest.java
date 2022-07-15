@@ -30,7 +30,7 @@ public class HandlerTest {
   @Test
   public void test() {
     try (Scope scope = Scope.create()) {
-      assertTrue(h.test(new BasicCondition("string", scope)));
+      assertTrue(h.test(new BasicCondition(scope, "string")));
       assertFalse(h.test(null));
     }
   }
@@ -38,12 +38,12 @@ public class HandlerTest {
   @Test
   public void apply() {
     try (Scope scope = Scope.create()) {
-      Condition c = new BasicCondition("OMGWTFBBQ", scope);
+      Condition c = new BasicCondition(scope, "OMGWTFBBQ");
       assertEquals(
         new UseValue("OK: OMGWTFBBQ"),
         h.apply(c));
 
-      Condition f = new BasicCondition("FAIL", scope);
+      Condition f = new BasicCondition(scope, "FAIL");
       assertEquals(
         new UseValue("FAIL!"),
         h.apply(f));
