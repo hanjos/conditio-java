@@ -5,7 +5,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Handles {@link Condition conditions}, by selecting and returning the {@link Restart restart option} to use.
+ * Handles {@linkplain Condition conditions}, selecting the {@link Restart restart option} to use.
+ * <p>
+ * A handler can do two things: check if it can handle a given signal (with {@link #test(Object)}), and
+ * analyze a given condition, returning which restart should be used (with {@link #apply(Object)}). A handler
+ * works both as a {@linkplain Predicate<Object> predicate} and as a
+ * {@linkplain Function<Condition, Restart.Option> function}, so this interface extends both.
  */
 public interface Handler extends Predicate<Object>, Function<Condition, Restart.Option> {
   class Impl implements Handler {

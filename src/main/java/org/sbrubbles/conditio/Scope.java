@@ -10,16 +10,18 @@ import java.util.function.Function;
  * <p></p>
  * The constructor is private; instantiation is handled by {@link Scope#create()}, which, along with Java's
  * try-with-resources, is used to create nested scopes and {@linkplain #close() leave them} when appropriate. As a
- * consequence, calling {@literal Scope.create()} outside of a try-with-resource will break the nesting machinery.
+ * consequence, calling {@code Scope.create()} without {@code close}ing it properly will <b>break</b> the nesting
+ * machinery; please do not do so :( Just use it only in a try-with-resources, and you'll be fine :)
  * <p></p>
  * The three main operations are:
  *
  * <ul>
- *   <li>{@link #signal(Object)}, which signals that something happened via a condition;</li>
+ *   <li>{@link #signal(Object)}, which signals that something happened, and (eventually) returns the result given by
+ *   the restart;</li>
  *   <li>{@link #handle(Class, Function)}, which registers a {@linkplain Handler handler} that handles conditions by
- * choosing which {@linkplain Restart restart} to use; and</li>
- *   <li>{@link #on(Class, Function)}, which registers a restart which provides a possible solution for the
- *   condition.</li>
+ *   choosing which {@linkplain Restart restart} to use; and</li>
+ *   <li>{@link #on(Class, Function)}, which registers a restart, which (when selected), provides the desired result
+ *   for the condition.</li>
  * </ul>
  * <p>
  * Expected usage:
@@ -31,14 +33,12 @@ import java.util.function.Function;
  *     // register a new handler
  *     scope.handle(MalformedEntry.class, condition -> new UseValue("FAIL: " + condition.getSignal()));
  *
- *     // signal a condition
+ *     // signal a condition, and waits for the result
  *     Object result = scope.signal(new MalformedEntry("NOOOOOOOO"));
  *   }
  * </pre>
  *
- * @see Condition
- * @see Handler
- * @see Restart
+ * @see <a href='https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html'>Beyond Exception Handling: Conditions and Restarts</a>
  */
 public final class Scope implements AutoCloseable {
   // the current scope in execution
@@ -57,26 +57,59 @@ public final class Scope implements AutoCloseable {
     this.restarts = new ArrayList<>();
   }
 
-  // === main operations ===
+  /**
+   * Establishes a new {@linkplain Restart restart} in this scope.
+   *
+   * @param optionType The type of {@linkplain Restart.Option restart options} accepted.
+   * @param body       The code which will take an instance of {@code optionType} and generate the result to be returned in
+   *                   {@link #signal(Object)}.
+   * @throws NullPointerException If one or both parameters are {@code null}.
+   */
   public <T extends Restart.Option, S extends T> Scope on(Class<S> optionType, Function<T, ?> body) {
     this.restarts.add(new Restart.Impl(optionType, body, this));
 
     return this;
   }
 
+  /**
+   * Establishes a new {@linkplain Handler handler} in this scope.
+   *
+   * @param signalType The type of signals handled.
+   * @param body       The code which will take a {@linkplain Condition condition} wrapping the signal and return which
+   *                   restart should be used, as an instance of {@link Restart.Option}.
+   * @throws NullPointerException If one or both parameters are {@code null}.
+   */
   public Scope handle(Class<?> signalType, Function<Condition, Restart.Option> body) {
     this.handlers.add(new Handler.Impl(signalType, body, this));
 
     return this;
   }
 
+  /**
+   * Called to signal something of interest, which the currently running code doesn't know how to handle. This method
+   * will:
+   * <ul>
+   *   <li>create a {@linkplain Condition condition} to store the signal;</li>
+   *   <li>search for an active {@linkplain Handler handler} in the call stack to decide which restart to call; and</li>
+   *   <li>search for the selected {@linkplain Restart restart}, and run it, returning its result.</li>
+   * </ul>
+   *
+   * @param signal Something of interest, which code in higher levels in the call stack will decide how to handle.
+   * @return The result given by the selected restart.
+   * @throws HandlerNotFoundException If no active handler was able to handle this signal.
+   * @throws RestartNotFoundException If the selected restart could not be found.
+   */
   public Object signal(Object signal) throws HandlerNotFoundException, RestartNotFoundException {
     Condition c = new Condition(signal, this);
     Restart.Option restartOption = selectRestartFor(c);
     return runRestartWith(restartOption);
   }
 
-  // === scope search ===
+  /**
+   * An iterable to get all active handlers in the call stack, starting from this instance to the root scope.
+   *
+   * @return An iterable to get all active handlers in the call stack.
+   */
   public Iterable<Handler> getAllHandlers() {
     return () -> new FullSearchIterator<Handler>(this) {
       @Override
@@ -86,6 +119,11 @@ public final class Scope implements AutoCloseable {
     };
   }
 
+  /**
+   * An iterable to get all active restarts in the call stack, starting from this instance to the root scope.
+   *
+   * @return An iterable to get all active restarts in the call stack.
+   */
   public Iterable<Restart> getAllRestarts() {
     return () -> new FullSearchIterator<Restart>(this) {
       @Override
@@ -95,14 +133,28 @@ public final class Scope implements AutoCloseable {
     };
   }
 
+  /**
+   * An unmodifiable view of the active handlers in this scope.
+   *
+   * @return The active handlers in this scope, in an unmodifiable list.
+   */
   public List<Handler> getHandlers() {
     return Collections.unmodifiableList(this.handlers);
   }
 
+  /**
+   * An unmodifiable view of the active restarts in this scope.
+   *
+   * @return The active restarts in this scope, in an unmodifiable list.
+   */
   public List<Restart> getRestarts() {
     return Collections.unmodifiableList(this.restarts);
   }
 
+  /*
+   * Searches for an active handler which can handle the given condition, from the inside (this scope) out
+   * (the root scope). Returns the restart option selected.
+   */
   private Restart.Option selectRestartFor(Condition c) throws HandlerNotFoundException {
     assert c != null;
 
@@ -123,6 +175,10 @@ public final class Scope implements AutoCloseable {
     throw new HandlerNotFoundException(c.getSignal());
   }
 
+  /*
+   * Searches for an active restart which can take the given restart option, from the inside (this scope) out
+   * (the root scope). Returns the result to be used in signal().
+   */
   private Object runRestartWith(Restart.Option restartOption) throws RestartNotFoundException {
     for (Restart r : getAllRestarts()) {
       if (r.test(restartOption)) {
@@ -132,8 +188,6 @@ public final class Scope implements AutoCloseable {
 
     throw new RestartNotFoundException(restartOption);
   }
-
-  // === scope management ===
 
   /**
    * Creates and returns a new {@link Scope} instance, keeping track of the current {@code scope} in... well, scope :)
