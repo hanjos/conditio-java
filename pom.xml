@@ -68,6 +68,7 @@
           <version>true</version>
           <show>protected</show>
           <doclint>none</doclint>
+          <stylesheetfile>prettier.css</stylesheetfile>
         </configuration>
       </plugin>
     </plugins>
