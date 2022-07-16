@@ -16,6 +16,12 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+/**
+ * A baseline test bed, inspired by Practical Common Lisp's
+ * <a href="https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html">logging example</a>.
+ * <p>
+ * It's a pretty decent usage example, if somewhat distorted by the instrumentation and shunts added for the tests.
+ */
 public class LoggingFixture {
   private static final Entry SKIP_ENTRY = new Entry(null);
 
@@ -38,6 +44,7 @@ public class LoggingFixture {
             return parseLogEntry(r.getText());
           });
 
+        // here would be where you create a condition and signal it
         Condition c = getConditionProvider().apply(scope, text);
         return (Entry) scope.signal(c);
       }
@@ -74,6 +81,8 @@ public class LoggingFixture {
 
   public List<AnalyzedEntry> analyzeLog(String filename) {
     try (Scope scope = Scope.create()) {
+      // this flag's here to test handling in different scopes, but it's actually a pretty good demonstration: since
+      // this isn't a language construct, handlers can be established dynamically
       if (isAnalyzeLog()) {
         scope.handle(MalformedLogEntry.class, condition -> {
           traceHandler("analyzeLog");
@@ -121,7 +130,7 @@ public class LoggingFixture {
     }
   }
 
-  // data for test purposes
+  // test machinery
   private boolean analyzeLog;
   private boolean logAnalyzer;
 

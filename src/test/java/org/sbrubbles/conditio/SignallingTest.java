@@ -63,11 +63,16 @@ public class SignallingTest {
     fixture.setRestartOptionToUse(restartOption);
 
     List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
+    String handlerMethodName = handlerOption.getMethodName();
+    String restartName = restartOption.getClass().getSimpleName();
 
     assertEquals(expected, actual);
     assertLinesMatch( // the handler gets called once for each bad line in the log; in bad.txt, there's two
-      Arrays.asList(handlerOption.getMethodName(), handlerOption.getMethodName()),
+      Arrays.asList(handlerMethodName, handlerMethodName),
       fixture.getHandlerTrace());
+    assertLinesMatch(
+      Arrays.asList(restartName, restartName),
+      fixture.getRestartTrace());
   }
 
   @Test
@@ -76,13 +81,13 @@ public class SignallingTest {
       fixture.logAnalyzer(BAD_LOG);
       fail();
     } catch (HandlerNotFoundException e) {
-
       Condition actual = e.getCondition();
       assertNotNull(actual);
       assertEquals(MalformedLogEntry.class, actual.getClass());
       assertEquals(badLine(2).getText(), ((MalformedLogEntry) actual).getText());
 
       assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
+      assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
     }
   }
 
@@ -104,6 +109,7 @@ public class SignallingTest {
       assertEquals(VALUE, ((BasicCondition) actual).getValue());
 
       assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
+      assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
     }
   }
 
@@ -117,7 +123,9 @@ public class SignallingTest {
       fail();
     } catch (RestartNotFoundException e) {
       assertNull(e.getRestartOption());
+
       assertLinesMatch(Arrays.asList("logAnalyzer"), fixture.getHandlerTrace());
+      assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
     }
   }
 
@@ -132,10 +140,10 @@ public class SignallingTest {
       fixture.logAnalyzer(BAD_LOG);
       fail();
     } catch (RestartNotFoundException e) {
-      assertEquals(
-        UNKNOWN_RESTART_OPTION,
-        e.getRestartOption());
+      assertEquals(UNKNOWN_RESTART_OPTION, e.getRestartOption());
+
       assertLinesMatch(Arrays.asList("logAnalyzer"), fixture.getHandlerTrace());
+      assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
     }
   }
 
@@ -143,7 +151,6 @@ public class SignallingTest {
   public void skipHandlingACondition() throws Exception {
     try (Scope scope = Scope.create()) {
       final Entry SIGNAL_ENTRY = new Entry("OMG");
-      final OneOff CONDITION = new OneOff(scope, SIGNAL_ENTRY);
 
       fixture.setConditionProvider((s, str) -> new OneOff(s, SIGNAL_ENTRY));
 
@@ -159,6 +166,9 @@ public class SignallingTest {
       assertLinesMatch(
         Arrays.asList("analyzeLog", "logAnalyzer", "analyzeLog", "logAnalyzer"),
         fixture.getHandlerTrace());
+      assertLinesMatch(
+        Arrays.asList("UseValue", "UseValue"),
+        fixture.getRestartTrace());
     }
   }
 
