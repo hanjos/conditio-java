@@ -10,34 +10,32 @@ import java.util.function.Function;
  * <p></p>
  * Instantiation is handled by {@link Scope#create()}, which, along with Java's
  * try-with-resources, is used to create nested scopes and {@linkplain #close() leave them} when appropriate. As a
- * consequence, this class creates and manages a stack of nested {@code Scope}s, and provides operations to search
+ * consequence, this class creates and manages a stack of nested {@code Scope}s, and provides ways to search
  * for handlers and restarts throughout this stack.
  * <p></p>
  * Also as a consequence, calling {@code Scope.create()} without {@code close}ing it properly will <b>break</b> the
- * nesting machinery. Please do not do so :(
- * <p></p>
- * Use it only in a try-with-resources, and you'll be fine :)
+ * nesting machinery. Use it only in a try-with-resources, and you'll be fine :)
  * <p></p>
  * The three main operations are:
  * <ul>
- *   <li>{@link #signal(Condition)}, which signals that something happened, and (eventually) returns the result given by
+ *   <li>{@link #signal(Condition)}: signals that something happened, and (eventually) returns the result given by
  *   the restart;</li>
- *   <li>{@link #handle(Class, Function)}, which establishes a handler that handles conditions by choosing which
+ *   <li>{@link #handle(Class, Function)}: establishes a handler that deals with conditions by choosing which
  *   restart to use; and</li>
- *   <li>{@link #on(Class, Function)}, which establishes a restart, which (when selected), provides the desired result
+ *   <li>{@link #on(Class, Function)}: establishes a restart, which (when selected), provides the desired result
  *   for the condition.</li>
  * </ul>
  * <p>
  * Example of expected usage:
  * <pre>
  *   try(Scope scope = Scope.create()) {
- *     // register a new restart
+ *     // establish a new restart
  *     scope.on(UseValue.class, u -&gt; u.getValue());
  *
- *     // register a new handler
+ *     // establish a new handler
  *     scope.handle(MalformedEntry.class, condition -&gt; new UseValue("FAIL: " + condition.getSignal()));
  *
- *     // signal a condition, and wait for the result
+ *     // maybe here, maybe deep in the call stack: signal a condition, and wait for the result
  *     Object result = (Entry) scope.signal(new MalformedEntry("NOOOOOOOO"));
  *   }
  * </pre>
@@ -86,7 +84,7 @@ public final class Scope implements AutoCloseable {
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
-  public <T extends Condition, S extends T> Scope handle(Class<S> conditionType, Function<T, Restart.Option> body) {
+  public <T extends Condition, S extends T> Scope handle(Class<S> conditionType, Function<T, ? extends Restart.Option> body) {
     this.handlers.add(new Handler.Impl(conditionType, body, this));
 
     return this;

@@ -24,7 +24,7 @@ public interface Handler extends Predicate<Condition>, Function<Condition, Resta
    */
   class Impl implements Handler {
     private final Class<? extends Condition> conditionType;
-    private final Function<? extends Condition, Restart.Option> body;
+    private final Function<? extends Condition, ? extends Restart.Option> body;
     private final Scope scope;
 
     /**
@@ -35,7 +35,7 @@ public interface Handler extends Predicate<Condition>, Function<Condition, Resta
      * @param scope         the {@link Scope} instance where this handler was created.
      * @throws NullPointerException if any of the arguments are {@code null}.
      */
-    public <T extends Condition, S extends T> Impl(Class<S> conditionType, Function<T, Restart.Option> body, Scope scope) {
+    public <T extends Condition, S extends T> Impl(Class<S> conditionType, Function<T, ? extends Restart.Option> body, Scope scope) {
       Objects.requireNonNull(conditionType, "conditionType");
       Objects.requireNonNull(body, "body");
       Objects.requireNonNull(scope, "scope");
@@ -52,14 +52,14 @@ public interface Handler extends Predicate<Condition>, Function<Condition, Resta
 
     @Override
     public Restart.Option apply(Condition c) {
-      return ((Function<Condition, Restart.Option>) getBody()).apply(c);
+      return (Restart.Option) ((Function) getBody()).apply(c);
     }
 
     public Class<? extends Condition> getConditionType() {
       return conditionType;
     }
 
-    public Function<? extends Condition, Restart.Option> getBody() {
+    public Function<? extends Condition, ? extends Restart.Option> getBody() {
       return body;
     }
 
