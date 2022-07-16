@@ -37,12 +37,15 @@ import java.util.function.Function;
  *     // register a new handler
  *     scope.handle(MalformedEntry.class, condition -&gt; new UseValue("FAIL: " + condition.getSignal()));
  *
- *     // signal a condition, and waits for the result
+ *     // signal a condition, and wait for the result
  *     Object result = (Entry) scope.signal(new MalformedEntry("NOOOOOOOO"));
  *   }
  * </pre>
  *
  * @see <a href='https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html'>Beyond Exception Handling: Conditions and Restarts</a>
+ * @see Condition
+ * @see Handler
+ * @see Restart
  */
 public final class Scope implements AutoCloseable {
   private static Scope current = null;

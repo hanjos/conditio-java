@@ -11,7 +11,12 @@ import java.util.function.Predicate;
  * analyze a given condition, returning which restart should be used (with {@link #apply(Object)}).
  * <p>
  * Since a handler works both as a {@linkplain Predicate<Object> predicate} and as a
- * {@linkplain Function<Condition, Restart.Option> function}, this interface extends both.
+ * {@linkplain Function function}, this interface extends both.
+ *
+ * @see Condition
+ * @see Restart.Option
+ * @see Restart
+ * @see Scope
  */
 public interface Handler extends Predicate<Condition>, Function<Condition, Restart.Option> {
   /**
