@@ -4,8 +4,6 @@ import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Handler;
 import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
-import org.sbrubbles.conditio.restarts.RetryWith;
-import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

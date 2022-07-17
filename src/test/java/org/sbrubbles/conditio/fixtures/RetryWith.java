@@ -1,8 +1,8 @@
-package org.sbrubbles.conditio.restarts;
+package org.sbrubbles.conditio.fixtures;
 
 import org.sbrubbles.conditio.Restart;
 
-public class RetryWith implements Restart.Option{
+public class RetryWith implements Restart.Option {
   private final String text;
 
   public RetryWith(String text) {
@@ -15,6 +15,6 @@ public class RetryWith implements Restart.Option{
 
   @Override
   public String toString() {
-    return "ReparseWith(" + text + ")";
+    return "RetryWith(" + text + ")";
   }
 }

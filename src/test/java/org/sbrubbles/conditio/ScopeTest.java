@@ -2,7 +2,7 @@ package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.restarts.UseValue;
+import org.sbrubbles.conditio.fixtures.UseValue;
 
 import java.util.List;
 
