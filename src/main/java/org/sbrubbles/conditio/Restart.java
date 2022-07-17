@@ -4,8 +4,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Provides a recovery strategy for conditions. It takes a restart option, which also holds useful data for the
- * recovery, and computes the end result to be returned by {@link Scope#signal(Condition) Scope.signal}.
+ * Provides a recovery strategy for conditions. It takes a restart option, which typically also holds useful data for
+ * the recovery, and computes the end result to be returned.
  * <p>
  * Similarly to a handler, a restart can do two things: check if it accepts a given restart option (with
  * {@link #test(Object)}), and analyze said option, producing the end result. Since it works both as a

@@ -8,18 +8,17 @@ import java.util.function.Function;
  * responsible for managing the signalling machinery and the available handlers and restarts.
  * <p></p>
  * Its instantiation is handled by {@link Scope#create()}, which, along with Java's {@code try-with-resources},
- * is used to create nested scopes and {@linkplain #close() leave them} when appropriate. As a
- * consequence, this class creates and manages a stack of nested {@code Scope}s, and provides ways to search
- * for handlers and restarts throughout this stack.
+ * is used to create nested scopes and {@linkplain #close() leave them} when appropriate. This class creates and manages
+ * a stack of nested {@code Scope}s, and provides ways to search for handlers and restarts throughout this stack.
  * <p></p>
- * Also as a consequence, calling {@code Scope.create()} without {@code close}ing it properly will <b>break</b> the
- * nesting. Use it only in a {@code try-with-resources}, and you'll be fine :)
+ * As a consequence, calling {@code Scope.create()} without {@code close}ing it properly will <strong>break</strong>
+ * the nesting. Use it only in a {@code try-with-resources}, and you'll be fine :)
  * <p></p>
  * The three main operations are:
  * <ul>
  *   <li>{@link #signal(Condition)}: signals that something happened, and (eventually) returns the result given by
  *   the restart;</li>
- *   <li>{@link #handle(Class, Function)}: establishes a handler, that deals with conditions by choosing which
+ *   <li>{@link #handle(Class, Function)}: establishes a handler, which deals with conditions by choosing which
  *   restart to use; and</li>
  *   <li>{@link #on(Class, Function)}: establishes a restart, which provides the end result for {@code signal}.</li>
  * </ul>
@@ -27,29 +26,31 @@ import java.util.function.Function;
  * Example of usage:
  * <pre>
  *   try(Scope scope = Scope.create()) {
- *     // establish a new restart
- *     scope.on(UseValue.class, u -&gt; u.getValue());
- *
  *     // establish a new handler
- *     scope.handle(MalformedEntry.class, condition -&gt; new UseValue("FAIL: " + condition.getEntry()));
+ *     scope.handle(MalformedEntry.class, c -&gt; new UseValue(new Entry("FAIL: " + c.getText())));
  *
- *     // signal a condition, and wait for the result
- *     Object result = (Entry) scope.signal(new MalformedEntry(scope, "NOOOOOOOO"));
+ *     // ...somewhere deeper in the call stack...
+ *     try(Scope scope = Scope.create()) {
+ *       // establish a new restart
+ *       scope.on(UseValue.class, u -&gt; u.getValue());
  *
- *     // carry on...
+ *       // ...somewhere deeper still...
+ *       try(Scope scope = Scope.create()) {
+ *         // signal a condition, and wait for the result
+ *         Entry entry = (Entry) scope.signal(new MalformedEntry(scope, "NOOOOOOOO"));
+ *
+ *         // carry on...
+ *       }
+ *     }
  *   }
  * </pre>
  * <p>
- * Of course, although all three operations <em>can</em> be in the same scope, the common case is for each call, or at
+ * Although all three operations <em>can</em> be in the same scope, the common case is for each one, or at
  * least {@code handle}, to happen at different points in the stack.
- * <p>
- * This class is kind of like Common Lisp's {@code restart-case}; for {@code handler-case}, I guess there's already
- * {@code try/catch} ;)
  *
  * @see Condition
  * @see Handler
  * @see Restart
- * @see <a href='https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html'>Beyond Exception Handling: Conditions and Restarts</a>
  */
 public final class Scope implements AutoCloseable {
   private static Scope current = null;
@@ -213,9 +214,9 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * Creates and returns a new {@link Scope} instance. Keeps track of the current {@code scope} in... well, scope :)
+   * Creates and returns a new instance, nested in the (now former) current scope.
    *
-   * @return a new instance of {@link Scope}.
+   * @return a new instance.
    */
   public static Scope create() {
     current = new Scope(current);

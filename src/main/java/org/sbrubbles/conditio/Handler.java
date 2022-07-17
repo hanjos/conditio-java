@@ -22,8 +22,8 @@ import java.util.function.Predicate;
  */
 public interface Handler extends Predicate<Condition>, Function<Condition, Restart.Option> {
   /**
-   * Returned when a handler, for whatever reason, can't handle a particular condition. By returning this, other
-   * handlers, bound later in the stack, will have the chance to handle the condition.
+   * Returned when a handler, for whatever reason, opts to not handle a particular condition. By returning this, other
+   * handlers, bound later in the stack, will have the chance instead.
    */
   Restart.Option SKIP = new Restart.Option() {
     @Override
