@@ -4,8 +4,7 @@ A simple condition system for Java, without dynamic variables or reflection wiza
 
 ## What
 
-In a nutshell, exception systems deal with exceptional situations by dividing responsibilities in two parts: _
-signalling_ the exception (like `throw`), and _handling_ it (like `try/catch`). The problem with this setup is, by the
+In a nutshell, exception systems deal with exceptional situations by dividing responsibilities in two parts: _signalling_ the exception (like `throw`), and _handling_ it (like `try/catch`). The problem with this setup is, by the
 time the error reaches the right handler, the context that signalled the exception is mostly gone, because the call
 stack unwinds until the handler is found. This limits the recovery options available.
 
