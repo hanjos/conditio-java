@@ -2,6 +2,8 @@
 
 A simple condition system for Java, without dynamic variables or reflection wizardry.
 
+## What?
+
 In a nutshell, exception systems deal with exceptional situations by dividing responsibilities in two parts:
 _signalling_ the exception (like `throw`), and _handling_ it (like `try/catch`).
 The problem with this setup is, by the time the error reaches the right handler, the context that signalled the
@@ -20,6 +22,27 @@ be of interest to code at different levels on the call stack.
 [Practical Common Lisp][pract-cl], informs much of the descriptions (as one can plainly see; I hope he doesn't mind :),
 terminology and tests.
 
+## Why?
+
+Although Common Lisp and at
+least [some](https://github.com/clojureman/special) [Clojure](https://github.com/pangloss/pure-conditioning) [libraries](https://github.com/bwo/conditions)
+use dynamic variables, Java has nothing of the sort. But it occurred to me one day that
+Java's [`try-with-resources`](https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html) would
+be enough for a simple condition/restart system. So I gave it a shot :)
+
+## How?
+
+`try-with-resources` for the win: `Scope` is a resource which nests and closes scopes as execution enters and
+leaves `try` clauses, and provides a place to hang the signalling, handling and restarting machinery.
+
+## Usage?
+
+Basically, [Maven](https://maven.apache.org/) (or Gradle; anything compatible with Maven repos, really)
+and [GitHub Packages](https://docs.github.com/en/packages/guides/configuring-apache-maven-for-use-with-github-packages).
+The badges above should provide links.
+
 [beh-cl]: https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html
+
 [pract-cl]: https://gigamonkeys.com/book/
+
 [vLatest]: https://sbrubbles.org/conditio-java/docs/0.1.0/apidocs/index.html
