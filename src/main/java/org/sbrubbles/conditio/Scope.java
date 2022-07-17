@@ -5,15 +5,15 @@ import java.util.function.Function;
 
 /**
  * The <a href='https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html'>resource</a>
- * responsible for managing the signalling machinery and all available handlers and restarts.
+ * responsible for managing the signalling machinery and the available handlers and restarts.
  * <p></p>
- * Instantiation is handled by {@link Scope#create()}, which, along with Java's
- * try-with-resources, is used to create nested scopes and {@linkplain #close() leave them} when appropriate. As a
+ * Its instantiation is handled by {@link Scope#create()}, which, along with Java's {@code try-with-resources},
+ * is used to create nested scopes and {@linkplain #close() leave them} when appropriate. As a
  * consequence, this class creates and manages a stack of nested {@code Scope}s, and provides ways to search
  * for handlers and restarts throughout this stack.
  * <p></p>
  * Also as a consequence, calling {@code Scope.create()} without {@code close}ing it properly will <b>break</b> the
- * nesting machinery. Use it only in a try-with-resources, and you'll be fine :)
+ * nesting. Use it only in a {@code try-with-resources}, and you'll be fine :)
  * <p></p>
  * The three main operations are:
  * <ul>
@@ -21,8 +21,7 @@ import java.util.function.Function;
  *   the restart;</li>
  *   <li>{@link #handle(Class, Function)}: establishes a handler, that deals with conditions by choosing which
  *   restart to use; and</li>
- *   <li>{@link #on(Class, Function)}: establishes a restart, which (when selected), provides the desired result
- *   for {@code signal}.</li>
+ *   <li>{@link #on(Class, Function)}: establishes a restart, which provides the end result for {@code signal}.</li>
  * </ul>
  * <p>
  * Example of usage:
@@ -32,7 +31,7 @@ import java.util.function.Function;
  *     scope.on(UseValue.class, u -&gt; u.getValue());
  *
  *     // establish a new handler
- *     scope.handle(MalformedEntry.class, condition -&gt; new UseValue("FAIL: " + condition.getSignal()));
+ *     scope.handle(MalformedEntry.class, condition -&gt; new UseValue("FAIL: " + condition.getEntry()));
  *
  *     // signal a condition, and wait for the result
  *     Object result = (Entry) scope.signal(new MalformedEntry(scope, "NOOOOOOOO"));
@@ -44,7 +43,7 @@ import java.util.function.Function;
  * Of course, although all three operations <em>can</em> be in the same scope, the common case is for each call, or at
  * least {@code handle}, to happen at different points in the stack.
  * <p>
- * This class is somewhat like Common Lisp's {@code restart-case}. For {@code handler-case}, I guess there's already
+ * This class is kind of like Common Lisp's {@code restart-case}; for {@code handler-case}, I guess there's already
  * {@code try/catch} ;)
  *
  * @see Condition
