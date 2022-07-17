@@ -4,11 +4,10 @@ A simple condition system for Java, without dynamic variables or reflection wiza
 
 ## What?
 
-In a nutshell, exception systems deal with exceptional situations by dividing responsibilities in two parts:
-_signalling_ the exception (like `throw`), and _handling_ it (like `try/catch`).
-The problem with this setup is, by the time the error reaches the right handler, the context that signalled the
-exception is mostly gone, because the call stack unwinds until the handler is found. This limits the recovery options
-available.
+In a nutshell, exception systems deal with exceptional situations by dividing responsibilities in two parts: _
+signalling_ the exception (like `throw`), and _handling_ it (like `try/catch`). The problem with this setup is, by the
+time the error reaches the right handler, the context that signalled the exception is mostly gone, because the call
+stack unwinds until the handler is found. This limits the recovery options available.
 
 A condition system, like the one in Common Lisp, provides a more general solution, by splitting the responsibilities
 in _three_ parts: _signalling_ the condition, _handling_ it, and _restarting_ execution. The call stack is unwound only
@@ -37,9 +36,9 @@ leaves `try` clauses, and provides a place to hang the signalling, handling and 
 
 ## Usage?
 
-Basically, [Maven](https://maven.apache.org/) (or Gradle; anything compatible with Maven repos, really)
-and [GitHub Packages](https://docs.github.com/en/packages/guides/configuring-apache-maven-for-use-with-github-packages).
-The badges above should provide links.
+Basically, Maven (or Gradle; anything compatible with Maven repos, really)
+and [GitHub Packages](https://docs.github.com/en/packages/guides/configuring-apache-maven-for-use-with-github-packages)
+for the actual [repo](https://github.com/hanjos/conditio-java/packages/1543701).
 
 [beh-cl]: https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html
 
