@@ -7,23 +7,23 @@ import org.sbrubbles.conditio.restarts.UseValue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class HandlerTest {
+public class HandlerImplTest {
   private Handler h;
 
   @BeforeEach
   public void setUp() {
-    try(Scope a = Scope.create()) {
-      h = new Handler.Impl(BasicCondition.class, this::body, a);
+    try (Scope a = Scope.create()) {
+      h = new HandlerImpl(BasicCondition.class, this::body, a);
     }
   }
 
   @Test
   public void nullParametersAreNotAllowed() {
     try(Scope scope = Scope.create()) {
-      assertThrows(NullPointerException.class, () -> new Handler.Impl(null, this::body, scope), "missing signalType");
-      assertThrows(NullPointerException.class, () -> new Handler.Impl(BasicCondition.class, null, scope), "missing body");
-      assertThrows(NullPointerException.class, () -> new Handler.Impl(BasicCondition.class, this::body, null), "missing scope");
-      assertThrows(NullPointerException.class, () -> new Handler.Impl(null, null, scope), "missing both");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl(null, this::body, scope), "missing conditionType");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl(BasicCondition.class, null, scope), "missing body");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl(BasicCondition.class, this::body, null), "missing scope");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl(null, null, scope), "missing both");
     }
   }
 

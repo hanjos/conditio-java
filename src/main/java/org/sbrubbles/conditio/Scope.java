@@ -70,7 +70,7 @@ public final class Scope implements AutoCloseable {
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
   public <T extends Restart.Option, S extends T> Scope on(Class<S> optionType, Function<T, ?> body) {
-    this.restarts.add(new Restart.Impl(optionType, body, this));
+    this.restarts.add(new RestartImpl(optionType, body, this));
 
     return this;
   }
@@ -85,7 +85,7 @@ public final class Scope implements AutoCloseable {
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
   public <T extends Condition, S extends T> Scope handle(Class<S> conditionType, Function<T, ? extends Restart.Option> body) {
-    this.handlers.add(new Handler.Impl(conditionType, body, this));
+    this.handlers.add(new HandlerImpl(conditionType, body, this));
 
     return this;
   }
@@ -242,6 +242,7 @@ public final class Scope implements AutoCloseable {
   public void close() {
     current = getParent();
   }
+
 }
 
 /**
@@ -290,5 +291,114 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
     }
 
     return this.currentIterator.next();
+  }
+}
+
+
+/**
+ * A simple implementation of {@link Handler}, which delegates its functionality to its attributes.
+ */
+class HandlerImpl implements Handler {
+  private final Class<? extends Condition> conditionType;
+  private final Function<? extends Condition, ? extends Restart.Option> body;
+  private final Scope scope;
+
+  /**
+   * Creates a new instance, ensuring statically that the given parameters are type-compatible.
+   *
+   * @param conditionType the type of {@link Condition} this handler expects.
+   * @param body          a function which receives a condition and returns the restart to use.
+   * @param scope         the {@link Scope} instance where this handler was created.
+   * @throws NullPointerException if any of the arguments are {@code null}.
+   */
+  public <T extends Condition, S extends T> HandlerImpl(Class<S> conditionType, Function<T, ? extends Restart.Option> body, Scope scope) {
+    Objects.requireNonNull(conditionType, "conditionType");
+    Objects.requireNonNull(body, "body");
+    Objects.requireNonNull(scope, "scope");
+
+    this.conditionType = conditionType;
+    this.body = body;
+    this.scope = scope;
+  }
+
+  @Override
+  public boolean test(Condition condition) {
+    return getConditionType().isInstance(condition);
+  }
+
+  @Override
+  public Restart.Option apply(Condition c) {
+    return (Restart.Option) ((Function) getBody()).apply(c);
+  }
+
+  public Class<? extends Condition> getConditionType() {
+    return conditionType;
+  }
+
+  public Function<? extends Condition, ? extends Restart.Option> getBody() {
+    return body;
+  }
+
+  public Scope getScope() {
+    return scope;
+  }
+
+  @Override
+  public String toString() {
+    return "HandlerImpl{" +
+      "conditionType=" + conditionType +
+      ", body=" + body +
+      ", scope=" + scope +
+      '}';
+  }
+}
+
+/**
+ * A simple implementation of {@link Restart}, which delegates its functionality to its attributes.
+ */
+class RestartImpl implements Restart {
+  private final Class<? extends Option> optionType;
+  private final Function<? extends Option, ?> body;
+  private final Scope scope;
+
+  /**
+   * Creates a new instance, ensuring statically that the given parameters are type-compatible.
+   *
+   * @param optionType the type of {@link Option} this restart expects.
+   * @param body       a function which receives a restart option and returns the result of
+   *                   {@link Scope#signal(Condition) signal}.
+   * @param scope      the {@link Scope} instance where this restart was created.
+   * @throws NullPointerException if any of the arguments are {@code null}.
+   */
+  public <T extends Option, S extends T> RestartImpl(Class<S> optionType, Function<T, ?> body, Scope scope) {
+    Objects.requireNonNull(optionType, "optionType");
+    Objects.requireNonNull(body, "body");
+    Objects.requireNonNull(scope, "scope");
+
+    this.optionType = optionType;
+    this.body = body;
+    this.scope = scope;
+  }
+
+  @Override
+  public boolean test(Option data) {
+    return getOptionType().isInstance(data);
+  }
+
+  @Override
+  public Object apply(Option data) {
+    return ((Function) getBody()).apply(data);
+  }
+
+  public Class<? extends Option> getOptionType() {
+    return optionType;
+  }
+
+  public Function<? extends Option, ?> getBody() {
+    return body;
+  }
+
+  public Scope getScope() {
+    return scope;
   }
 }

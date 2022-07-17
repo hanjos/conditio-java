@@ -1072,7 +1072,7 @@ body {
 div.block, .deprecationBlock, .contentContainer .description dl dd, .contentContainer .details dl dd,
 .serializedFormContainer dl dd {
   font-family: Georgia, Times, "Times New Roman", "Noto Serif", "Droid Serif", serif;
-  font-size: 1rem;
+  font-size: 1em;
 }
 
 pre, code, tt {
@@ -1084,12 +1084,16 @@ a:link, a:visited {
   color: #5486A6; /* lighten(nav color, 10%) */
 }
 
+td.colFirst, th.colFirst {
+  font-size: 1em;
+}
+
 .methodSignature {
   /* white-space: revert; // splits parameters and exceptions in separate lines */
   font-size: 1rem;
 }
 
-main {
+main, div.header {
   margin: 0 auto;
   max-width: 1280px;
 }
