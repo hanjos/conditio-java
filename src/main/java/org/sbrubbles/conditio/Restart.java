@@ -4,14 +4,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Provides a strategy to deal with {@linkplain Condition conditions}.
+ * Provides a recovery strategy for conditions. It takes a restart option, which holds useful data for the recovery,
+ * and computes an end result, to be returned by {@link Scope#signal(Condition) Scope.signal}.
  * <p>
  * Similarly to a handler, a restart can do two things: check if it accepts a given restart option (with
- * {@link #test(Object)}), and analyze said option, producing the result to be returned by
- * {@link Scope#signal(Condition) Scope.signal}.
- * <p>
- * Since a restart works both as a {@linkplain Predicate predicate} and as a {@linkplain Function function}, this
- * interface extends both.
+ * {@link #test(Object)}), and analyze said option, producing the end result. Since it works both as a
+ * {@linkplain Predicate predicate} and as a {@linkplain Function function}, this interface extends both.
  *
  * @see Condition
  * @see Restart.Option
@@ -19,7 +17,10 @@ import java.util.function.Predicate;
  */
 public interface Restart extends Predicate<Restart.Option>, Function<Restart.Option, Object> {
   /**
-   * A marker interface, implemented by all valid restart options.
+   * Serves as input for restarts, and a way to select which restart to use; basically, the earliest-bound one in the
+   * stack which {@linkplain Restart#test(Object) accepts} it.
+   * <p>
+   * This is merely a marker interface; implementations typically hold extra fields and data.
    */
   interface Option { /**/ }
 }

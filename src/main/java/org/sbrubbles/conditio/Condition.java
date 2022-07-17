@@ -3,11 +3,14 @@ package org.sbrubbles.conditio;
 import java.util.Objects;
 
 /**
- * Conditions represent exceptional situations, which the running code doesn't know how to deal with. They are meant to
- * be {@linkplain Scope#signal(Condition) signalled}, an operation which will search for and run recovery code in the
- * {@linkplain Scope call stack} to provide a result. Therefore, conditions should only be created inside a scope.
+ * Represents an unusual situation, which the running code doesn't know how to deal with. Conditions are meant to
+ * be {@linkplain Scope#signal(Condition) signalled}; therefore, they should only be created inside a
+ * {@linkplain Scope scope}.
  * <p>
- * This class provides some common behaviors for conditions, and is intended to be subclassed.
+ * Since signalling doesn't unwind the stack (unless that was the recovery strategy selected), a condition is more
+ * general than an exception, and enables strategies and protocols for things other than error handling.
+ * <p>
+ * This is the superclass of all conditions.
  *
  * @see Scope
  */

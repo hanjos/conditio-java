@@ -5,8 +5,7 @@ import java.util.function.Function;
 
 /**
  * The <a href='https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html'>resource</a>
- * responsible for managing all the signalling machinery and the available {@linkplain Handler handlers} and
- * {@linkplain Restart restarts}.
+ * responsible for managing the signalling machinery and all available handlers and restarts.
  * <p></p>
  * Instantiation is handled by {@link Scope#create()}, which, along with Java's
  * try-with-resources, is used to create nested scopes and {@linkplain #close() leave them} when appropriate. As a
@@ -20,13 +19,13 @@ import java.util.function.Function;
  * <ul>
  *   <li>{@link #signal(Condition)}: signals that something happened, and (eventually) returns the result given by
  *   the restart;</li>
- *   <li>{@link #handle(Class, Function)}: establishes a handler that deals with conditions by choosing which
+ *   <li>{@link #handle(Class, Function)}: establishes a handler, that deals with conditions by choosing which
  *   restart to use; and</li>
  *   <li>{@link #on(Class, Function)}: establishes a restart, which (when selected), provides the desired result
- *   for the condition.</li>
+ *   for {@code signal}.</li>
  * </ul>
  * <p>
- * Example of expected usage:
+ * Example of usage:
  * <pre>
  *   try(Scope scope = Scope.create()) {
  *     // establish a new restart
@@ -35,15 +34,23 @@ import java.util.function.Function;
  *     // establish a new handler
  *     scope.handle(MalformedEntry.class, condition -&gt; new UseValue("FAIL: " + condition.getSignal()));
  *
- *     // maybe here, maybe deep in the call stack: signal a condition, and wait for the result
- *     Object result = (Entry) scope.signal(new MalformedEntry("NOOOOOOOO"));
+ *     // signal a condition, and wait for the result
+ *     Object result = (Entry) scope.signal(new MalformedEntry(scope, "NOOOOOOOO"));
+ *
+ *     // carry on...
  *   }
  * </pre>
+ * <p>
+ * Of course, although all three operations <em>can</em> be in the same scope, the common case is for each call, or at
+ * least {@code handle}, to happen at different points in the stack.
+ * <p>
+ * This class is somewhat like Common Lisp's {@code restart-case}. For {@code handler-case}, I guess there's already
+ * {@code try/catch} ;)
  *
- * @see <a href='https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html'>Beyond Exception Handling: Conditions and Restarts</a>
  * @see Condition
  * @see Handler
  * @see Restart
+ * @see <a href='https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html'>Beyond Exception Handling: Conditions and Restarts</a>
  */
 public final class Scope implements AutoCloseable {
   private static Scope current = null;
