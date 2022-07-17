@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,8 +51,8 @@ public class SignallingTest {
 
   @ParameterizedTest
   @MethodSource("handleBadLogProvider")
-  public void handleBadLog(HandlerOption handlerOption, Restart.Option restartOption, List<AnalyzedEntry> expected) throws Exception {
-    switch (handlerOption) {
+  public void handleBadLog(ExpectedHandler expectedHandler, ExpectedRestart expectedRestart, List<AnalyzedEntry> expectedEntries, Restart.Option restartOption) throws Exception {
+    switch (expectedHandler) {
       case LOG_ANALYZER:
         fixture.setLogAnalyzer(true);
         break;
@@ -63,15 +64,16 @@ public class SignallingTest {
     fixture.setRestartOptionToUse(restartOption);
 
     List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
-    String handlerMethodName = handlerOption.getMethodName();
-    String restartName = restartOption.getClass().getSimpleName();
+    String handlerMethodName = expectedHandler.getMethodName();
+    String restartOptionName = expectedRestart.getRestartName();
 
-    assertEquals(expected, actual);
+
+    assertEquals(expectedEntries, actual);
     assertLinesMatch( // the handler gets called once for each bad line in the log; in bad.txt, there's two
       Arrays.asList(handlerMethodName, handlerMethodName),
       fixture.getHandlerTrace());
     assertLinesMatch(
-      Arrays.asList(restartName, restartName),
+      Arrays.asList(restartOptionName, restartOptionName),
       fixture.getRestartTrace());
   }
 
@@ -147,29 +149,28 @@ public class SignallingTest {
     }
   }
 
-  @Test
-  public void skipHandlingACondition() throws Exception {
-    try (Scope scope = Scope.create()) {
-      final Entry SIGNAL_ENTRY = new Entry("OMG");
+  @ParameterizedTest
+  @MethodSource("skipHandlingProvider")
+  public void skipHandling(final BiFunction<Scope, Entry, Condition> conditionBuilder) throws Exception {
+    final Entry SIGNAL_ENTRY = new Entry("OMG");
 
-      fixture.setConditionProvider((s, str) -> new OneOff(s, SIGNAL_ENTRY));
+    fixture.setConditionProvider((s, str) -> conditionBuilder.apply(s, SIGNAL_ENTRY));
 
-      List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
+    List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
 
-      assertEquals(
-        Arrays.asList(
-          new AnalyzedEntry(goodLine(1), BAD_LOG),
-          new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG),
-          new AnalyzedEntry(goodLine(3), BAD_LOG),
-          new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG)),
-        actual);
-      assertLinesMatch(
-        Arrays.asList("analyzeLog", "logAnalyzer", "analyzeLog", "logAnalyzer"),
-        fixture.getHandlerTrace());
-      assertLinesMatch(
-        Arrays.asList("UseValue", "UseValue"),
-        fixture.getRestartTrace());
-    }
+    assertEquals(
+      Arrays.asList(
+        new AnalyzedEntry(goodLine(1), BAD_LOG),
+        new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG),
+        new AnalyzedEntry(goodLine(3), BAD_LOG),
+        new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG)),
+      actual);
+    assertLinesMatch(
+      Arrays.asList("analyzeLog", "logAnalyzer", "analyzeLog", "logAnalyzer"),
+      fixture.getHandlerTrace());
+    assertLinesMatch(
+      Arrays.asList("UseValue", "UseValue"),
+      fixture.getRestartTrace());
   }
 
   // helpers
@@ -181,12 +182,12 @@ public class SignallingTest {
     return new Entry(String.format("%04d FAIL", line));
   }
 
-  enum HandlerOption {
+  enum ExpectedHandler {
     LOG_ANALYZER("logAnalyzer"), ANALYZE_LOG("analyzeLog");
 
     private final String methodName;
 
-    HandlerOption(String methodName) {
+    ExpectedHandler(String methodName) {
       this.methodName = methodName;
     }
 
@@ -195,52 +196,97 @@ public class SignallingTest {
     }
   }
 
+  enum ExpectedRestart {
+    USE_VALUE("UseValue"), RETRY_WITH("RetryWith"), SKIP_ENTRY("SkipEntry");
+
+    private final String restartName;
+
+    ExpectedRestart(String restartName) {
+      this.restartName = restartName;
+    }
+
+    public String getRestartName() {
+      return restartName;
+    }
+  }
+
   static Stream<Arguments> handleBadLogProvider() {
     return Stream.of(
       arguments(
-        HandlerOption.LOG_ANALYZER,
-        new UseValue(USE_VALUE_ENTRY),
+        ExpectedHandler.LOG_ANALYZER,
+        ExpectedRestart.USE_VALUE,
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
           new AnalyzedEntry(goodLine(3), BAD_LOG),
-          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG))),
+          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
+        new UseValue(USE_VALUE_ENTRY)),
       arguments(
-        HandlerOption.ANALYZE_LOG,
-        new UseValue(USE_VALUE_ENTRY),
+        ExpectedHandler.ANALYZE_LOG,
+        ExpectedRestart.USE_VALUE,
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
           new AnalyzedEntry(goodLine(3), BAD_LOG),
-          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG))),
+          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
+        new UseValue(USE_VALUE_ENTRY)),
       arguments(
-        HandlerOption.LOG_ANALYZER,
-        new RetryWith(FIXED_TEXT),
+        ExpectedHandler.LOG_ANALYZER,
+        ExpectedRestart.USE_VALUE,
+        Arrays.asList(
+          new AnalyzedEntry(goodLine(1), BAD_LOG),
+          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
+          new AnalyzedEntry(goodLine(3), BAD_LOG),
+          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
+        new SonOfUseValue(USE_VALUE_ENTRY)),
+      arguments(
+        ExpectedHandler.ANALYZE_LOG,
+        ExpectedRestart.USE_VALUE,
+        Arrays.asList(
+          new AnalyzedEntry(goodLine(1), BAD_LOG),
+          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
+          new AnalyzedEntry(goodLine(3), BAD_LOG),
+          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
+        new SonOfUseValue(USE_VALUE_ENTRY)),
+      arguments(
+        ExpectedHandler.LOG_ANALYZER,
+        ExpectedRestart.RETRY_WITH,
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
           new AnalyzedEntry(FIXED_ENTRY, BAD_LOG),
           new AnalyzedEntry(goodLine(3), BAD_LOG),
-          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG))),
+          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG)),
+        new RetryWith(FIXED_TEXT)),
       arguments(
-        HandlerOption.ANALYZE_LOG,
-        new RetryWith(FIXED_TEXT),
+        ExpectedHandler.ANALYZE_LOG,
+        ExpectedRestart.RETRY_WITH,
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
           new AnalyzedEntry(FIXED_ENTRY, BAD_LOG),
           new AnalyzedEntry(goodLine(3), BAD_LOG),
-          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG))),
+          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG)),
+        new RetryWith(FIXED_TEXT)),
       arguments(
-        HandlerOption.LOG_ANALYZER,
-        new SkipEntry(),
+        ExpectedHandler.LOG_ANALYZER,
+        ExpectedRestart.SKIP_ENTRY,
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
-          new AnalyzedEntry(goodLine(3), BAD_LOG))),
+          new AnalyzedEntry(goodLine(3), BAD_LOG)),
+        new SkipEntry()),
       arguments(
-        HandlerOption.ANALYZE_LOG,
-        new SkipEntry(),
+        ExpectedHandler.ANALYZE_LOG,
+        ExpectedRestart.SKIP_ENTRY,
         Arrays.asList(
           new AnalyzedEntry(goodLine(1), BAD_LOG),
-          new AnalyzedEntry(goodLine(3), BAD_LOG)))
+          new AnalyzedEntry(goodLine(3), BAD_LOG)),
+        new SkipEntry())
+    );
+  }
+
+  static Stream<BiFunction<Scope, Entry, Condition>> skipHandlingProvider() {
+    return Stream.of(
+      OneOff::new,
+      SonOfOneOff::new
     );
   }
 

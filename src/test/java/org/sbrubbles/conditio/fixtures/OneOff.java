@@ -17,6 +17,6 @@ public class OneOff extends Condition {
 
   @Override
   public String toString() {
-    return "OneOffSignal(" + value + ")";
+    return "OneOff(" + value + ")";
   }
 }
