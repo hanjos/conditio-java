@@ -8,11 +8,11 @@ Exception systems divide responsibilities in two parts: _signalling_ the excepti
 
 A condition system, like the one in Common Lisp, provides a more general solution by splitting responsibilities in _three_ parts: _signalling_ the condition, _handling_ it, and _restarting_ execution. The call stack is unwound only if that was the handling strategy chosen; it doesn't have to be. This enables novel recovery strategies and protocols, and can be used for things other than error handling.
 
-[Beyond Exception Handling: Conditions and Restarts][beh-cl], chapter 19 of Peter Seibel's [Practical Common Lisp][pract-cl], informs much of the descriptions (as one can plainly see; I hope he doesn't mind :), terminology and tests.
+[Beyond Exception Handling: Conditions and Restarts][beh-cl], chapter 19 of Peter Seibel's [Practical Common Lisp][pract-cl], informs much of the descriptions (as one can plainly see; I hope he doesn't mind :grin:), terminology and tests.
 
 ## Why
 
-Although Common Lisp and atleast [some](https://github.com/clojureman/special) [Clojure](https://github.com/pangloss/pure-conditioning) [libraries](https://github.com/bwo/conditions) use dynamic variables, Java has nothing of the sort. But it occurred to me one day that Java's [`try-with-resources`](https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html) would be enough for a simple condition/restart system. So I gave it a shot :)
+Although Common Lisp and at least [some](https://github.com/clojureman/special) [Clojure](https://github.com/pangloss/pure-conditioning) [libraries](https://github.com/bwo/conditions) use dynamic variables, Java has nothing of the sort. But it occurred to me one day that Java's [`try-with-resources`](https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html) would be enough for a simple condition/restart system. So I gave it a shot :shrug:
 
 ## How
 
@@ -21,7 +21,7 @@ Although Common Lisp and atleast [some](https://github.com/clojureman/special) [
 ```Java
 public void analyzeLog(String filename) throws Exception {
   try(Scope scope = Scope.create()) {
-    // establish a handler, which picks a restart to use
+    // establish a handler, which here picked a restart to use
     scope.handle(MalformedLogEntry.class, (condition, s) -> s.restart(new RetryWith("...")));
 
     // load file content and parse it
