@@ -62,6 +62,7 @@ public class SignallingTest {
     fixture.setRestartOptionToUse(restartOption);
 
     List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
+
     String handlerTrace = expectedHandler.getMethodName() + ": " + MalformedLogEntry.class.getSimpleName();
     String restartOptionTrace = expectedRestart.getRestartName();
 
@@ -76,14 +77,13 @@ public class SignallingTest {
 
   @Test
   public void readBadLogWithNoHandlingAtAll() throws Exception {
+    final MalformedLogEntry expectedCondition = new MalformedLogEntry(badLine(2).getText());
+
     try {
       fixture.logAnalyzer(BAD_LOG);
       fail();
     } catch (HandlerNotFoundException e) {
-      Condition actual = e.getCondition();
-      assertNotNull(actual);
-      assertEquals(MalformedLogEntry.class, actual.getClass());
-      assertEquals(badLine(2).getText(), ((MalformedLogEntry) actual).getText());
+      assertEquals(expectedCondition, e.getCondition());
 
       assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
       assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
@@ -92,20 +92,17 @@ public class SignallingTest {
 
   @Test
   public void readBadLogWithNoHandlerFound() throws Exception {
-    final String VALUE = "oops";
+    final Condition expectedCondition = new BasicCondition("oops");
 
     fixture.setLogAnalyzer(true);
-    fixture.setConditionProvider(str -> new BasicCondition(VALUE)); // won't match MalformedLogEntry
+    fixture.setConditionProvider(str -> expectedCondition); // won't match MalformedLogEntry
     fixture.setRestartOptionToUse(new UseValue(USE_VALUE_ENTRY)); // should never be called
 
     try {
       fixture.logAnalyzer(BAD_LOG);
       fail();
     } catch (HandlerNotFoundException e) {
-      Condition actual = e.getCondition();
-      assertNotNull(actual);
-      assertEquals(BasicCondition.class, actual.getClass());
-      assertEquals(VALUE, ((BasicCondition) actual).getValue());
+      assertEquals(expectedCondition, e.getCondition());
 
       assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
       assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
