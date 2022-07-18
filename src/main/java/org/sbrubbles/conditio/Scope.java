@@ -17,7 +17,7 @@ import java.util.function.Function;
  * <p></p>
  * The main operations are:
  * <ul>
- *   <li>{@link #signal(Condition)}: signals that something happened, and (eventually) returns the result ;</li>
+ *   <li>{@link #signal(Condition)}: signals that something happened, and (eventually) returns the result;</li>
  *   <li>{@link #handle(Class, BiFunction)}: establishes a handler, which deals with conditions by either directly
  *   providing an end result for {@code signal} or choosing a restart to do so;</li>
  *   <li>{@link #on(Class, Function)}: establishes a restart, which can provide a result;
@@ -28,17 +28,17 @@ import java.util.function.Function;
  * Usage in practice should look something like this:
  * <pre>
  *   try(Scope scope = Scope.create()) {
- *     // establish a new handler
+ *     // establishing a new handler, which delegates the work to a RetryWith-compatible restart
  *     scope.handle(MalformedEntry.class, (c, s) -&gt; s.restart(new RetryWith("FAIL: " + c.getText())));
  *
  *     // ...somewhere deeper in the call stack...
  *     try(Scope scope = Scope.create()) {
- *       // establish a new restart
+ *       // establishing a new restart
  *       scope.on(RetryWith.class, r -&gt; func(r.getValue()));
  *
  *       // ...somewhere deeper still...
  *       try(Scope scope = Scope.create()) {
- *         // signal a condition, and wait for the result
+ *         // signals a condition, and waits for the result
  *         Entry entry = (Entry) scope.signal(new MalformedEntry(scope, "NOOOOOOOO"));
  *
  *         // carry on...
@@ -99,10 +99,10 @@ public final class Scope implements AutoCloseable {
 
   /**
    * Signals a situation which the currently running code doesn't know how to handle. This method will search for
-   * a compatible {@linkplain Handler handler}, using this instance as the scope of origin, and return its result.
+   * a compatible {@linkplain Handler handler} and run it with this instance as the scope of origin, returning the
+   * result.
    *
-   * @param condition a condition, representing a situation which higher-level code in the call stack will decide how
-   *                  to handle.
+   * @param condition a condition, representing a situation which higher-level code will decide how to handle.
    * @return the end result, as given by the handler.
    * @throws NullPointerException     if no condition was given.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
@@ -127,8 +127,7 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * Searches for a restart which accepts the given restart option, from the inside (this scope) out
-   * (the root scope), and runs it.
+   * Searches for a restart compatible with the given option, starting from this scope, and runs it.
    *
    * @param restartOption identifies which restart to run, and holds any data required for that restart's operation.
    * @return the result of the found restart's execution.
@@ -173,7 +172,7 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * An unmodifiable view of the active handlers in this scope.
+   * The active handlers in this scope.
    *
    * @return the active handlers in this scope, in an unmodifiable list.
    */
@@ -182,7 +181,7 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * An unmodifiable view of the active restarts in this scope.
+   * The active restarts in this scope.
    *
    * @return the active restarts in this scope, in an unmodifiable list.
    */
