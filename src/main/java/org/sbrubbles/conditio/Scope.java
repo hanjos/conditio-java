@@ -18,23 +18,23 @@ import java.util.function.Function;
  * The main operations are:
  * <ul>
  *   <li>{@link #signal(Condition)}: signals that something happened, and (eventually) returns the result ;</li>
- *   <li>{@link #handle(Class, Function)}: establishes a handler, which deals with conditions by either providing an
- *   end result for {@code signal} or choosing a restart to do so;</li>
- *   <li>{@link #on(Class, Function)}: establishes a restart, which can provide and end result for {@code signal};
+ *   <li>{@link #handle(Class, BiFunction)}: establishes a handler, which deals with conditions by either directly
+ *   providing an end result for {@code signal} or choosing a restart to do so;</li>
+ *   <li>{@link #on(Class, Function)}: establishes a restart, which can provide a result;
  *   and</li>
  *   <li>{@link #restart(Restart.Option)}: finds and runs a restart compatible with the given option.</li>
  * </ul>
  * <p>
- * Example of usage:
+ * Usage in practice should look something like this:
  * <pre>
  *   try(Scope scope = Scope.create()) {
  *     // establish a new handler
- *     scope.handle(MalformedEntry.class, c -&gt; c.getScope().restart(new UseValue(new Entry("FAIL: " + c.getText()))));
+ *     scope.handle(MalformedEntry.class, (c, s) -&gt; s.restart(new RetryWith("FAIL: " + c.getText())));
  *
  *     // ...somewhere deeper in the call stack...
  *     try(Scope scope = Scope.create()) {
  *       // establish a new restart
- *       scope.on(UseValue.class, u -&gt; u.getValue());
+ *       scope.on(RetryWith.class, r -&gt; func(r.getValue()));
  *
  *       // ...somewhere deeper still...
  *       try(Scope scope = Scope.create()) {
@@ -70,7 +70,7 @@ public final class Scope implements AutoCloseable {
    * Establishes a new {@linkplain Restart restart} in this scope.
    *
    * @param optionType the type of {@linkplain Restart.Option restart options} accepted.
-   * @param body       the code which will take an instance of {@code optionType} and generate the result to be returned in
+   * @param body       the code which will take an instance of {@code optionType} and generate a result for
    *                   {@link #signal(Condition)}.
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
@@ -84,9 +84,10 @@ public final class Scope implements AutoCloseable {
   /**
    * Establishes a new {@linkplain Handler handler} in this scope.
    *
-   * @param conditionType the type of signals handled.
-   * @param body          the code which will take a {@linkplain Condition condition} wrapping the signal and return
-   *                      which restart should be used, as an instance of {@link Restart.Option}.
+   * @param conditionType the type of conditions handled.
+   * @param body          the code which will take a {@linkplain Condition condition} and its scope of origin, and
+   *                      return a result for {@link #signal(Condition)}, either by itself or by calling
+   *                      {@link #restart(Restart.Option)}.
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
@@ -98,7 +99,7 @@ public final class Scope implements AutoCloseable {
 
   /**
    * Signals a situation which the currently running code doesn't know how to handle. This method will search for
-   * a compatible {@linkplain Handler handler}, and return its result.
+   * a compatible {@linkplain Handler handler}, using this instance as the scope of origin, and return its result.
    *
    * @param condition a condition, representing a situation which higher-level code in the call stack will decide how
    *                  to handle.

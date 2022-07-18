@@ -11,8 +11,8 @@ import java.util.function.Predicate;
  * A handler doesn't necessarily <em>need</em> to handle a condition; it can decline to do so by returning
  * {@link Handler#SKIP}. The signalling machinery will then search for another handler, bound later in the stack.
  * <p>
- * A handler can do two things: check if it can handle a given signal (with {@link #test(Object)}), and
- * analyze a given condition in its scope of origin, returning the end result (with {@link #apply(Object, Object)}).
+ * A handler can do two things: check if it can handle a given condition (with {@link #test(Object)}), and, given a
+ * condition and its scope of origin, return the end result of {@code signal} (with {@link #apply(Object, Object)}).
  * Since it works both as a {@linkplain Predicate<Object> predicate} and as a {@linkplain BiFunction (bi)function},
  * this interface extends both.
  *
