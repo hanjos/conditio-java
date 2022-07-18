@@ -14,20 +14,21 @@ import java.util.function.Function;
  * As a consequence, calling {@code Scope.create()} without {@code close}ing it properly will <strong>break</strong>
  * the nesting. Use it only in a {@code try-with-resources}, and you'll be fine :)
  * <p></p>
- * The three main operations are:
+ * The main operations are:
  * <ul>
- *   <li>{@link #signal(Condition)}: signals that something happened, and (eventually) returns the result given by
- *   the restart;</li>
- *   <li>{@link #handle(Class, Function)}: establishes a handler, which deals with conditions by choosing which
- *   restart to use; and</li>
- *   <li>{@link #on(Class, Function)}: establishes a restart, which provides the end result for {@code signal}.</li>
+ *   <li>{@link #signal(Condition)}: signals that something happened, and (eventually) returns the result ;</li>
+ *   <li>{@link #handle(Class, Function)}: establishes a handler, which deals with conditions by either providing an
+ *   end result for {@code signal} or choosing a restart to do so;</li>
+ *   <li>{@link #on(Class, Function)}: establishes a restart, which can provide and end result for {@code signal};
+ *   and</li>
+ *   <li>{@link #restart(Restart.Option)}: finds and runs a restart compatible with the given option.</li>
  * </ul>
  * <p>
  * Example of usage:
  * <pre>
  *   try(Scope scope = Scope.create()) {
  *     // establish a new handler
- *     scope.handle(MalformedEntry.class, c -&gt; new UseValue(new Entry("FAIL: " + c.getText())));
+ *     scope.handle(MalformedEntry.class, c -&gt; c.getScope().restart(new UseValue(new Entry("FAIL: " + c.getText()))));
  *
  *     // ...somewhere deeper in the call stack...
  *     try(Scope scope = Scope.create()) {
@@ -44,9 +45,6 @@ import java.util.function.Function;
  *     }
  *   }
  * </pre>
- * <p>
- * Although all three operations <em>can</em> be in the same scope, the common case is for each one, or at
- * least {@code handle}, to happen at different points in the stack.
  *
  * @see Condition
  * @see Handler
@@ -91,34 +89,57 @@ public final class Scope implements AutoCloseable {
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
-  public <T extends Condition, S extends T> Scope handle(Class<S> conditionType, Function<T, ? extends Restart.Option> body) {
+  public <T extends Condition, S extends T> Scope handle(Class<S> conditionType, Function<T, ?> body) {
     this.handlers.add(new HandlerImpl(conditionType, body, this));
 
     return this;
   }
 
   /**
-   * Signals a situation which the currently running code doesn't know how to handle.
-   * <p></p>
-   * This method will:
-   * <ul>
-   *   <li>search for an {@linkplain Handler handler} to handle it, by deciding on a restart
-   *   {@linkplain Restart.Option to use}, and</li>
-   *   <li>search for the selected {@linkplain Restart restart} and run it, returning its result.</li>
-   * </ul>
+   * Signals a situation which the currently running code doesn't know how to handle. This method will search for
+   * a compatible {@linkplain Handler handler}, and return its result.
    *
    * @param condition a condition, representing a situation which higher-level code in the call stack will decide how
    *                  to handle.
-   * @return the end result, as given by the selected restart.
+   * @return the end result, as given by the handler.
    * @throws NullPointerException     if no condition was given.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
-   * @throws RestartNotFoundException if the selected restart could not be found.
    */
   public Object signal(Condition condition) throws HandlerNotFoundException, RestartNotFoundException {
     Objects.requireNonNull(condition, "condition");
 
-    Restart.Option restartOption = selectRestartFor(condition);
-    return runRestartWith(restartOption);
+    for (Handler h : getAllHandlers()) {
+      if (!h.test(condition)) {
+        continue;
+      }
+
+      Object result = h.apply(condition);
+      if (result == Handler.SKIP) {
+        continue;
+      }
+
+      return result;
+    }
+
+    throw new HandlerNotFoundException(condition);
+  }
+
+  /**
+   * Searches for a restart which accepts the given restart option, from the inside (this scope) out
+   * (the root scope), and runs it.
+   *
+   * @param restartOption identifies which restart to run, and holds any data required for that restart's operation.
+   * @return the result of the found restart's execution.
+   * @throws RestartNotFoundException if no restart compatible with {@code restartOption} could be found.
+   */
+  public Object restart(Restart.Option restartOption) throws RestartNotFoundException {
+    for (Restart r : getAllRestarts()) {
+      if (r.test(restartOption)) {
+        return r.apply(restartOption);
+      }
+    }
+
+    throw new RestartNotFoundException(restartOption);
   }
 
   /**
@@ -168,52 +189,6 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * Searches for an active handler which can handle the given condition, from the inside (this scope) out
-   * (the root scope). Returns the restart option selected.
-   *
-   * @param c a condition.
-   * @return the restart option selected.
-   * @throws HandlerNotFoundException if no handler was able to handle the given condition.
-   */
-  private Restart.Option selectRestartFor(Condition c) throws HandlerNotFoundException {
-    assert c != null;
-
-    for (Handler h : getAllHandlers()) {
-      if (!h.test(c)) {
-        continue;
-      }
-
-      // TODO Is null a valid restart option? It would work with runRestartWith... What would the semantics be?
-      Restart.Option restartOption = h.apply(c);
-      if (restartOption == Handler.SKIP) {
-        continue;
-      }
-
-      return restartOption;
-    }
-
-    throw new HandlerNotFoundException(c);
-  }
-
-  /**
-   * Searches for an active restart which can take the given restart option, from the inside (this scope) out
-   * (the root scope). Returns the result to be used in signal().
-   *
-   * @param restartOption identifies which restart to run, ands holds any data required for that restart's operation.
-   * @return the result to be returned by {@link #signal(Condition) signal}.
-   * @throws RestartNotFoundException if no restart compatible with {@code restartOption} could be found.
-   */
-  private Object runRestartWith(Restart.Option restartOption) throws RestartNotFoundException {
-    for (Restart r : getAllRestarts()) {
-      if (r.test(restartOption)) {
-        return r.apply(restartOption);
-      }
-    }
-
-    throw new RestartNotFoundException(restartOption);
-  }
-
-  /**
    * Creates and returns a new instance, nested in the (now former) current scope.
    *
    * @return a new instance.
@@ -249,7 +224,6 @@ public final class Scope implements AutoCloseable {
   public void close() {
     current = getParent();
   }
-
 }
 
 /**
@@ -301,24 +275,23 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
   }
 }
 
-
 /**
  * A simple implementation of {@link Handler}, which delegates its functionality to its attributes.
  */
 class HandlerImpl implements Handler {
   private final Class<? extends Condition> conditionType;
-  private final Function<? extends Condition, ? extends Restart.Option> body;
+  private final Function<? extends Condition, ?> body;
   private final Scope scope;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
    *
    * @param conditionType the type of {@link Condition} this handler expects.
-   * @param body          a function which receives a condition and returns the restart to use.
+   * @param body          a function which receives a condition and returns the end result.
    * @param scope         the {@link Scope} instance where this handler was created.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  public <T extends Condition, S extends T> HandlerImpl(Class<S> conditionType, Function<T, ? extends Restart.Option> body, Scope scope) {
+  public <T extends Condition, S extends T> HandlerImpl(Class<S> conditionType, Function<T, ?> body, Scope scope) {
     Objects.requireNonNull(conditionType, "conditionType");
     Objects.requireNonNull(body, "body");
     Objects.requireNonNull(scope, "scope");
@@ -334,15 +307,15 @@ class HandlerImpl implements Handler {
   }
 
   @Override
-  public Restart.Option apply(Condition c) {
-    return (Restart.Option) ((Function) getBody()).apply(c);
+  public Object apply(Condition c) {
+    return ((Function) getBody()).apply(c);
   }
 
   public Class<? extends Condition> getConditionType() {
     return conditionType;
   }
 
-  public Function<? extends Condition, ? extends Restart.Option> getBody() {
+  public Function<? extends Condition, ?> getBody() {
     return body;
   }
 

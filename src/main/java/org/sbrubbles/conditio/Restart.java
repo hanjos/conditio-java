@@ -11,7 +11,6 @@ import java.util.function.Predicate;
  * {@link #test(Object)}), and analyze said option, producing the end result. Since it works both as a
  * {@linkplain Predicate predicate} and as a {@linkplain Function function}, this interface extends both.
  *
- * @see Condition
  * @see Restart.Option
  * @see Scope
  */

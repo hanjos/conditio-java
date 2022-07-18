@@ -83,13 +83,13 @@ public class LoggingFixture {
       // this isn't a language construct, handlers can be established dynamically
       if (isAnalyzeLog()) {
         scope.handle(MalformedLogEntry.class, condition -> {
-          traceHandler("analyzeLog");
-          return getRestartOptionToUse();
+          traceHandler("analyzeLog: " + condition.getClass().getSimpleName());
+          return condition.getScope().restart(getRestartOptionToUse());
         });
       }
 
-      scope.handle(OneOff.class, condition -> {
-        traceHandler("analyzeLog");
+      scope.handle(SkipHandler.class, condition -> {
+        traceHandler("analyzeLog: " + condition.getClass().getSimpleName());
         return Handler.SKIP;
       });
 
@@ -109,15 +109,20 @@ public class LoggingFixture {
     try (Scope scope = Scope.create()) {
       if (isLogAnalyzer()) {
         scope.handle(MalformedLogEntry.class, condition -> {
-          traceHandler("logAnalyzer");
-          return getRestartOptionToUse();
+          traceHandler("logAnalyzer: " + condition.getClass().getSimpleName());
+          return condition.getScope().restart(getRestartOptionToUse());
         });
       }
 
-      scope.handle(OneOff.class, condition -> {
-        traceHandler("logAnalyzer");
-        return new UseValue(condition.getValue());
-      });
+      scope
+        .handle(SkipHandler.class, condition -> {
+          traceHandler("logAnalyzer: " + condition.getClass().getSimpleName());
+          return condition.getScope().restart(new UseValue(condition.getValue()));
+        })
+        .handle(NoRestartUsed.class, condition -> {
+          traceHandler("logAnalyzer: " + condition.getClass().getSimpleName());
+          return condition.getValue();
+        });
 
       List<AnalyzedEntry> logs = new ArrayList<>();
       for (String filename : logfiles) {

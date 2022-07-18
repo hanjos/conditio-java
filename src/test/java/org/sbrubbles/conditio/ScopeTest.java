@@ -54,7 +54,7 @@ public class ScopeTest {
   public void getHandlersIsUnmodifiable() {
     try (Scope a = Scope.create()) {
       final List<Handler> hs = a.getHandlers();
-      final Handler h = new HandlerImpl(BasicCondition.class, c -> new UseValue("test"), a);
+      final Handler h = new HandlerImpl(BasicCondition.class, c -> "test", a);
 
       assertThrows(UnsupportedOperationException.class, () -> hs.add(h));
       assertThrows(UnsupportedOperationException.class, () -> hs.remove(h));

@@ -3,7 +3,6 @@ package org.sbrubbles.conditio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.fixtures.UseValue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,22 +38,18 @@ public class HandlerImplTest {
   public void apply() {
     try (Scope scope = Scope.create()) {
       Condition c = new BasicCondition(scope, "OMGWTFBBQ");
-      assertEquals(
-        new UseValue("OK: OMGWTFBBQ"),
-        h.apply(c));
+      assertEquals("OK: OMGWTFBBQ", h.apply(c));
 
       Condition f = new BasicCondition(scope, "FAIL");
-      assertEquals(
-        new UseValue("FAIL!"),
-        h.apply(f));
+      assertEquals("FAIL!", h.apply(f));
     }
   }
 
-  private Restart.Option body(BasicCondition c) {
+  private Object body(BasicCondition c) {
     if (!"FAIL".equals(c.getValue())) {
-      return new UseValue("OK: " + c.getValue());
+      return "OK: " + c.getValue();
     } else {
-      return new UseValue("FAIL!");
+      return "FAIL!";
     }
   }
 }

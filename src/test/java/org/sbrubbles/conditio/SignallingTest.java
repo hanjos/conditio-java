@@ -49,7 +49,7 @@ public class SignallingTest {
 
   @ParameterizedTest
   @MethodSource("handleBadLogProvider")
-  public void handleBadLog(ExpectedHandler expectedHandler, ExpectedRestart expectedRestart, List<AnalyzedEntry> expectedEntries, Restart.Option restartOption) throws Exception {
+  public void handleBadLogWithRestarts(ExpectedHandler expectedHandler, ExpectedRestart expectedRestart, List<AnalyzedEntry> expectedEntries, Restart.Option restartOption) throws Exception {
     switch (expectedHandler) {
       case LOG_ANALYZER:
         fixture.setLogAnalyzer(true);
@@ -62,16 +62,15 @@ public class SignallingTest {
     fixture.setRestartOptionToUse(restartOption);
 
     List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
-    String handlerMethodName = expectedHandler.getMethodName();
-    String restartOptionName = expectedRestart.getRestartName();
-
+    String handlerTrace = expectedHandler.getMethodName() + ": " + MalformedLogEntry.class.getSimpleName();
+    String restartOptionTrace = expectedRestart.getRestartName();
 
     assertEquals(expectedEntries, actual);
     assertLinesMatch( // the handler gets called once for each bad line in the log; in bad.txt, there's two
-      Arrays.asList(handlerMethodName, handlerMethodName),
+      Arrays.asList(handlerTrace, handlerTrace),
       fixture.getHandlerTrace());
     assertLinesMatch(
-      Arrays.asList(restartOptionName, restartOptionName),
+      Arrays.asList(restartOptionTrace, restartOptionTrace),
       fixture.getRestartTrace());
   }
 
@@ -124,7 +123,7 @@ public class SignallingTest {
     } catch (RestartNotFoundException e) {
       assertNull(e.getRestartOption());
 
-      assertLinesMatch(Arrays.asList("logAnalyzer"), fixture.getHandlerTrace());
+      assertLinesMatch(Arrays.asList("logAnalyzer: " + MalformedLogEntry.class.getSimpleName()), fixture.getHandlerTrace());
       assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
     }
   }
@@ -142,14 +141,38 @@ public class SignallingTest {
     } catch (RestartNotFoundException e) {
       assertEquals(UNKNOWN_RESTART_OPTION, e.getRestartOption());
 
-      assertLinesMatch(Arrays.asList("logAnalyzer"), fixture.getHandlerTrace());
+      assertLinesMatch(Arrays.asList("logAnalyzer: " + MalformedLogEntry.class.getSimpleName()), fixture.getHandlerTrace());
       assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
     }
   }
 
+  @Test
+  public void readBadLogUsingNoRestarts() throws Exception {
+    final Entry FIXED_ENTRY = new Entry("1111 FIXED ENTRY");
+    fixture.setConditionProvider((s, t) -> new NoRestartUsed(s, FIXED_ENTRY));
+
+    List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
+
+    assertEquals(
+      Arrays.asList(
+        new AnalyzedEntry(goodLine(1), BAD_LOG),
+        new AnalyzedEntry(FIXED_ENTRY, BAD_LOG),
+        new AnalyzedEntry(goodLine(3), BAD_LOG),
+        new AnalyzedEntry(FIXED_ENTRY, BAD_LOG)),
+      actual);
+    assertLinesMatch(
+      Arrays.asList(
+        "logAnalyzer: " + NoRestartUsed.class.getSimpleName(),
+        "logAnalyzer: " + NoRestartUsed.class.getSimpleName()),
+      fixture.getHandlerTrace());
+    assertLinesMatch(
+      Collections.emptyList(),
+      fixture.getRestartTrace());
+  }
+
   @ParameterizedTest
   @MethodSource("skipHandlingProvider")
-  public void skipHandling(final BiFunction<Scope, Entry, Condition> conditionBuilder) throws Exception {
+  public void skipHandling(final Class<? extends Condition> conditionType, final BiFunction<Scope, Entry, Condition> conditionBuilder) throws Exception {
     final Entry SIGNAL_ENTRY = new Entry("OMG");
 
     fixture.setConditionProvider((s, str) -> conditionBuilder.apply(s, SIGNAL_ENTRY));
@@ -164,7 +187,11 @@ public class SignallingTest {
         new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG)),
       actual);
     assertLinesMatch(
-      Arrays.asList("analyzeLog", "logAnalyzer", "analyzeLog", "logAnalyzer"),
+      Arrays.asList(
+        "analyzeLog: " + conditionType.getSimpleName(),
+        "logAnalyzer: " + conditionType.getSimpleName(),
+        "analyzeLog: " + conditionType.getSimpleName(),
+        "logAnalyzer: " + conditionType.getSimpleName()),
       fixture.getHandlerTrace());
     assertLinesMatch(
       Arrays.asList("UseValue", "UseValue"),
@@ -281,10 +308,10 @@ public class SignallingTest {
     );
   }
 
-  static Stream<BiFunction<Scope, Entry, Condition>> skipHandlingProvider() {
+  static Stream<Arguments> skipHandlingProvider() {
     return Stream.of(
-      OneOff::new,
-      SonOfOneOff::new
+      arguments(SkipHandler.class, (BiFunction<Scope, Entry, Condition>) SkipHandler::new),
+      arguments(SonOfSkipHandler.class, (BiFunction<Scope, Entry, Condition>) SonOfSkipHandler::new)
     );
   }
 
