@@ -29,7 +29,7 @@ public class HandlerImplTest {
   @Test
   public void test() {
     try (Scope scope = Scope.create()) {
-      assertTrue(h.test(new BasicCondition(scope, "string")));
+      assertTrue(h.test(new BasicCondition("string")));
       assertFalse(h.test(null));
     }
   }
@@ -37,15 +37,15 @@ public class HandlerImplTest {
   @Test
   public void apply() {
     try (Scope scope = Scope.create()) {
-      Condition c = new BasicCondition(scope, "OMGWTFBBQ");
-      assertEquals("OK: OMGWTFBBQ", h.apply(c));
+      Condition c = new BasicCondition("OMGWTFBBQ");
+      assertEquals("OK: OMGWTFBBQ", h.apply(c, scope));
 
-      Condition f = new BasicCondition(scope, "FAIL");
-      assertEquals("FAIL!", h.apply(f));
+      Condition f = new BasicCondition("FAIL");
+      assertEquals("FAIL!", h.apply(f, scope));
     }
   }
 
-  private Object body(BasicCondition c) {
+  private Object body(BasicCondition c, Scope s) {
     if (!"FAIL".equals(c.getValue())) {
       return "OK: " + c.getValue();
     } else {

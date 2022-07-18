@@ -11,7 +11,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -43,7 +43,7 @@ public class LoggingFixture {
           });
 
         // here would be where you create a condition and signal it
-        Condition c = getConditionProvider().apply(scope, text);
+        Condition c = getConditionProvider().apply(text);
         return (Entry) scope.signal(c);
       }
     } catch (RuntimeException e) {
@@ -82,14 +82,14 @@ public class LoggingFixture {
       // this flag's here to test handling in different scopes, but it's actually a pretty good demonstration: since
       // this isn't a language construct, handlers can be established dynamically
       if (isAnalyzeLog()) {
-        scope.handle(MalformedLogEntry.class, condition -> {
-          traceHandler("analyzeLog: " + condition.getClass().getSimpleName());
-          return condition.getScope().restart(getRestartOptionToUse());
+        scope.handle(MalformedLogEntry.class, (c, s) -> {
+          traceHandler("analyzeLog: " + c.getClass().getSimpleName());
+          return s.restart(getRestartOptionToUse());
         });
       }
 
-      scope.handle(SkipHandler.class, condition -> {
-        traceHandler("analyzeLog: " + condition.getClass().getSimpleName());
+      scope.handle(SkipHandler.class, (c, s) -> {
+        traceHandler("analyzeLog: " + c.getClass().getSimpleName());
         return Handler.SKIP;
       });
 
@@ -108,20 +108,20 @@ public class LoggingFixture {
   public List<AnalyzedEntry> logAnalyzer(String... logfiles) throws Exception {
     try (Scope scope = Scope.create()) {
       if (isLogAnalyzer()) {
-        scope.handle(MalformedLogEntry.class, condition -> {
-          traceHandler("logAnalyzer: " + condition.getClass().getSimpleName());
-          return condition.getScope().restart(getRestartOptionToUse());
+        scope.handle(MalformedLogEntry.class, (c, s) -> {
+          traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
+          return s.restart(getRestartOptionToUse());
         });
       }
 
       scope
-        .handle(SkipHandler.class, condition -> {
-          traceHandler("logAnalyzer: " + condition.getClass().getSimpleName());
-          return condition.getScope().restart(new UseValue(condition.getValue()));
+        .handle(SkipHandler.class, (c, s) -> {
+          traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
+          return s.restart(new UseValue(c.getValue()));
         })
-        .handle(NoRestartUsed.class, condition -> {
-          traceHandler("logAnalyzer: " + condition.getClass().getSimpleName());
-          return condition.getValue();
+        .handle(NoRestartUsed.class, (c, s) -> {
+          traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
+          return c.getValue();
         });
 
       List<AnalyzedEntry> logs = new ArrayList<>();
@@ -137,7 +137,7 @@ public class LoggingFixture {
   private boolean analyzeLog;
   private boolean logAnalyzer;
 
-  private BiFunction<Scope, String, Condition> conditionProvider;
+  private Function<String, Condition> conditionProvider;
   private Restart.Option restartOptionToUse;
 
   private final List<String> handlerTrace;
@@ -178,11 +178,11 @@ public class LoggingFixture {
     this.logAnalyzer = logAnalyzer;
   }
 
-  public BiFunction<Scope, String, Condition> getConditionProvider() {
+  public Function<String, Condition> getConditionProvider() {
     return conditionProvider;
   }
 
-  public void setConditionProvider(BiFunction<Scope, String, Condition> provider) {
+  public void setConditionProvider(Function<String, Condition> provider) {
     this.conditionProvider = provider;
   }
 

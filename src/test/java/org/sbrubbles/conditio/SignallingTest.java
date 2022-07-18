@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -95,7 +95,7 @@ public class SignallingTest {
     final String VALUE = "oops";
 
     fixture.setLogAnalyzer(true);
-    fixture.setConditionProvider((s, str) -> new BasicCondition(s, VALUE)); // won't match MalformedLogEntry
+    fixture.setConditionProvider(str -> new BasicCondition(VALUE)); // won't match MalformedLogEntry
     fixture.setRestartOptionToUse(new UseValue(USE_VALUE_ENTRY)); // should never be called
 
     try {
@@ -149,7 +149,7 @@ public class SignallingTest {
   @Test
   public void readBadLogUsingNoRestarts() throws Exception {
     final Entry FIXED_ENTRY = new Entry("1111 FIXED ENTRY");
-    fixture.setConditionProvider((s, t) -> new NoRestartUsed(s, FIXED_ENTRY));
+    fixture.setConditionProvider(t -> new NoRestartUsed(FIXED_ENTRY));
 
     List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
 
@@ -172,10 +172,10 @@ public class SignallingTest {
 
   @ParameterizedTest
   @MethodSource("skipHandlingProvider")
-  public void skipHandling(final Class<? extends Condition> conditionType, final BiFunction<Scope, Entry, Condition> conditionBuilder) throws Exception {
+  public void skipHandling(final Class<? extends Condition> conditionType, final Function<Entry, Condition> conditionBuilder) throws Exception {
     final Entry SIGNAL_ENTRY = new Entry("OMG");
 
-    fixture.setConditionProvider((s, str) -> conditionBuilder.apply(s, SIGNAL_ENTRY));
+    fixture.setConditionProvider(str -> conditionBuilder.apply(SIGNAL_ENTRY));
 
     List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
 
@@ -310,8 +310,8 @@ public class SignallingTest {
 
   static Stream<Arguments> skipHandlingProvider() {
     return Stream.of(
-      arguments(SkipHandler.class, (BiFunction<Scope, Entry, Condition>) SkipHandler::new),
-      arguments(SonOfSkipHandler.class, (BiFunction<Scope, Entry, Condition>) SonOfSkipHandler::new)
+      arguments(SkipHandler.class, (Function<Entry, Condition>) SkipHandler::new),
+      arguments(SonOfSkipHandler.class, (Function<Entry, Condition>) SonOfSkipHandler::new)
     );
   }
 

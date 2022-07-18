@@ -1,6 +1,7 @@
 package org.sbrubbles.conditio;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -89,7 +90,7 @@ public final class Scope implements AutoCloseable {
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
-  public <T extends Condition, S extends T> Scope handle(Class<S> conditionType, Function<T, ?> body) {
+  public <T extends Condition, S extends T> Scope handle(Class<S> conditionType, BiFunction<T, Scope, ?> body) {
     this.handlers.add(new HandlerImpl(conditionType, body, this));
 
     return this;
@@ -113,7 +114,7 @@ public final class Scope implements AutoCloseable {
         continue;
       }
 
-      Object result = h.apply(condition);
+      Object result = h.apply(condition, this);
       if (result == Handler.SKIP) {
         continue;
       }
@@ -280,7 +281,7 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
  */
 class HandlerImpl implements Handler {
   private final Class<? extends Condition> conditionType;
-  private final Function<? extends Condition, ?> body;
+  private final BiFunction<? extends Condition, Scope, ?> body;
   private final Scope scope;
 
   /**
@@ -291,7 +292,7 @@ class HandlerImpl implements Handler {
    * @param scope         the {@link Scope} instance where this handler was created.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  public <T extends Condition, S extends T> HandlerImpl(Class<S> conditionType, Function<T, ?> body, Scope scope) {
+  public <T extends Condition, S extends T> HandlerImpl(Class<S> conditionType, BiFunction<T, Scope, ?> body, Scope scope) {
     Objects.requireNonNull(conditionType, "conditionType");
     Objects.requireNonNull(body, "body");
     Objects.requireNonNull(scope, "scope");
@@ -307,15 +308,15 @@ class HandlerImpl implements Handler {
   }
 
   @Override
-  public Object apply(Condition c) {
-    return ((Function) getBody()).apply(c);
+  public Object apply(Condition c, Scope s) {
+    return ((BiFunction) getBody()).apply(c, s);
   }
 
   public Class<? extends Condition> getConditionType() {
     return conditionType;
   }
 
-  public Function<? extends Condition, ?> getBody() {
+  public BiFunction<? extends Condition, Scope, ?> getBody() {
     return body;
   }
 

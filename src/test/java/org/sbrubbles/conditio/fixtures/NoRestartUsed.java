@@ -1,14 +1,11 @@
 package org.sbrubbles.conditio.fixtures;
 
 import org.sbrubbles.conditio.Condition;
-import org.sbrubbles.conditio.Scope;
 
-public class NoRestartUsed extends Condition {
+public class NoRestartUsed implements Condition {
   private final Object value;
 
-  public NoRestartUsed(Scope scope, Object value) {
-    super(scope);
-
+  public NoRestartUsed(Object value) {
     this.value = value;
   }
 

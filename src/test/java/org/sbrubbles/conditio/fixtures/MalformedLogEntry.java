@@ -1,16 +1,13 @@
 package org.sbrubbles.conditio.fixtures;
 
 import org.sbrubbles.conditio.Condition;
-import org.sbrubbles.conditio.Scope;
 
 import java.util.Objects;
 
-public class MalformedLogEntry extends Condition {
+public class MalformedLogEntry implements Condition {
   private String text;
 
-  public MalformedLogEntry(Scope scope, String text) {
-    super(scope);
-
+  public MalformedLogEntry(String text) {
     this.text = text;
   }
 

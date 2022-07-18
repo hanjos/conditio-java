@@ -1,13 +1,11 @@
 package org.sbrubbles.conditio.fixtures;
 
 import org.sbrubbles.conditio.Condition;
-import org.sbrubbles.conditio.Scope;
 
-public class SkipHandler extends Condition {
+public class SkipHandler implements Condition {
   private final Entry value;
 
-  public SkipHandler(Scope scope, Entry value) {
-    super(scope);
+  public SkipHandler(Entry value) {
     this.value = value;
   }
 
@@ -17,6 +15,6 @@ public class SkipHandler extends Condition {
 
   @Override
   public String toString() {
-    return "OneOff(" + value + ")";
+    return "SkipHandler(" + value + ")";
   }
 }

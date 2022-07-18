@@ -1,14 +1,11 @@
 package org.sbrubbles.conditio.fixtures;
 
 import org.sbrubbles.conditio.Condition;
-import org.sbrubbles.conditio.Scope;
 
-public class BasicCondition extends Condition {
+public class BasicCondition implements Condition {
   private final Object value;
 
-  public BasicCondition(Scope scope, Object value) {
-    super(scope);
-
+  public BasicCondition(Object value) {
     this.value = value;
   }
 
