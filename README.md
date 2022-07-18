@@ -19,7 +19,7 @@ Although Common Lisp and at least [some](https://github.com/clojureman/special) 
 `try-with-resources` for the win: `Scope` is a resource which nests and closes scopes as execution enters and leaves `try` clauses, and provides a place to hang the signalling, handling and restarting machinery. In practice, the end result looks something like this:
 
 ```java
-public void analyzeLog(String filename) throws Exception{
+public void analyzeLog(String filename) throws Exception {
   try(Scope scope = Scope.create()) {
     // establish a handler, which picks a restart to use
     scope.handle(MalformedLogEntry.class, condition -> new UseValue(new Entry(...)));
@@ -32,7 +32,7 @@ public void analyzeLog(String filename) throws Exception{
   }
 }
 
-public List<Entry> parseLogFile(InputStream in) throws Exception{
+public List<Entry> parseLogFile(InputStream in) throws Exception {
   try(BufferedReader br = new BufferedReader(new InputStreamReader(in));
       Scope scope = Scope.create()) {
     List<String> lines = // ...
@@ -55,7 +55,7 @@ public List<Entry> parseLogFile(InputStream in) throws Exception{
   }
 }
 
-public Entry parseLogEntry(String text) throws Exception{
+public Entry parseLogEntry(String text) throws Exception {
   try(Scope scope = Scope.create()) {
     if(isWellFormed(text)) {
       return new Entry(text);
