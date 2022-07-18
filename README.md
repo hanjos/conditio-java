@@ -66,7 +66,7 @@ public Entry parseLogEntry(String text) throws Exception {
          .on(RetryWith.class, r -> parseLogEntry(r.getText())); // retry with different input
 
     // signal a condition
-    return (Entry) scope.signal(new MalformedLogEntry(scope, text));
+    return (Entry) scope.signal(new MalformedLogEntry(text));
   }
 }
 ```
