@@ -78,9 +78,9 @@ Basically, Maven (or Gradle; anything compatible with Maven repos, really) and [
 ## Caveats and stuff to mull over
 
 * There is no attempt whatsoever to make this thread-safe; to be honest, I'm not even sure what that'd look like.
-* This does no stack unwinding at all. I figured _that_ could be done by straight-up throwing an exception.
-* AFAICT, in some Clojure implementations I've looked at, a handler can either explicitly call a restart or just return a value directly. Here, all a handler can do is either skip handling or call a restart; its job is merely to decide _which_ restart to call. The current approach seems simpler to implement and understand, but may be too cumbersome in practice.
 * Providing some general-use restarts would be nice :)
+* This does no stack unwinding at all. I figured _that_ could be done by just throwing an exception, although it wouldn't be pretty (something like `SkipEntry` in the example above?). Some ergonomics might be in order...
+* AFAICT, in the Clojure implementations I've seen, a handler can either explicitly call a restart or just return a value directly. Here, all a handler can do is either skip handling or call a restart; its job is merely to decide _which_ restart to call. Hum... now that I think of it, that would break the API, but not by much (create a `scope.restart(Restart.Option)`, to be called by the handler? How to get the right scope? From the condition?). The end result might be better...
 
 [beh-cl]: https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html
 [pract-cl]: https://gigamonkeys.com/book/
