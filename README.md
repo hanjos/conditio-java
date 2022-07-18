@@ -4,11 +4,153 @@ A simple condition system for Java, without dynamic variables or reflection wiza
 
 ## What
 
-In a nutshell, exception systems deal with exceptional situations by dividing responsibilities in two parts: _signalling_ the exception (like `throw`), and _handling_ it (like `try/catch`), unwinding the call stack until a handler is found. The problem with this setup is, by the time the error reaches this handler, the context that signalled the exception is mostly gone. This limits the recovery options available.
+Exception
+systems
+divide
+responsibilities
+in
+two
+parts: _
+signalling_
+the
+exception (
+like `throw`)
+,
+and _
+handling_
+it (
+like `try/catch`)
+,
+unwinding
+the
+call
+stack
+until
+a
+handler
+is
+found.
+The
+problem
+with
+this
+setup
+is,
+by
+the
+time
+the
+error
+reaches
+this
+handler,
+the
+context
+that
+signalled
+the
+exception
+is
+mostly
+gone.
+This
+limits
+the
+recovery
+options
+available.
 
-A condition system, like the one in Common Lisp, provides a more general solution by splitting responsibilities in _three_ parts: _signalling_ the condition, _handling_ it, and _restarting_ execution. The call stack is unwound only if that was the handling strategy chosen; it doesn't have to be. Therefore, a condition can represent anything that happened and may be of interest to code at different levels on the call stack, not just errors. This enables novel recovery strategies and protocols, and can be used for things other than error handling.
+A
+condition
+system,
+like
+the
+one
+in
+Common
+Lisp,
+provides
+a
+more
+general
+solution
+by
+splitting
+responsibilities
+in _
+three_
+parts: _
+signalling_
+the
+condition, _
+handling_
+it,
+and _
+restarting_
+execution.
+The
+call
+stack
+is
+unwound
+only
+if
+that
+was
+the
+handling
+strategy
+chosen;
+it
+doesn't
+have
+to
+be.
+This
+enables
+novel
+recovery
+strategies
+and
+protocols,
+and
+can
+be
+used
+for
+things
+other
+than
+error
+handling.
 
-[Beyond Exception Handling: Conditions and Restarts][beh-cl], chapter 19 of Peter Seibel's [Practical Common Lisp][pract-cl], informs much of the descriptions (as one can plainly see; I hope he doesn't mind :), terminology and tests.
+[Beyond Exception Handling: Conditions and Restarts][beh-cl]
+,
+chapter
+19
+of
+Peter
+Seibel's [Practical Common Lisp][pract-cl]
+,
+informs
+much
+of
+the
+descriptions (
+as
+one
+can
+plainly
+see;
+I
+hope
+he
+doesn't
+mind :)
+,
+terminology
+and
+tests.
 
 ## Why
 
