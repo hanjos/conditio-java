@@ -12,17 +12,16 @@ public class HandlerImplTest {
   @BeforeEach
   public void setUp() {
     try (Scope a = Scope.create()) {
-      h = new HandlerImpl(BasicCondition.class, this::body, a);
+      h = new HandlerImpl(BasicCondition.class, this::body);
     }
   }
 
   @Test
   public void nullParametersAreNotAllowed() {
     try(Scope scope = Scope.create()) {
-      assertThrows(NullPointerException.class, () -> new HandlerImpl(null, this::body, scope), "missing conditionType");
-      assertThrows(NullPointerException.class, () -> new HandlerImpl(BasicCondition.class, null, scope), "missing body");
-      assertThrows(NullPointerException.class, () -> new HandlerImpl(BasicCondition.class, this::body, null), "missing scope");
-      assertThrows(NullPointerException.class, () -> new HandlerImpl(null, null, scope), "missing both");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl(null, this::body), "missing conditionType");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl(BasicCondition.class, null), "missing body");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl(null, null), "missing both");
     }
   }
 

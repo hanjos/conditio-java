@@ -76,7 +76,7 @@ public final class Scope implements AutoCloseable {
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
   public <T extends Restart.Option, S extends T> Scope on(Class<S> optionType, Function<T, ?> body) {
-    this.restarts.add(new RestartImpl(optionType, body, this));
+    this.restarts.add(new RestartImpl(optionType, body));
 
     return this;
   }
@@ -92,7 +92,7 @@ public final class Scope implements AutoCloseable {
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
   public <T extends Condition, S extends T> Scope handle(Class<S> conditionType, BiFunction<T, Scope, ?> body) {
-    this.handlers.add(new HandlerImpl(conditionType, body, this));
+    this.handlers.add(new HandlerImpl(conditionType, body));
 
     return this;
   }
@@ -283,24 +283,20 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
 class HandlerImpl implements Handler {
   private final Class<? extends Condition> conditionType;
   private final BiFunction<? extends Condition, Scope, ?> body;
-  private final Scope scope;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
    *
    * @param conditionType the type of {@link Condition} this handler expects.
    * @param body          a function which receives a condition and returns the end result.
-   * @param scope         the {@link Scope} instance where this handler was created.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  public <T extends Condition, S extends T> HandlerImpl(Class<S> conditionType, BiFunction<T, Scope, ?> body, Scope scope) {
+  public <T extends Condition, S extends T> HandlerImpl(Class<S> conditionType, BiFunction<T, Scope, ?> body) {
     Objects.requireNonNull(conditionType, "conditionType");
     Objects.requireNonNull(body, "body");
-    Objects.requireNonNull(scope, "scope");
 
     this.conditionType = conditionType;
     this.body = body;
-    this.scope = scope;
   }
 
   @Override
@@ -320,19 +316,6 @@ class HandlerImpl implements Handler {
   public BiFunction<? extends Condition, Scope, ?> getBody() {
     return body;
   }
-
-  public Scope getScope() {
-    return scope;
-  }
-
-  @Override
-  public String toString() {
-    return "HandlerImpl{" +
-      "conditionType=" + conditionType +
-      ", body=" + body +
-      ", scope=" + scope +
-      '}';
-  }
 }
 
 /**
@@ -341,7 +324,6 @@ class HandlerImpl implements Handler {
 class RestartImpl implements Restart {
   private final Class<? extends Option> optionType;
   private final Function<? extends Option, ?> body;
-  private final Scope scope;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
@@ -349,17 +331,14 @@ class RestartImpl implements Restart {
    * @param optionType the type of {@link Option} this restart expects.
    * @param body       a function which receives a restart option and returns the result of
    *                   {@link Scope#signal(Condition) signal}.
-   * @param scope      the {@link Scope} instance where this restart was created.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  public <T extends Option, S extends T> RestartImpl(Class<S> optionType, Function<T, ?> body, Scope scope) {
+  public <T extends Option, S extends T> RestartImpl(Class<S> optionType, Function<T, ?> body) {
     Objects.requireNonNull(optionType, "optionType");
     Objects.requireNonNull(body, "body");
-    Objects.requireNonNull(scope, "scope");
 
     this.optionType = optionType;
     this.body = body;
-    this.scope = scope;
   }
 
   @Override
@@ -378,9 +357,5 @@ class RestartImpl implements Restart {
 
   public Function<? extends Option, ?> getBody() {
     return body;
-  }
-
-  public Scope getScope() {
-    return scope;
   }
 }
