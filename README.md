@@ -62,8 +62,7 @@ public Entry parseLogEntry(String text) throws Exception {
     }
 
     // establishing some restarts
-    scope.on(UseValue.class, u -> u.getValue()) // just use the given value
-         .on(RetryWith.class, r -> parseLogEntry(r.getText())); // retry with different input
+    scope.on(RetryWith.class, r -> parseLogEntry(r.getText())); // retry with different input
 
     // signal a condition
     return (Entry) scope.signal(new MalformedLogEntry(text));
