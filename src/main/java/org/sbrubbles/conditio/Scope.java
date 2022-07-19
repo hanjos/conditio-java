@@ -39,7 +39,7 @@ import java.util.function.Function;
  *       // ...somewhere deeper still...
  *       try(Scope scope = Scope.create()) {
  *         // signals a condition, and waits for the result
- *         Entry entry = (Entry) scope.signal(new MalformedEntry(scope, "NOOOOOOOO"));
+ *         Entry entry = (Entry) scope.signal(new MalformedEntry("NOOOOOOOO"));
  *
  *         // carry on...
  *       }
@@ -240,7 +240,7 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
   }
 
   /**
-   * Gets an iterator from {@code scope} with the values to iterate over.
+   * Gets an iterator from {@code scope} with the next values to iterate over.
    *
    * @param scope the new scope "holding" the desired values.
    * @return the iterator "holding" the values in {@code scope}.
