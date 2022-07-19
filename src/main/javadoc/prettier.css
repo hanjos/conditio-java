@@ -1093,7 +1093,8 @@ td.colFirst, th.colFirst {
   font-size: 1rem;
 }
 
-main, div.header {
+main /*, div.header */
+{
   margin: 0 auto;
   max-width: 1280px;
 }
