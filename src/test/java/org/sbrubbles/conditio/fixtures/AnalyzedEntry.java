@@ -3,8 +3,8 @@ package org.sbrubbles.conditio.fixtures;
 import java.util.Objects;
 
 public class AnalyzedEntry {
-  Entry entry;
-  String filename;
+  final Entry entry;
+  final String filename;
 
   public AnalyzedEntry(Entry entry, String filename) {
     this.entry = entry;

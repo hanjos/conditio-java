@@ -71,11 +71,11 @@ public class RestartImplTest {
   public void applyForB() {
     assertThrows(
       ClassCastException.class,
-      () -> { rB.apply(new A("OMGWTFBBQ")); });
+      () -> rB.apply(new A("OMGWTFBBQ")));
 
     assertThrows(
       ClassCastException.class,
-      () -> { rB.apply(new UseValue("OMGWTFBBQ")); });
+      () -> rB.apply(new UseValue("OMGWTFBBQ")));
 
     assertEquals(
       "OK: OMGWTFBBQ",

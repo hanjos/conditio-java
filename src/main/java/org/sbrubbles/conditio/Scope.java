@@ -5,15 +5,15 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * The <a href='https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html'>resource</a>
+ * The <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">resource</a>
  * responsible for managing the signalling machinery and the available handlers and restarts.
  * <p></p>
- * Its instantiation is handled by {@link Scope#create()}, which, along with Java's {@code try-with-resources},
+ * Its instantiation is handled by {@link Scope#create()}, which, along with Java's {@code try}-with-resources,
  * is used to create nested scopes and {@linkplain #close() leave them} when appropriate. This class creates and manages
  * a stack of nested {@code Scope}s, and provides ways to search for handlers and restarts throughout this stack.
  * <p></p>
  * As a consequence, calling {@code Scope.create()} without {@code close}ing it properly will <strong>break</strong>
- * the nesting. Use it only in a {@code try-with-resources}, and you'll be fine :)
+ * the nesting. Use it only in a {@code try}-with-resources, and you'll be fine :)
  * <p></p>
  * The main operations are:
  * <ul>
@@ -302,6 +302,7 @@ class HandlerImpl implements Handler {
     return getConditionType().isInstance(condition);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Object apply(Condition c, Scope s) {
     return ((BiFunction) getBody()).apply(c, s);
@@ -344,6 +345,7 @@ class RestartImpl implements Restart {
     return getOptionType().isInstance(data);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Object apply(Option data) {
     return ((Function) getBody()).apply(data);

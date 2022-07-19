@@ -3,7 +3,7 @@ package org.sbrubbles.conditio.fixtures;
 import java.util.Objects;
 
 public class Entry {
-  String text;
+  final String text;
 
   public Entry(String text) {
     this.text = text;

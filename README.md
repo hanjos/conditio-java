@@ -12,11 +12,11 @@ A condition system, like the one in Common Lisp, provides a more general solutio
 
 ## Why
 
-Although Common Lisp and at least [some](https://github.com/clojureman/special) [Clojure](https://github.com/pangloss/pure-conditioning) [libraries](https://github.com/bwo/conditions) use dynamic variables, Java has nothing of the sort. But it occurred to me one day that Java's [`try-with-resources`](https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html) would be enough for a simple condition/restart system. So I gave it a shot :shrug:
+Although Common Lisp and at least [some](https://github.com/clojureman/special) [Clojure](https://github.com/pangloss/pure-conditioning) [libraries](https://github.com/bwo/conditions) use dynamic variables, Java has nothing of the sort. But it occurred to me one day that Java's [`try`-with-resources](https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html) would be enough for a simple condition/restart system. So I gave it a shot :shrug:
 
 ## How
 
-`try-with-resources` for the win: `Scope` is a resource which nests and closes scopes as execution enters and leaves `try` clauses, and provides a place to hang the signalling, handling and restarting machinery. In practice, the end result looks something like this:
+`try`-with-resources for the win: `Scope` is a resource which nests and closes scopes as execution enters and leaves `try` clauses, and provides a place to hang the signalling, handling and restarting machinery. In practice, the end result looks something like this:
 
 ```Java
 public void analyzeLog(String filename) throws Exception {

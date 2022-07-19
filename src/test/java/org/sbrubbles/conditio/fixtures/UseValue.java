@@ -5,7 +5,7 @@ import org.sbrubbles.conditio.Restart;
 import java.util.Objects;
 
 public class UseValue implements Restart.Option {
-  private Object value;
+  private final Object value;
 
   public UseValue(Object value) {
     this.value = value;
