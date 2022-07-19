@@ -5,14 +5,17 @@ import java.util.function.Predicate;
 
 /**
  * Provides a recovery strategy for conditions. It takes a restart option, which typically also holds useful data for
- * the recovery, and computes the end result to be returned.
+ * the recovery, and computes a result.
  * <p>
- * Similarly to a handler, a restart can do two things: check if it accepts a given restart option (with
- * {@link #test(Object)}), and analyze said option, producing the end result. Since it works both as a
- * {@linkplain Predicate predicate} and as a {@linkplain Function function}, this interface extends both.
+ * Similarly to a handler, a restart can do two things:
+ * <ul>
+ *   <li>check if it accepts a given restart option (with {@link #test(Object)}); and</li>
+ *   <li>analyze said option, producing the end result (with {@link #apply(Object)}). </li>
+ * </ul>
+ * <p>
+ * Since a restart works both as a {@linkplain Predicate predicate} and as a {@linkplain Function function}, this interface extends both.
  *
  * @see Restart.Option
- * @see Scope
  */
 public interface Restart extends Predicate<Restart.Option>, Function<Restart.Option, Object> {
   /**

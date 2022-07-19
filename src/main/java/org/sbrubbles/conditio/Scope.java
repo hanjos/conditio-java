@@ -85,11 +85,11 @@ public final class Scope implements AutoCloseable {
    * Establishes a new {@linkplain Handler handler} in this scope.
    *
    * @param conditionType the type of conditions handled.
-   * @param body          the code which will take a {@linkplain Condition condition} and its scope of origin, and
-   *                      return a result for {@link #signal(Condition)}, either by itself or by calling
-   *                      {@link #restart(Restart.Option)}.
+   * @param body          the handler code, which takes as arguments a condition and the scope where {@code signal()}
+   *                      was called, and returns a result.
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
+   * @see #signal(Condition)
    */
   public <T extends Condition, S extends T> Scope handle(Class<S> conditionType, BiFunction<T, Scope, ?> body) {
     this.handlers.add(new HandlerImpl(conditionType, body));
@@ -99,11 +99,10 @@ public final class Scope implements AutoCloseable {
 
   /**
    * Signals a situation which the currently running code doesn't know how to handle. This method will search for
-   * a compatible {@linkplain Handler handler} and run it with this instance as the scope of origin, returning the
-   * result.
+   * a compatible {@linkplain Handler handler} and run it, returning the result.
    *
    * @param condition a condition, representing a situation which higher-level code will decide how to handle.
-   * @return the end result, as given by the handler.
+   * @return the end result, as provided by the selected handler.
    * @throws NullPointerException     if no condition was given.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
    */
