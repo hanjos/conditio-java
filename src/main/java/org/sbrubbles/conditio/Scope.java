@@ -106,7 +106,7 @@ public final class Scope implements AutoCloseable {
    * @throws NullPointerException     if no condition was given.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
    */
-  public Object signal(Condition condition) throws HandlerNotFoundException, RestartNotFoundException {
+  public Object signal(Condition condition) throws HandlerNotFoundException {
     Objects.requireNonNull(condition, "condition");
 
     for (Handler h : getAllHandlers()) {
