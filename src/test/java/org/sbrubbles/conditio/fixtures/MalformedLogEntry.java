@@ -4,10 +4,15 @@ import org.sbrubbles.conditio.Condition;
 
 import java.util.Objects;
 
-public class MalformedLogEntry implements Condition {
+public class MalformedLogEntry extends Condition {
   private final String text;
 
   public MalformedLogEntry(String text) {
+    this.text = text;
+  }
+
+  public MalformedLogEntry(Condition cause, String text) {
+    super(cause);
     this.text = text;
   }
 
@@ -20,12 +25,12 @@ public class MalformedLogEntry implements Condition {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     MalformedLogEntry that = (MalformedLogEntry) o;
-    return Objects.equals(text, that.text);
+    return Objects.equals(getText(), that.getText());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(text);
+    return Objects.hash(getText());
   }
 
   @Override

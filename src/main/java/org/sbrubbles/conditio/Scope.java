@@ -315,6 +315,14 @@ class HandlerImpl implements Handler {
   public BiFunction<? extends Condition, Scope, ?> getBody() {
     return body;
   }
+
+  @Override
+  public String toString() {
+    return "HandlerImpl{" +
+      "conditionType=" + conditionType +
+      ", body=" + body +
+      '}';
+  }
 }
 
 /**
@@ -357,5 +365,13 @@ class RestartImpl implements Restart {
 
   public Function<? extends Option, ?> getBody() {
     return body;
+  }
+
+  @Override
+  public String toString() {
+    return "RestartImpl{" +
+      "optionType=" + optionType +
+      ", body=" + body +
+      '}';
   }
 }

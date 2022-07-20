@@ -1,3 +1,7 @@
+# 0.3
+
+* Condition is now a class, similar in spirit to Exception.
+
 # 0.2
 
 * Handlers are now ultimately responsible for returning a value to signal. A restart is merely an option for doing so, and Scope offers a restart() method for that.

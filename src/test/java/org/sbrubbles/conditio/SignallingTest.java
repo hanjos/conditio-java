@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -165,6 +166,34 @@ public class SignallingTest {
     assertLinesMatch(
       Collections.emptyList(),
       fixture.getRestartTrace());
+  }
+
+  @Test
+  public void readBadLogWithResignalling() throws Exception {
+    final Condition c = new PleaseSignalSomethingElse();
+
+    fixture.setConditionProvider(t -> c);
+
+    List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
+
+    assertEquals(
+      Arrays.asList(
+        new AnalyzedEntry(goodLine(1), BAD_LOG),
+        new AnalyzedEntry(goodLine(3), BAD_LOG)),
+      actual);
+    assertLinesMatch(
+      Arrays.asList(
+        "logAnalyzer: " + PleaseSignalSomethingElse.class.getSimpleName(),
+        "analyzeLog: " + SomethingElse.class.getSimpleName(),
+        "logAnalyzer: " + PleaseSignalSomethingElse.class.getSimpleName(),
+        "analyzeLog: " + SomethingElse.class.getSimpleName()),
+      fixture.getHandlerTrace());
+    assertLinesMatch(
+      Arrays.asList("SkipEntry", "SkipEntry"),
+      fixture.getRestartTrace());
+    assertEquals(
+      Arrays.asList(c, c),
+      fixture.getLoggedConditions().stream().map(Condition::getCause).collect(Collectors.toList()));
   }
 
   @ParameterizedTest

@@ -88,10 +88,17 @@ public class LoggingFixture {
         });
       }
 
-      scope.handle(SkipHandler.class, (c, s) -> {
-        traceHandler("analyzeLog: " + c.getClass().getSimpleName());
-        return Handler.SKIP;
-      });
+      scope
+        .handle(SkipHandler.class, (c, s) -> {
+          traceHandler("analyzeLog: " + c.getClass().getSimpleName());
+          return Handler.SKIP;
+        })
+        .handle(SomethingElse.class, (c, s) -> {
+          traceHandler("analyzeLog: " + c.getClass().getSimpleName());
+          loggedConditions.add(c);
+
+          return s.restart(new SkipEntry());
+        });
 
       InputStream in = LoggingFixture.class.getResourceAsStream(filename);
       List<Entry> entries = parseLogFile(in);
@@ -122,6 +129,10 @@ public class LoggingFixture {
         .handle(NoRestartUsed.class, (c, s) -> {
           traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
           return c.getValue();
+        })
+        .handle(PleaseSignalSomethingElse.class, (c, s) -> {
+          traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
+          return s.signal(new SomethingElse(c));
         });
 
       List<AnalyzedEntry> logs = new ArrayList<>();
@@ -143,6 +154,8 @@ public class LoggingFixture {
   private final List<String> handlerTrace;
   private final List<String> restartTrace;
 
+  private final List<Condition> loggedConditions;
+
   public LoggingFixture() {
     analyzeLog = false;
     logAnalyzer = false;
@@ -152,6 +165,7 @@ public class LoggingFixture {
 
     handlerTrace = new ArrayList<>();
     restartTrace = new ArrayList<>();
+    loggedConditions = new ArrayList<>();
   }
 
   private void traceHandler(String trace) {
@@ -202,4 +216,5 @@ public class LoggingFixture {
     return Collections.unmodifiableList(restartTrace);
   }
 
+  public List<Condition> getLoggedConditions() { return Collections.unmodifiableList(loggedConditions); }
 }

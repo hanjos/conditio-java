@@ -4,7 +4,7 @@ import org.sbrubbles.conditio.Condition;
 
 import java.util.Objects;
 
-public class SkipHandler implements Condition {
+public class SkipHandler extends Condition {
   private final Entry value;
 
   public SkipHandler(Entry value) {
