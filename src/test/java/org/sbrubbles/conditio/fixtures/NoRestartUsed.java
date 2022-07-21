@@ -2,7 +2,7 @@ package org.sbrubbles.conditio.fixtures;
 
 import org.sbrubbles.conditio.Condition;
 
-public class NoRestartUsed extends Condition {
+public class NoRestartUsed implements Condition {
   private final Object value;
 
   public NoRestartUsed(Object value) {

@@ -132,7 +132,7 @@ public class LoggingFixture {
         })
         .handle(PleaseSignalSomethingElse.class, (c, s) -> {
           traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
-          return s.signal(new SomethingElse(c));
+          return s.signal(new SomethingElse());
         });
 
       List<AnalyzedEntry> logs = new ArrayList<>();

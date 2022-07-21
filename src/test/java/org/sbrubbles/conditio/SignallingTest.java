@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -170,9 +169,7 @@ public class SignallingTest {
 
   @Test
   public void readBadLogWithResignalling() throws Exception {
-    final Condition c = new PleaseSignalSomethingElse();
-
-    fixture.setConditionProvider(t -> c);
+    fixture.setConditionProvider(t -> new PleaseSignalSomethingElse());
 
     List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
 
@@ -191,9 +188,6 @@ public class SignallingTest {
     assertLinesMatch(
       Arrays.asList("SkipEntry", "SkipEntry"),
       fixture.getRestartTrace());
-    assertEquals(
-      Arrays.asList(c, c),
-      fixture.getLoggedConditions().stream().map(Condition::getCause).collect(Collectors.toList()));
   }
 
   @ParameterizedTest
