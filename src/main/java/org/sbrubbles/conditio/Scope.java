@@ -63,6 +63,11 @@ public final class Scope implements AutoCloseable {
   }
 
   // TODO what happens if the restart is defined in a scope above the handler's? Should it still work?
+  /* TODO This doesn't work well for scopes with more than one signal() call; which restart gets called?
+   * A solution is to establish restarts only at signal calls, following the call stack. This method would be removed,
+   * and there'd be a scope.call(<lambda>, <restart list>), which creates a scope solely to execute the lambda with
+   * the given restarts, and return its result.
+   */
 
   /**
    * Establishes a new {@linkplain Restart restart} in this scope.
