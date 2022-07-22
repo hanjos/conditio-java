@@ -7,25 +7,21 @@ import java.util.function.Function;
 /**
  * The <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">resource</a>
  * responsible for managing the signalling machinery and the available handlers and restarts.
- * <p></p>
- * Its instantiation is handled by {@link Scope#create()}, which, along with Java's {@code try}-with-resources,
- * is used to create nested scopes and {@linkplain #close() leave them} when appropriate. This class creates and manages
- * a stack of nested {@code Scope}s, and provides ways to search for handlers and restarts throughout this stack.
- * <p></p>
- * As a consequence, calling {@code Scope.create()} without {@code close}ing it properly will <strong>break</strong>
- * the nesting. Use it only in a {@code try}-with-resources, and you'll be fine :)
- * <p></p>
- * The main operations are:
- * <ul>
- *   <li>{@link #signal(Condition)}: signals that something happened, and (eventually) returns the result;</li>
- *   <li>{@link #handle(Class, BiFunction)}: establishes a handler, which deals with conditions by either directly
- *   providing an end result for {@code signal} or choosing a restart to do so;</li>
- *   <li>{@link #on(Class, Function)}: establishes a restart, which can provide a result;
- *   and</li>
- *   <li>{@link #restart(Restart.Option)}: finds and runs a restart compatible with the given option.</li>
- * </ul>
  * <p>
- * Usage in practice should look something like this:
+ * The main operation is {@link #signal(Condition)}, which is called when lower-level code doesn't know how to handle a
+ * certain {@linkplain Condition situation}, and needs a value to proceed. Basically, {@code signal} looks for
+ * something that can {@linkplain #handle(Class, BiFunction) handle} the given condition. This
+ * {@linkplain Handler handler} may return a result itself, or look for a previously set
+ * {@linkplain #on(Class, Function) recovery strategy} (also known as a {@linkplain Restart restart}), and
+ * {@linkplain #restart(Restart.Option) use} it to provide a result.
+ * <p>
+ * This class creates and manages a stack of nested {@code Scope}s, and provides ways to search for handlers and
+ * restarts throughout this stack. This nesting is handled with {@link Scope#create()} and particularly
+ * {@link Scope#close()}, which will unnest the scope as execution leaves it. As a
+ * consequence, {@code create}ing a scope without {@code close}ing it properly will <strong>break</strong>
+ * the nesting. Use it only in a {@code try}-with-resources, and you'll be fine :)
+ * <p>
+ * In practice, usage should look something like this:
  * <pre>
  *   try(Scope scope = Scope.create()) {
  *     // establishing a new handler, which delegates the work to a RetryWith-compatible restart
@@ -66,6 +62,8 @@ public final class Scope implements AutoCloseable {
     this.restarts = new ArrayList<>();
   }
 
+  // TODO what happens if the restart is defined in a scope above the handler's? Should it still work?
+
   /**
    * Establishes a new {@linkplain Restart restart} in this scope.
    *
@@ -74,6 +72,7 @@ public final class Scope implements AutoCloseable {
    *                   {@link #signal(Condition)}.
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
+   * @see Restart
    */
   public <T extends Restart.Option, S extends T> Scope on(Class<S> optionType, Function<T, ?> body) {
     this.restarts.add(new RestartImpl(optionType, body));
@@ -82,7 +81,9 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * Establishes a new {@linkplain Handler handler} in this scope.
+   * Establishes a new {@linkplain Handler handler} in this scope. It is responsible for handling conditions, returning
+   * a result for {@link #signal(Condition) signal}. The handler may compute this result by itself, or it may delegate
+   * to a {@linkplain Restart restart}.
    *
    * @param conditionType the type of conditions handled.
    * @param body          the handler code, which takes as arguments a condition and the scope where {@code signal()}
@@ -90,6 +91,8 @@ public final class Scope implements AutoCloseable {
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
    * @see #signal(Condition)
+   * @see #restart(Restart.Option)
+   * @see Handler
    */
   public <T extends Condition, S extends T> Scope handle(Class<S> conditionType, BiFunction<T, Scope, ?> body) {
     this.handlers.add(new HandlerImpl(conditionType, body));
@@ -98,13 +101,17 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * Signals a situation which the currently running code doesn't know how to handle. This method will search for
-   * a compatible {@linkplain Handler handler} and run it, returning the result.
+   * Signals a situation which the currently running code doesn't know how to handle. This method will
+   * {@linkplain #getAllHandlers() search} for a compatible {@linkplain Handler handler} and run it, returning the
+   * result.
    *
-   * @param condition a condition, representing a situation which higher-level code will decide how to handle.
+   * @param condition a condition, representing a situation which {@linkplain #handle(Class, BiFunction) higher-level
+   *                  code} will decide how to handle.
    * @return the end result, as provided by the selected handler.
    * @throws NullPointerException     if no condition was given.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
+   * @see #handle(Class, BiFunction)
+   * @see #getAllHandlers()
    */
   public Object signal(Condition condition) throws HandlerNotFoundException {
     Objects.requireNonNull(condition, "condition");
@@ -126,11 +133,15 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * Searches for a restart compatible with the given option, starting from this scope, and runs it.
+   * Invokes a {@linkplain #on(Class, Function) previously set} recovery strategy. This method will
+   * {@linkplain #getAllRestarts() search} for a compatible {@linkplain Restart restart} and run it, returning the
+   * result.
    *
    * @param restartOption identifies which restart to run, and holds any data required for that restart's operation.
-   * @return the result of the found restart's execution.
+   * @return the result of the selected restart's execution.
    * @throws RestartNotFoundException if no restart compatible with {@code restartOption} could be found.
+   * @see #on(Class, Function)
+   * @see #getAllRestarts()
    */
   public Object restart(Restart.Option restartOption) throws RestartNotFoundException {
     for (Restart r : getAllRestarts()) {
@@ -233,10 +244,16 @@ public final class Scope implements AutoCloseable {
 abstract class FullSearchIterator<T> implements Iterator<T> {
   private Iterator<T> currentIterator;
   private Scope currentScope;
+  private Scope endScope;
 
   public FullSearchIterator(Scope currentScope) {
+    this(currentScope, null);
+  }
+
+  public FullSearchIterator(Scope currentScope, Scope upToScope) {
     this.currentScope = Objects.requireNonNull(currentScope, "currentScope");
     this.currentIterator = getNextIteratorFrom(currentScope);
+    this.endScope = (upToScope == null) ? null : upToScope.getParent();
   }
 
   /**
@@ -254,7 +271,7 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
     }
 
     do {
-      if (this.currentScope.getParent() == null) {
+      if (this.currentScope.getParent() == null || this.currentScope.getParent() == endScope) {
         return false;
       }
 

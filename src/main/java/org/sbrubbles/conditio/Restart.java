@@ -4,8 +4,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Provides a recovery strategy for conditions. It takes a restart option, which typically also holds useful data for
- * the recovery, and computes a result.
+ * Provides a recovery strategy. It takes a restart option, which typically also holds useful data for this recovery,
+ * and computes a result.
  * <p>
  * Similarly to a handler, a restart can do two things:
  * <ul>
@@ -13,7 +13,11 @@ import java.util.function.Predicate;
  *   <li>analyze said option, producing the end result (with {@link #apply(Object)}). </li>
  * </ul>
  * <p>
- * Since a restart works both as a {@linkplain Predicate predicate} and as a {@linkplain Function function}, this interface extends both.
+ * Since handlers are expected to know about the available restarts, it is good practice for a method to document
+ * the restarts it sets, along with those set by any methods it calls.
+ * <p>
+ * Since a restart works both as a {@linkplain Predicate predicate} and as a {@linkplain Function function}, this
+ * interface extends both.
  *
  * @see Restart.Option
  */
