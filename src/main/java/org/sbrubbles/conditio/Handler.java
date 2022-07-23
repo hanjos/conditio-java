@@ -17,7 +17,7 @@ import java.util.function.Predicate;
  *   <li>given a condition and its scope of origin, return a result (with {@link #apply(Object, Object) apply}).</li>
  * </ul>
  * <p>
- * Since a handler works both as a {@linkplain Predicate<Object> predicate} and as a
+ * Since a handler works both as a {@linkplain Predicate predicate} and as a
  * {@linkplain BiFunction (bi)function}, this interface extends both.
  *
  * @see Condition

@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * Represents a recovery strategy. One uses a recovery strategy by {@linkplain Scope#restart(Option) calling it} from a
+ * Represents a recovery strategy. One uses a recovery strategy by {@linkplain Scope#restart(Restart.Option) calling it} from a
  * {@linkplain Handler handler}, which will select which strategy to use with a {@linkplain Restart.Option restart
  * option}.
  * <p>
@@ -22,7 +22,7 @@ import java.util.function.Supplier;
  * the restarts it establishes, along with those established by any methods it calls.
  *
  * @see Restart.Option
- * @see Scope#restart(Option)
+ * @see Scope#restart(Restart.Option)
  * @see Scope#signal(Condition, Restart...)
  * @see Scope#call(Supplier, Restart...)
  */
