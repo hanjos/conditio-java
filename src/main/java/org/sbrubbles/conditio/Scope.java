@@ -15,8 +15,9 @@ import java.util.function.Supplier;
  * result itself, or look for a recovery strategy (also known as a {@linkplain Restart restart}),
  * and {@linkplain #restart(Restart.Option) use} it to provide a result.
  * <p>
- * Restarts make sense for specific situations, and therefore are set only when the condition is {@code signal}led, or
- * when code calling a {@code signal}ling method wraps that call with {@link #call(Supplier, Restart...)}.
+ * Restarts only make sense for specific situations, and therefore are set only when the condition is
+ * {@code signal}led, or when code calling a {@code signal}ling method wraps that call with
+ * {@link #call(Supplier, Restart...)}.
  * <p>
  * This class creates and manages a stack of nested {@code Scope}s, and provides ways to search for handlers and
  * restarts throughout this stack. This nesting is handled with {@link Scope#create()} and particularly
@@ -60,12 +61,10 @@ public final class Scope implements AutoCloseable {
     this.restarts = new ArrayList<>();
   }
 
-  // TODO what happens if the restart is defined in a scope above the handler's? Should it still work?
-
   /**
    * Establishes a new {@linkplain Handler handler} in this scope. It is responsible for handling conditions, returning
-   * a result for {@link #signal(Condition, Restart...) signal}. The handler may compute this result by itself, or it may delegate
-   * to a {@linkplain Restart restart}.
+   * a result for {@link #signal(Condition, Restart...) signal}. The handler may compute this result by itself, or it
+   * may delegate to a {@linkplain Restart restart}.
    *
    * @param conditionType the type of conditions handled.
    * @param body          the handler code, which takes as arguments a condition and the scope where {@code signal()}
@@ -83,10 +82,26 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * Establishes some restarts, available to all code in or called by {@code body}.
+   * Establishes some restarts, available to all code in or called by {@code body}. It's useful for adding recovery
+   * strategies to calls that may signal conditions.
+   * <p>
+   * Usage:
+   * <pre>
+   * final Restart SKIP_ENTRY = Restart.on(SkipEntry.class, r -&gt; SKIP_ENTRY_MARKER);
+   *
+   * for (String line : lines) {
+   *   // parseLogEntry may signal a condition. This code isn't handling it,
+   *   // but it provides SKIP_ENTRY as one more possible restart
+   *   Entry entry = scope.call(() -&gt; parseLogEntry(line), SKIP_ENTRY);
+   *
+   *   if (!SKIP_ENTRY_MARKER.equals(entry)) {
+   *     entries.add(entry);
+   *   }
+   * }
+   * </pre>
    *
    * @param body     some code.
-   * @param restarts some restarts, which will be available to all code in or called by {@code body}.
+   * @param restarts some restarts, which will be made available to all code in or called by {@code body}.
    * @return the result of calling {@code body}.
    * @throws NullPointerException if at least one parameter is {@code null}.
    * @see Restart#on(Class, Function)

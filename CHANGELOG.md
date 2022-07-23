@@ -1,7 +1,6 @@
 # 0.3
 
-* Scope.on no longer exists. In its place there's Restart.on, Scope.call, and Scope.signal now takes restarts. The point is that restarts only apply for specific calls and signals, and therefore a scope-wide restart doesn't really make
-  sense.
+* Scope.on no longer exists. In its place there's Restart.on, Scope.call, and Scope.signal now takes restarts too. Restarts only apply for specific calls and signals, so scope-wide restarts don't really make sense.
 
 # 0.2
 

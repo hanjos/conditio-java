@@ -2,19 +2,18 @@ package org.sbrubbles.conditio;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
- * Represents a recovery strategy, to be selected by a {@linkplain Handler handler} via an appropriate
- * {@linkplain Restart.Option restart option}.
+ * Represents a recovery strategy. One uses a recovery strategy by {@linkplain Scope#restart(Option) calling it} from a
+ * {@linkplain Handler handler}, which will select which strategy to use with a {@linkplain Restart.Option restart
+ * option}.
  * <p>
  * Similarly to a handler, a restart can do two things:
  * <ul>
  *   <li>check if it accepts a given restart option (with {@link #test(Object) test}); and, if so,</li>
- *   <li>use said option, computing a result (with {@link #apply(Object) apply}). </li>
+ *   <li>consume said option, computing a result (with {@link #apply(Object) apply}). </li>
  * </ul>
- * <p>
- * Restart options have two purposes: they both carry useful data for the restart, and are a way to select which
- * restart to use: the earliest-bound one in the stack that accepts it.
  * <p>
  * Handlers are expected to know about the available restarts. It is good practice for a method to document
  * the restarts it establishes, along with those established by any methods it calls.
@@ -23,6 +22,9 @@ import java.util.function.Predicate;
  * interface extends both.
  *
  * @see Restart.Option
+ * @see Scope#restart(Option)
+ * @see Scope#signal(Condition, Restart...)
+ * @see Scope#call(Supplier, Restart...)
  */
 public interface Restart extends Predicate<Restart.Option>, Function<Restart.Option, Object> {
   /**
