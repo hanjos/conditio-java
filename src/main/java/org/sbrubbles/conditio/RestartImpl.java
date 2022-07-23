@@ -17,7 +17,7 @@ class RestartImpl implements Restart {
    * @param body       a function which receives a restart option and returns a result.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  <T extends Option, S extends T> RestartImpl(Class<S> optionType, Function<T, ?> body) {
+  <O extends Option, S extends O> RestartImpl(Class<S> optionType, Function<O, ?> body) {
     Objects.requireNonNull(optionType, "optionType");
     Objects.requireNonNull(body, "body");
 
