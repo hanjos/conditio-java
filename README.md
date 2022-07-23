@@ -1,4 +1,4 @@
-[![CI](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml) [![Javadocs](https://img.shields.io/static/v1?label=Javadocs&message=0.2.0&color=informational&logo=read-the-docs)][vLatest] [![Maven package](https://img.shields.io/static/v1?label=Maven&message=0.2.0&color=orange&logo=apache-maven)](https://github.com/hanjos/conditio-java/packages/1543701)
+[![CI](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml) [![Javadocs](https://img.shields.io/static/v1?label=Javadocs&message=0.3.0&color=informational&logo=read-the-docs)][vLatest] [![Maven package](https://img.shields.io/static/v1?label=Maven&message=0.3.0&color=orange&logo=apache-maven)](https://github.com/hanjos/conditio-java/packages/1543701)
 
 A simple condition system for Java, without dynamic variables or reflection wizardry.
 
@@ -83,4 +83,4 @@ Basically, Maven (or Gradle; anything compatible with Maven repos, really) and [
 
 [beh-cl]: https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html
 [pract-cl]: https://gigamonkeys.com/book/
-[vLatest]: https://sbrubbles.org/conditio-java/docs/0.2.0/apidocs/index.html
+[vLatest]: https://sbrubbles.org/conditio-java/docs/0.3.0/apidocs/index.html
