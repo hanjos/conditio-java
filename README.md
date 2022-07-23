@@ -62,9 +62,6 @@ public Entry parseLogEntry(String text) throws Exception {
       return new Entry(text);
     }
 
-    // establishing some restarts
-    scope; // retry with different input
-
     // signal a condition, and establish a restart
     return (Entry) scope.signal(
       new MalformedLogEntry(text),
