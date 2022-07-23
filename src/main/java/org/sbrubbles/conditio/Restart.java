@@ -15,11 +15,11 @@ import java.util.function.Supplier;
  *   <li>consume said option, computing a result (with {@link #apply(Object) apply}). </li>
  * </ul>
  * <p>
- * Handlers are expected to know about the available restarts. It is good practice for a method to document
- * the restarts it establishes, along with those established by any methods it calls.
- * <p>
  * Since a restart works both as a {@linkplain Predicate predicate} and as a {@linkplain Function function}, this
  * interface extends both.
+ * <p>
+ * Handlers are expected to know about the available restarts. It is good practice for a method to document
+ * the restarts it establishes, along with those established by any methods it calls.
  *
  * @see Restart.Option
  * @see Scope#restart(Option)

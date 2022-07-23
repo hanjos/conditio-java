@@ -1,6 +1,7 @@
 # 0.3
 
-* Scope.on no longer exists. In its place there's Restart.on, Scope.call, and Scope.signal now takes restarts too. Restarts only apply for specific calls and signals, so scope-wide restarts don't really make sense.
+* Restarts only apply for specific calls and signals, so scope-wide restarts don't really make sense. Therefore, Scope.on no longer exists; in its place there's Scope.call, and Scope.signal now takes restarts too.
+* Restart.on provides a default implementation for restarts without having to expose RestartImpl.
 
 # 0.2
 
