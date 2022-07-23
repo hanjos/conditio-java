@@ -44,7 +44,7 @@ public List<Entry> parseLogFile(InputStream in) throws Exception {
     // parse each line, and create an entry
     for(String line : lines) {
       // establishing a new restart
-      Entry entry = (Entry) scope.call(() -> parseLogEntry(line), SKIP_ENTRY);
+      Entry entry = scope.call(() -> parseLogEntry(line), SKIP_ENTRY);
 
       // this is how the skipping is done
       if(! SKIP_ENTRY_MARKER.equals(entry)) {
