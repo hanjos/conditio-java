@@ -38,15 +38,16 @@ public List<Entry> parseLogFile(InputStream in) throws Exception {
     List<String> lines = // ...
     List<Entry> entries = new ArrayList<>();
 
-    // establish a restart, which skips entries
-    scope.on(SkipEntry.class, r -> SKIP_ENTRY);
+    // create a restart, for skipping entries
+    final Restart SKIP_ENTRY = Restart.on(SkipEntry.class, r -> SKIP_ENTRY_MARKER);
 
     // parse each line, and create an entry
     for(String line : lines) {
-      Entry entry = parseLogEntry(line);
+      // establishing a new restart
+      Entry entry = (Entry) scope.call(() -> parseLogEntry(line), SKIP_ENTRY);
 
       // this is how the skipping is done
-      if(! SKIP_ENTRY.equals(entry)) {
+      if(! SKIP_ENTRY_MARKER.equals(entry)) {
         entries.add(entry);
       }
     }
@@ -62,10 +63,12 @@ public Entry parseLogEntry(String text) throws Exception {
     }
 
     // establishing some restarts
-    scope.on(RetryWith.class, r -> parseLogEntry(r.getText())); // retry with different input
+    scope; // retry with different input
 
-    // signal a condition
-    return (Entry) scope.signal(new MalformedLogEntry(text));
+    // signal a condition, and establish a restart
+    return (Entry) scope.signal(
+      new MalformedLogEntry(text),
+      Restart.on(RetryWith.class, r -> parseLogEntry(r.getText())));
   }
 }
 ```

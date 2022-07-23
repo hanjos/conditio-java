@@ -1,6 +1,7 @@
 # 0.3
 
-* Condition is now a class, similar in spirit to Exception.
+* Scope.on no longer exists. In its place there's Restart.on, Scope.call, and Scope.signal now takes restarts. The point is that restarts only apply for specific calls and signals, and therefore a scope-wide restart doesn't really make
+  sense.
 
 # 0.2
 

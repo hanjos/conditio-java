@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -218,7 +219,72 @@ public class SignallingTest {
       fixture.getRestartTrace());
   }
 
+  @Test
+  public void signalRemovesTheRestartsAfterwards() {
+    final Restart USE_VALUE = Restart.on(UseValue.class, UseValue::getValue);
+    final String TEST_STR = "test";
+    final Restart.Option u = new UseValue(TEST_STR);
+
+    try (Scope a = Scope.create()) {
+      // no restart before the handler...
+      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
+
+      a.handle(MalformedLogEntry.class, (c, s) -> {
+        // now there's something!
+        assertTrue(toStream(s.getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
+
+        return s.restart(u);
+      });
+
+      // no restart after either
+      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "after handle");
+
+      try (Scope b = Scope.create()) {
+        // no restart before signal...
+        assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "before signal");
+
+        assertEquals(TEST_STR, b.signal(new MalformedLogEntry(""), USE_VALUE));
+
+        // no restart after either...
+        assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "after signal");
+      }
+    }
+  }
+
+  @Test
+  public void callRemovesTheRestartsAfterwards() {
+    final Restart USE_VALUE = Restart.on(UseValue.class, UseValue::getValue);
+    final String TEST_STR = "test";
+    final Restart.Option u = new UseValue(TEST_STR);
+
+    try (Scope a = Scope.create()) {
+      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
+
+      a.handle(MalformedLogEntry.class, (c, s) -> {
+        assertTrue(toStream(s.getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
+
+        return s.restart(u);
+      });
+
+      assertEquals(TEST_STR, a.call(
+        () -> {
+          try (Scope b = Scope.create()) {
+            assertTrue(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "inside call");
+
+            return b.signal(new MalformedLogEntry(""));
+          }
+        },
+        USE_VALUE));
+
+      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "after handle");
+    }
+  }
+
   // helpers
+  static <T> Stream<T> toStream(Iterable<T> iterable) {
+    return StreamSupport.stream(iterable.spliterator(), false);
+  }
+
   static Entry goodLine(int line) {
     return new Entry(String.format("%04d OK", line));
   }

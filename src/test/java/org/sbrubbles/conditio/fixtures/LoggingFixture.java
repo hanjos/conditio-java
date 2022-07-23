@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * It's a pretty decent usage example, if somewhat distorted by the instrumentation and shunts added for the tests.
  */
 public class LoggingFixture {
-  private static final Entry SKIP_ENTRY = new Entry(null);
+  private static final Entry SKIP_ENTRY_MARKER = new Entry(null);
 
   public boolean isWellFormed(String entry) {
     return entry != null && !entry.contains("FAIL");
@@ -32,19 +32,21 @@ public class LoggingFixture {
       if (isWellFormed(text)) {
         return new Entry(text);
       } else {
-        scope
-          .on(UseValue.class, r -> {
+        final Restart USE_VALUE = Restart.on(UseValue.class,
+          r -> {
             traceRestart("UseValue");
             return r.getValue();
-          })
-          .on(RetryWith.class, r -> {
+          });
+        final Restart RETRY_WITH = Restart.on(RetryWith.class,
+          r -> {
             traceRestart("RetryWith");
             return parseLogEntry(r.getText());
           });
 
-        // here would be where you create a condition and signal it
-        Condition c = getConditionProvider().apply(text);
-        return (Entry) scope.signal(c);
+        return (Entry) scope.signal(
+          getConditionProvider().apply(text),
+          USE_VALUE,
+          RETRY_WITH);
       }
     } catch (RuntimeException e) {
       throw e;
@@ -59,12 +61,16 @@ public class LoggingFixture {
       List<String> lines = br.lines().collect(Collectors.toList());
       List<Entry> entries = new ArrayList<>();
 
-      scope.on(SkipEntry.class, r -> { traceRestart("SkipEntry"); return SKIP_ENTRY; });
+      final Restart SKIP_ENTRY = Restart.on(SkipEntry.class, r -> {
+        traceRestart("SkipEntry");
+        return SKIP_ENTRY_MARKER;
+      });
 
       for (String line : lines) {
-        Entry entry = parseLogEntry(line);
+        Entry entry = scope.call(() -> parseLogEntry(line),
+          SKIP_ENTRY);
 
-        if (!SKIP_ENTRY.equals(entry)) {
+        if (!SKIP_ENTRY_MARKER.equals(entry)) {
           entries.add(entry);
         }
       }
