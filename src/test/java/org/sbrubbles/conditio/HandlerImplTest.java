@@ -12,16 +12,16 @@ public class HandlerImplTest {
   @BeforeEach
   public void setUp() {
     try (Scope a = Scope.create()) {
-      h = new HandlerImpl(BasicCondition.class, this::body);
+      h = new HandlerImpl<>(BasicCondition.class, this::body);
     }
   }
 
   @Test
   public void nullParametersAreNotAllowed() {
     try(Scope scope = Scope.create()) {
-      assertThrows(NullPointerException.class, () -> new HandlerImpl(null, this::body), "missing conditionType");
-      assertThrows(NullPointerException.class, () -> new HandlerImpl(BasicCondition.class, null), "missing body");
-      assertThrows(NullPointerException.class, () -> new HandlerImpl(null, null), "missing both");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl<>(null, this::body), "missing conditionType");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl<>(BasicCondition.class, null), "missing body");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl<>(null, null), "missing both");
     }
   }
 
@@ -44,7 +44,7 @@ public class HandlerImplTest {
     }
   }
 
-  private Object body(BasicCondition c, Scope s) {
+  private String body(BasicCondition c, Scope s) {
     if (!"FAIL".equals(c.getValue())) {
       return "OK: " + c.getValue();
     } else {

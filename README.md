@@ -39,7 +39,7 @@ public List<Entry> parseLogFile(InputStream in) throws Exception {
     List<Entry> entries = new ArrayList<>();
 
     // create a restart, for skipping entries
-    final Restart SKIP_ENTRY = Restart.on(SkipEntry.class, r -> SKIP_ENTRY_MARKER);
+    final Restart<Entry> SKIP_ENTRY = Restart.on(SkipEntry.class, r -> SKIP_ENTRY_MARKER);
 
     // parse each line, and create an entry
     for(String line : lines) {
@@ -63,7 +63,7 @@ public Entry parseLogEntry(String text) throws Exception {
     }
 
     // signal a condition, and establish a restart
-    return (Entry) scope.signal(
+    return scope.signal(
       new MalformedLogEntry(text),
       Restart.on(RetryWith.class, r -> parseLogEntry(r.getText())));
   }

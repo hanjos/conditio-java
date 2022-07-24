@@ -6,9 +6,9 @@ import java.util.function.Function;
 /**
  * A simple implementation of {@link Restart}, which delegates its functionality to its attributes.
  */
-class RestartImpl implements Restart {
+class RestartImpl<T> implements Restart<T> {
   private final Class<? extends Option> optionType;
-  private final Function<? extends Option, ?> body;
+  private final Function<? extends Option, T> body;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
@@ -17,7 +17,7 @@ class RestartImpl implements Restart {
    * @param body       a function which receives a restart option and returns a result.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  <O extends Option, S extends O> RestartImpl(Class<S> optionType, Function<O, ?> body) {
+  <O extends Option, S extends O> RestartImpl(Class<S> optionType, Function<O, T> body) {
     Objects.requireNonNull(optionType, "optionType");
     Objects.requireNonNull(body, "body");
 
@@ -32,8 +32,8 @@ class RestartImpl implements Restart {
 
   @SuppressWarnings("unchecked")
   @Override
-  public Object apply(Option data) {
-    return ((Function) getBody()).apply(data);
+  public T apply(Option data) {
+    return (T) ((Function) getBody()).apply(data);
   }
 
   public Class<? extends Option> getOptionType() {
