@@ -34,8 +34,8 @@ import java.util.function.Supplier;
  *     // ...somewhere deeper in the call stack...
  *     try(Scope scope = Scope.create()) {
  *       // signals a condition, sets a restart, and waits for the result
- *       Entry entry = scope.signal(new MalformedEntry("NOOOOOOOO"),
- *                       Restart.on(RetryWith.class, r -&gt; func(r.getValue())));
+ *       Entry entry = (Entry) scope.signal(new MalformedEntry("NOOOOOOOO"),
+ *                                Restart.on(RetryWith.class, r -&gt; func(r.getValue())));
  *
  *       // carry on...
  *     }
@@ -76,7 +76,7 @@ public final class Scope implements AutoCloseable {
    * @see Handler
    */
   public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Scope, ?> body) {
-    this.handlers.add(new HandlerImpl<>(conditionType, body));
+    this.handlers.add(new HandlerImpl(conditionType, body));
 
     return this;
   }
@@ -106,8 +106,7 @@ public final class Scope implements AutoCloseable {
    * @throws NullPointerException if at least one parameter is {@code null}.
    * @see Restart#on(Class, Function)
    */
-  @SuppressWarnings("unchecked")
-  public <T> T call(Supplier<T> body, Restart<T>... restarts) {
+  public <T> T call(Supplier<T> body, Restart... restarts) {
     Objects.requireNonNull(body, "body");
     Objects.requireNonNull(restarts, "restarts");
 
@@ -134,8 +133,7 @@ public final class Scope implements AutoCloseable {
    * @see Restart
    * @see Restart#on(Class, Function)
    */
-  @SuppressWarnings("unchecked")
-  public <T> T signal(Condition condition, Restart<T>... restarts) throws HandlerNotFoundException {
+  public Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
 
@@ -148,7 +146,7 @@ public final class Scope implements AutoCloseable {
           continue;
         }
 
-        T result = (T) h.apply(condition, scope);
+        Object result = h.apply(condition, scope);
         if (result == Handler.SKIP) {
           continue;
         }
@@ -165,10 +163,10 @@ public final class Scope implements AutoCloseable {
    *
    * @throws NullPointerException if a restart is null.
    */
-  private void establish(Restart<?>... restarts) {
+  private void establish(Restart... restarts) {
     assert restarts != null;
 
-    for (Restart<?> r : restarts) {
+    for (Restart r : restarts) {
       this.restarts.add(Objects.requireNonNull(r));
     }
   }

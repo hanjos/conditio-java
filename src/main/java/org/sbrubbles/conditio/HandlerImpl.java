@@ -6,9 +6,9 @@ import java.util.function.BiFunction;
 /**
  * A simple implementation of {@link Handler}, which delegates its functionality to its attributes.
  */
-class HandlerImpl<T> implements Handler<T> {
+class HandlerImpl implements Handler {
   private final Class<? extends Condition> conditionType;
-  private final BiFunction<? extends Condition, Scope, T> body;
+  private final BiFunction<? extends Condition, Scope, ?> body;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
@@ -17,7 +17,7 @@ class HandlerImpl<T> implements Handler<T> {
    * @param body          a function which receives a condition and returns the end result.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  <C extends Condition, S extends C> HandlerImpl(Class<S> conditionType, BiFunction<C, Scope, T> body) {
+  <T extends Condition, S extends T> HandlerImpl(Class<S> conditionType, BiFunction<T, Scope, ?> body) {
     Objects.requireNonNull(conditionType, "conditionType");
     Objects.requireNonNull(body, "body");
 
@@ -32,8 +32,8 @@ class HandlerImpl<T> implements Handler<T> {
 
   @SuppressWarnings("unchecked")
   @Override
-  public T apply(Condition c, Scope s) {
-    return (T) ((BiFunction) getBody()).apply(c, s);
+  public Object apply(Condition c, Scope s) {
+    return ((BiFunction) getBody()).apply(c, s);
   }
 
   public Class<? extends Condition> getConditionType() {

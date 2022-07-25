@@ -24,7 +24,7 @@ import java.util.function.Predicate;
  * @see Restart
  * @see Scope
  */
-public interface Handler<T> extends Predicate<Condition>, BiFunction<Condition, Scope, T> {
+public interface Handler extends Predicate<Condition>, BiFunction<Condition, Scope, Object> {
   /**
    * Returned when a handler, for whatever reason, opts to not handle a particular condition. By returning this, other
    * handlers, bound later in the stack, will have the chance instead.

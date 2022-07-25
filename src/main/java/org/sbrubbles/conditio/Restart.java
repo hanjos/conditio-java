@@ -26,7 +26,7 @@ import java.util.function.Supplier;
  * @see Scope#signal(Condition, Restart...)
  * @see Scope#call(Supplier, Restart...)
  */
-public interface Restart<T> extends Predicate<Restart.Option>, Function<Restart.Option, T> {
+public interface Restart extends Predicate<Restart.Option>, Function<Restart.Option, Object> {
   /**
    * Serves both as input for restarts, and a way to select which restart to use: the earliest-bound one in the stack
    * which {@linkplain Restart#test(Object) accepts} it.
@@ -44,7 +44,7 @@ public interface Restart<T> extends Predicate<Restart.Option>, Function<Restart.
    * @return an instance of Restart, using a default implementation.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
-  static <O extends Restart.Option, S extends O, T> Restart<T> on(Class<S> optionType, Function<O, T> body) {
-    return new RestartImpl<>(optionType, body);
+  static <O extends Restart.Option, S extends O> Restart on(Class<S> optionType, Function<O, ?> body) {
+    return new RestartImpl(optionType, body);
   }
 }

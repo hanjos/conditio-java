@@ -32,18 +32,18 @@ public class LoggingFixture {
       if (isWellFormed(text)) {
         return new Entry(text);
       } else {
-        final Restart<Entry> USE_VALUE = Restart.on(UseValue.class,
+        final Restart USE_VALUE = Restart.on(UseValue.class,
           r -> {
             traceRestart("UseValue");
-            return (Entry) r.getValue();
+            return r.getValue();
           });
-        final Restart<Entry> RETRY_WITH = Restart.on(RetryWith.class,
+        final Restart RETRY_WITH = Restart.on(RetryWith.class,
           r -> {
             traceRestart("RetryWith");
             return parseLogEntry(r.getText());
           });
 
-        return scope.signal(
+        return (Entry) scope.signal(
           getConditionProvider().apply(text),
           USE_VALUE,
           RETRY_WITH);
@@ -61,13 +61,14 @@ public class LoggingFixture {
       List<String> lines = br.lines().collect(Collectors.toList());
       List<Entry> entries = new ArrayList<>();
 
-      final Restart<Entry> SKIP_ENTRY = Restart.on(SkipEntry.class, r -> {
+      final Restart SKIP_ENTRY = Restart.on(SkipEntry.class, r -> {
         traceRestart("SkipEntry");
         return SKIP_ENTRY_MARKER;
       });
 
       for (String line : lines) {
-        Entry entry = scope.call(() -> parseLogEntry(line), SKIP_ENTRY);
+        Entry entry = scope.call(() -> parseLogEntry(line),
+          SKIP_ENTRY);
 
         if (!SKIP_ENTRY_MARKER.equals(entry)) {
           entries.add(entry);
