@@ -36,15 +36,17 @@ public class HandlerImplTest {
   @Test
   public void apply() {
     try (Scope scope = Scope.create()) {
+      Handler.Operations ops = new HandlerOperationsImpl(scope);
+
       Condition c = new BasicCondition("OMGWTFBBQ");
-      assertEquals("OK: OMGWTFBBQ", h.apply(c, scope));
+      assertEquals("OK: OMGWTFBBQ", h.apply(c, ops));
 
       Condition f = new BasicCondition("FAIL");
-      assertEquals("FAIL!", h.apply(f, scope));
+      assertEquals("FAIL!", h.apply(f, ops));
     }
   }
 
-  private Object body(BasicCondition c, Scope s) {
+  private Object body(BasicCondition c, Handler.Operations ops) {
     if (!"FAIL".equals(c.getValue())) {
       return "OK: " + c.getValue();
     } else {

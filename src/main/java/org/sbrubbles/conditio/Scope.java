@@ -63,19 +63,16 @@ public final class Scope implements AutoCloseable {
 
   /**
    * Establishes a new {@linkplain Handler handler} in this scope. It is responsible for handling conditions, returning
-   * a result for {@link #signal(Condition, Restart...) signal}. The handler may compute this result by itself, or it
-   * may delegate to a {@linkplain Restart restart}.
+   * a result for {@link #signal(Condition, Restart...) signal}.
    *
    * @param conditionType the type of conditions handled.
-   * @param body          the handler code, which takes as arguments a condition and the scope where {@code signal()}
-   *                      was called, and returns a result.
+   * @param body          the handler code.
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
    * @see #signal(Condition, Restart...)
-   * @see #restart(Restart.Option)
    * @see Handler
    */
-  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Scope, ?> body) {
+  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations, ?> body) {
     this.handlers.add(new HandlerImpl(conditionType, body));
 
     return this;
@@ -141,13 +138,14 @@ public final class Scope implements AutoCloseable {
     try (Scope scope = Scope.create()) {
       scope.establish(restarts);
 
+      Handler.Operations ops = new HandlerOperationsImpl(scope);
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(condition)) {
           continue;
         }
 
-        Object result = h.apply(condition, scope);
-        if (result == Handler.SKIP) {
+        Object result = h.apply(condition, ops);
+        if (result == HandlerOperationsImpl.SKIP) {
           continue;
         }
 
@@ -169,25 +167,6 @@ public final class Scope implements AutoCloseable {
     for (Restart r : restarts) {
       this.restarts.add(Objects.requireNonNull(r));
     }
-  }
-
-  /**
-   * Invokes a previously set recovery strategy. This method will {@linkplain #getAllRestarts() search} for a
-   * compatible {@linkplain Restart restart} and run it, returning the result.
-   *
-   * @param restartOption identifies which restart to run, and holds any data required for that restart's operation.
-   * @return the result of the selected restart's execution.
-   * @throws RestartNotFoundException if no restart compatible with {@code restartOption} could be found.
-   * @see #getAllRestarts()
-   */
-  public Object restart(Restart.Option restartOption) throws RestartNotFoundException {
-    for (Restart r : getAllRestarts()) {
-      if (r.test(restartOption)) {
-        return r.apply(restartOption);
-      }
-    }
-
-    throw new RestartNotFoundException(restartOption);
   }
 
   /**
@@ -274,3 +253,57 @@ public final class Scope implements AutoCloseable {
   }
 }
 
+/**
+ * A single iterator to run through all values available in the active call stack. Which values to use is determined
+ * by the implementation of {@link #getNextIteratorFrom(Scope)}.
+ */
+abstract class FullSearchIterator<T> implements Iterator<T> {
+  private Iterator<T> currentIterator;
+  private Scope currentScope;
+  private Scope endScope;
+
+  FullSearchIterator(Scope currentScope) {
+    this(currentScope, null);
+  }
+
+  FullSearchIterator(Scope currentScope, Scope upToScope) {
+    this.currentScope = Objects.requireNonNull(currentScope, "currentScope");
+    this.currentIterator = getNextIteratorFrom(currentScope);
+    this.endScope = (upToScope == null) ? null : upToScope.getParent();
+  }
+
+  /**
+   * Gets an iterator from {@code scope} with the next values to iterate over.
+   *
+   * @param scope the new scope "holding" the desired values.
+   * @return the iterator "holding" the values in {@code scope}.
+   */
+  abstract Iterator<T> getNextIteratorFrom(Scope scope);
+
+  @Override
+  public boolean hasNext() {
+    if (this.currentIterator.hasNext()) {
+      return true;
+    }
+
+    do {
+      if (this.currentScope.getParent() == null || this.currentScope.getParent() == endScope) {
+        return false;
+      }
+
+      this.currentScope = this.currentScope.getParent();
+      this.currentIterator = getNextIteratorFrom(this.currentScope);
+    } while (!this.currentIterator.hasNext());
+
+    return true;
+  }
+
+  @Override
+  public T next() {
+    if (!hasNext()) {
+      throw new NoSuchElementException();
+    }
+
+    return this.currentIterator.next();
+  }
+}

@@ -1,3 +1,7 @@
+# 0.4
+
+* Handlers now take a Handler.Operations instead of a scope, which delimits the operations available.
+
 # 0.3
 
 * Restarts only apply for specific calls and signals, so scope-wide restarts don't really make sense. Therefore, Scope.on no longer exists; in its place there's Scope.call, and Scope.signal now takes restarts too.

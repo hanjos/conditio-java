@@ -229,11 +229,13 @@ public class SignallingTest {
       // no restart before the handler...
       assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
 
-      a.handle(MalformedLogEntry.class, (c, s) -> {
+      a.handle(MalformedLogEntry.class, (c, ops) -> {
         // now there's something!
-        assertTrue(toStream(s.getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
+        // TODO add a getScope to Operations?
+        HandlerOperationsImpl opsImpl = (HandlerOperationsImpl) ops;
+        assertTrue(toStream(opsImpl.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
 
-        return s.restart(u);
+        return ops.restart(u);
       });
 
       // no restart after either
@@ -260,10 +262,11 @@ public class SignallingTest {
     try (Scope a = Scope.create()) {
       assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
 
-      a.handle(MalformedLogEntry.class, (c, s) -> {
-        assertTrue(toStream(s.getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
+      a.handle(MalformedLogEntry.class, (c, ops) -> {
+        HandlerOperationsImpl opsImpl = (HandlerOperationsImpl) ops;
+        assertTrue(toStream(opsImpl.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
 
-        return s.restart(u);
+        return ops.restart(u);
       });
 
       assertEquals(TEST_STR, a.call(

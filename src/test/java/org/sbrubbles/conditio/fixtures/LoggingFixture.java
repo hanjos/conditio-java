@@ -1,7 +1,6 @@
 package org.sbrubbles.conditio.fixtures;
 
 import org.sbrubbles.conditio.Condition;
-import org.sbrubbles.conditio.Handler;
 import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
 
@@ -88,22 +87,24 @@ public class LoggingFixture {
       // this flag's here to test handling in different scopes, but it's actually a pretty good demonstration: since
       // this isn't a language construct, handlers can be established dynamically
       if (isAnalyzeLog()) {
-        scope.handle(MalformedLogEntry.class, (c, s) -> {
+        scope.handle(MalformedLogEntry.class, (c, ops) -> {
           traceHandler("analyzeLog: " + c.getClass().getSimpleName());
-          return s.restart(getRestartOptionToUse());
+
+          return ops.restart(getRestartOptionToUse());
         });
       }
 
       scope
-        .handle(SkipHandler.class, (c, s) -> {
+        .handle(SkipHandler.class, (c, ops) -> {
           traceHandler("analyzeLog: " + c.getClass().getSimpleName());
-          return Handler.SKIP;
+
+          return ops.skip();
         })
-        .handle(SomethingElse.class, (c, s) -> {
+        .handle(SomethingElse.class, (c, ops) -> {
           traceHandler("analyzeLog: " + c.getClass().getSimpleName());
           loggedConditions.add(c);
 
-          return s.restart(new SkipEntry());
+          return ops.restart(new SkipEntry());
         });
 
       InputStream in = LoggingFixture.class.getResourceAsStream(filename);
@@ -121,24 +122,28 @@ public class LoggingFixture {
   public List<AnalyzedEntry> logAnalyzer(String... logfiles) throws Exception {
     try (Scope scope = Scope.create()) {
       if (isLogAnalyzer()) {
-        scope.handle(MalformedLogEntry.class, (c, s) -> {
+        scope.handle(MalformedLogEntry.class, (c, ops) -> {
           traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
-          return s.restart(getRestartOptionToUse());
+
+          return ops.restart(getRestartOptionToUse());
         });
       }
 
       scope
-        .handle(SkipHandler.class, (c, s) -> {
+        .handle(SkipHandler.class, (c, ops) -> {
           traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
-          return s.restart(new UseValue(c.getValue()));
+
+          return ops.restart(new UseValue(c.getValue()));
         })
-        .handle(NoRestartUsed.class, (c, s) -> {
+        .handle(NoRestartUsed.class, (c, ops) -> {
           traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
+
           return c.getValue();
         })
-        .handle(PleaseSignalSomethingElse.class, (c, s) -> {
+        .handle(PleaseSignalSomethingElse.class, (c, ops) -> {
           traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
-          return s.signal(new SomethingElse());
+
+          return ops.signal(new SomethingElse());
         });
 
       List<AnalyzedEntry> logs = new ArrayList<>();
