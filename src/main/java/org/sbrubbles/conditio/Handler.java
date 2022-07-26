@@ -5,8 +5,8 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 /**
- * Handles conditions, producing the result to be returned by {@link Scope#signal(Condition, Restart...) signal}.
- * It may compute this result by itself, or invoke one of several {@link Operations operations}.
+ * Handles conditions, producing the result to be returned by {@link Scope#signal(Condition, Restart...) signal}. This
+ * result is communicated, and maybe computed, by invoking one of several {@linkplain Operations operations}.
  * <p>
  * A handler can do two things:
  * <ul>
@@ -15,55 +15,99 @@ import java.util.function.Predicate;
  *       {@link #apply(Object, Object) apply}).</li>
  * </ul>
  * <p>
- * Since a handler works both as a {@linkplain Predicate predicate} and as a
- * {@linkplain BiFunction (bi)function}, this interface extends both.
+ * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain BiFunction (bi)function}, this
+ * interface extends both.
  *
  * @see Condition
  * @see Restart
  * @see Operations
+ * @see Decision
  */
-public interface Handler extends Predicate<Condition>, BiFunction<Condition, Handler.Operations, Object> {
+public interface Handler extends Predicate<Condition>, BiFunction<Condition, Handler.Operations, Handler.Decision> {
   /**
-   * The decisions a handler can take.
+   * The ways a handler can handle a condition.
    */
   interface Operations {
-    /**
-     * A handler may opt to signal a condition itself. This is a convenience method, to avoid the need of creating
-     * another scope inside the handler and signalling from there.
-     *
-     * @param condition a condition.
-     * @param restarts  some {@linkplain Restart restarts}, which will be available to the eventual handler.
-     * @return the end result, as provided by the selected handler.
-     * @throws NullPointerException     if no condition or a {@code null} restart array was given.
-     * @throws HandlerNotFoundException if no available handler was able to handle this condition.
-     * @see Scope#signal(Condition, Restart...)
-     */
-    Object signal(Condition condition, Restart... restarts) throws NullPointerException, HandlerNotFoundException;
-
     /**
      * Invokes a previously set recovery strategy. This method will search for a compatible
      * {@linkplain Restart restart} and run it, returning the result.
      *
      * @param restartOption identifies which restart to run, and holds any data required for that restart's operation.
-     * @return the result of the selected restart's execution.
+     * @return (a decision representing) the result of the selected restart's execution.
      * @throws RestartNotFoundException if no restart compatible with {@code restartOption} could be found.
      */
-    Object restart(Restart.Option restartOption) throws RestartNotFoundException;
+    Decision restart(Restart.Option restartOption) throws RestartNotFoundException;
+
+    /**
+     * Signals for execution to proceed, "without" returning a value. Careful; this is meant for situations where the
+     * result of {@link Scope#signal(Condition, Restart...) signal} isn't used, and the handler means only to
+     * acknowledge the condition, like
+     * <pre>
+     *   try(Scope scope = Scope.create()) {
+     *     scope.handle(Progress.class, (c, ops) -&gt; {
+     *       // do something
+     *       showProgressToUser(c.getValue());
+     *
+     *       // condition acknowledged; carry on
+     *       return ops.resume();
+     *     });
+     *
+     *     // note that result of signal() is ignored and thrown away
+     *     scope.signal(new Progress(0.6));
+     *
+     *     // ...
+     *   }
+     * </pre>
+     * <p>
+     * There's no useful value to "return". There's also no way to tell Java to "not return" a value here, so in this
+     * case {@code signal} will return a "garbage" object.
+     *
+     * @return an object representing the decision to continue execution.
+     */
+    Decision resume();
 
     /**
      * When a handler opts to not handle a particular condition. By calling this, other handlers, bound later in the
      * stack, will have the chance instead.
+     *
+     * @return an object representing the decision to skip.
      */
-    Object skip();
+    Decision skip();
+
+    /**
+     * Provides a value for {@link Scope#signal(Condition, Restart...) signal} to return directly.
+     *
+     * @param object the value to be returned by {@code signal}.
+     * @return (a decision holding) the given {@code object}.
+     */
+    Decision use(Object object);
+
+  }
+
+  /**
+   * Encodes how a {@linkplain Handler handler} decided to handle a condition. Instances are consumed by
+   * {@link Scope#signal(Condition, Restart...) signal}.
+   *
+   * @see Operations
+   * @see Scope#signal(Condition, Restart...)
+   */
+  class Decision {
+    static final Decision SKIP = new Decision(null);
+    static final Decision RESUME = new Decision(new Object());
+
+    private final Object result;
+
+    // Package-private for a reason; only classes in this package should create instances.
+    Decision(Object result) { this.result = result; }
+
+    // Package-private for a reason; only classes in this package should use this.
+    Object get() { return result; }
   }
 }
 
-/**
- * A simple implementation of {@link Handler}, which delegates its functionality to its attributes.
- */
 class HandlerImpl implements Handler {
   private final Class<? extends Condition> conditionType;
-  private final BiFunction<? extends Condition, Operations, ?> body;
+  private final BiFunction<? extends Condition, Operations, Decision> body;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
@@ -72,7 +116,7 @@ class HandlerImpl implements Handler {
    * @param body          a function which receives a condition and the available operations, and returns the result.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  <T extends Condition, S extends T> HandlerImpl(Class<S> conditionType, BiFunction<T, Operations, ?> body) {
+  <T extends Condition, S extends T> HandlerImpl(Class<S> conditionType, BiFunction<T, Operations, Decision> body) {
     Objects.requireNonNull(conditionType, "conditionType");
     Objects.requireNonNull(body, "body");
 
@@ -87,22 +131,20 @@ class HandlerImpl implements Handler {
 
   @SuppressWarnings("unchecked")
   @Override
-  public Object apply(Condition c, Operations s) {
-    return ((BiFunction) getBody()).apply(c, s);
+  public Decision apply(Condition c, Operations ops) {
+    return (Decision) ((BiFunction) getBody()).apply(c, ops);
   }
 
   public Class<? extends Condition> getConditionType() {
     return conditionType;
   }
 
-  public BiFunction<? extends Condition, Operations, ?> getBody() {
+  public BiFunction<? extends Condition, Operations, Decision> getBody() {
     return body;
   }
 }
 
 class HandlerOperationsImpl implements Handler.Operations {
-  static final Object SKIP = new Object();
-
   private final Scope scope;
 
   public HandlerOperationsImpl(Scope scope) {
@@ -112,15 +154,10 @@ class HandlerOperationsImpl implements Handler.Operations {
   }
 
   @Override
-  public Object signal(Condition condition, Restart... restarts) {
-    return getScope().signal(condition, restarts);
-  }
-
-  @Override
-  public Object restart(Restart.Option restartOption) throws RestartNotFoundException {
+  public Handler.Decision restart(Restart.Option restartOption) throws RestartNotFoundException {
     for (Restart r : getScope().getAllRestarts()) {
       if (r.test(restartOption)) {
-        return r.apply(restartOption);
+        return new Handler.Decision(r.apply(restartOption));
       }
     }
 
@@ -128,11 +165,21 @@ class HandlerOperationsImpl implements Handler.Operations {
   }
 
   @Override
-  public Object skip() {
-    return SKIP;
+  public Handler.Decision resume() {
+    return Handler.Decision.RESUME;
   }
 
-  public Scope getScope() {
+  @Override
+  public Handler.Decision skip() {
+    return Handler.Decision.SKIP;
+  }
+
+  @Override
+  public Handler.Decision use(Object object) {
+    return new Handler.Decision(object);
+  }
+
+  Scope getScope() {
     return scope;
   }
 }

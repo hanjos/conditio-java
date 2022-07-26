@@ -10,14 +10,14 @@ import java.util.function.Supplier;
  * responsible for managing the signalling machinery and the available handlers and restarts.
  * <p>
  * The main operation is {@link #signal(Condition, Restart...)}, which is called when lower-level code doesn't know
- * how to handle a certain {@linkplain Condition situation}. Basically, {@code signal} looks for something that can
- * {@linkplain #handle(Class, BiFunction) handle} the given condition. This {@linkplain Handler handler} may return a
- * result itself, or look for a recovery strategy (also known as a {@linkplain Restart restart}),
- * and {@linkplain #restart(Restart.Option) use} it to provide a result.
+ * how to handle a certain {@linkplain Condition situation}. In a nutshell, {@code signal} looks for something that can
+ * {@linkplain #handle(Class, BiFunction) handle} the given condition. This {@linkplain Handler handler} then chooses
+ * {@linkplain Handler.Operations what to do}, like returning a result directly, or looking for a recovery strategy
+ * (also known as a {@linkplain Restart restart}) and using it to provide a result.
  * <p>
- * Restarts only make sense for specific situations, and therefore are set only when the condition is
+ * Restarts only make sense for specific invocations. Therefore, they're set only when a condition is
  * {@code signal}led, or when code calling a {@code signal}ling method wraps that call with
- * {@link #call(Supplier, Restart...)}.
+ * {@link #call(Supplier, Restart...)} to provide more restarts.
  * <p>
  * This class creates and manages a stack of nested {@code Scope}s, and provides ways to search for handlers and
  * restarts throughout this stack. This nesting is handled with {@link Scope#create()} and particularly
@@ -29,7 +29,7 @@ import java.util.function.Supplier;
  * <pre>
  *   try(Scope scope = Scope.create()) {
  *     // establishing a new handler, which delegates the work to a RetryWith-compatible restart
- *     scope.handle(MalformedEntry.class, (c, s) -&gt; s.restart(new RetryWith("FAIL: " + c.getText())));
+ *     scope.handle(MalformedEntry.class, (c, ops) -&gt; ops.restart(new RetryWith("FAIL: " + c.getText())));
  *
  *     // ...somewhere deeper in the call stack...
  *     try(Scope scope = Scope.create()) {
@@ -72,22 +72,22 @@ public final class Scope implements AutoCloseable {
    * @see #signal(Condition, Restart...)
    * @see Handler
    */
-  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations, ?> body) {
+  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations, Handler.Decision> body) {
     this.handlers.add(new HandlerImpl(conditionType, body));
 
     return this;
   }
 
   /**
-   * Establishes some restarts, available to all code in or called by {@code body}. It's useful for adding recovery
+   * Establishes some restarts, available to all handlers above in the call stack. It's useful for adding recovery
    * strategies to calls that may signal conditions.
    * <p>
-   * Usage:
+   * Usage example:
    * <pre>
    * final Restart SKIP_ENTRY = Restart.on(SkipEntry.class, r -&gt; SKIP_ENTRY_MARKER);
    *
    * for (String line : lines) {
-   *   // parseLogEntry may signal a condition. This code isn't handling it,
+   *   // parseLogEntry may signal a condition. This code doesn't handle it,
    *   // but it provides SKIP_ENTRY as one more possible restart
    *   Entry entry = scope.call(() -&gt; parseLogEntry(line), SKIP_ENTRY);
    *
@@ -98,7 +98,7 @@ public final class Scope implements AutoCloseable {
    * </pre>
    *
    * @param body     some code.
-   * @param restarts some restarts, which will be made available to all code in or called by {@code body}.
+   * @param restarts some restarts, which will be available to all handlers above in the call stack.
    * @return the result of calling {@code body}.
    * @throws NullPointerException if at least one parameter is {@code null}.
    * @see Restart#on(Class, Function)
@@ -115,15 +115,15 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * Signals a situation which the currently running code doesn't know how to handle. This method will
+   * Signals a situation which the currently running code doesn't know how to deal with. This method will
    * {@linkplain #getAllHandlers() search} for a compatible {@linkplain Handler handler} and run it, returning the
-   * result.
+   * end result.
    *
    * @param condition a condition, representing a situation which {@linkplain #handle(Class, BiFunction) higher-level
    *                  code} will decide how to handle.
    * @param restarts  some {@linkplain Restart restarts}, which will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
-   * @throws NullPointerException     if no condition or a {@code null} restart array was given.
+   * @throws NullPointerException     if at least one argument was {@code null}.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
    * @see #handle(Class, BiFunction)
    * @see #getAllHandlers()
@@ -134,9 +134,8 @@ public final class Scope implements AutoCloseable {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
 
-    // add restarts, but only for this signal call
     try (Scope scope = Scope.create()) {
-      scope.establish(restarts);
+      scope.establish(restarts); // add restarts, but only for this signal call
 
       Handler.Operations ops = new HandlerOperationsImpl(scope);
       for (Handler h : scope.getAllHandlers()) {
@@ -144,12 +143,12 @@ public final class Scope implements AutoCloseable {
           continue;
         }
 
-        Object result = h.apply(condition, ops);
-        if (result == HandlerOperationsImpl.SKIP) {
+        Handler.Decision result = h.apply(condition, ops);
+        if (result == Handler.Decision.SKIP) {
           continue;
         }
 
-        return result;
+        return result.get();
       }
 
       throw new HandlerNotFoundException(condition);

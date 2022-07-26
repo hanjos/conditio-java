@@ -3,7 +3,7 @@ package org.sbrubbles.conditio;
 /**
  * Thrown when no working handler for a given condition was found. This may happen either when no available handler
  * could {@linkplain Handler#test(Object) handle} the condition, or when the ones that could opted to
- * {@linkplain Handler#SKIP skip} instead.
+ * {@linkplain Handler.Operations#skip() skip} instead.
  *
  * @see Handler
  * @see Condition

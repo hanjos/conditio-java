@@ -39,18 +39,18 @@ public class HandlerImplTest {
       Handler.Operations ops = new HandlerOperationsImpl(scope);
 
       Condition c = new BasicCondition("OMGWTFBBQ");
-      assertEquals("OK: OMGWTFBBQ", h.apply(c, ops));
+      assertEquals("OK: OMGWTFBBQ", h.apply(c, ops).get());
 
       Condition f = new BasicCondition("FAIL");
-      assertEquals("FAIL!", h.apply(f, ops));
+      assertEquals("FAIL!", h.apply(f, ops).get());
     }
   }
 
-  private Object body(BasicCondition c, Handler.Operations ops) {
+  private Handler.Decision body(BasicCondition c, Handler.Operations ops) {
     if (!"FAIL".equals(c.getValue())) {
-      return "OK: " + c.getValue();
+      return ops.use("OK: " + c.getValue());
     } else {
-      return "FAIL!";
+      return ops.use("FAIL!");
     }
   }
 }

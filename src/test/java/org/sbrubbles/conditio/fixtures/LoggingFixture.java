@@ -138,12 +138,14 @@ public class LoggingFixture {
         .handle(NoRestartUsed.class, (c, ops) -> {
           traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
 
-          return c.getValue();
+          return ops.use(c.getValue());
         })
         .handle(PleaseSignalSomethingElse.class, (c, ops) -> {
-          traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
+          try (Scope s = Scope.create()) {
+            traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
 
-          return ops.signal(new SomethingElse());
+            return ops.use(s.signal(new SomethingElse()));
+          }
         });
 
       List<AnalyzedEntry> logs = new ArrayList<>();

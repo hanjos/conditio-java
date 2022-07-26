@@ -1,6 +1,7 @@
 # 0.4
 
 * Handlers now take a Handler.Operations instead of a scope, which delimits the operations available.
+* Handlers now return a Handler.Decision, which is written in a way to effectively force the dev to use Handler.Operations to get an instance.
 
 # 0.3
 
