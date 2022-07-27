@@ -1,4 +1,4 @@
-package org.sbrubbles.conditio.fixtures;
+package org.sbrubbles.conditio.fixtures.logging;
 
 import org.sbrubbles.conditio.Restart;
 

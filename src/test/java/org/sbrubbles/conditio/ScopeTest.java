@@ -1,8 +1,8 @@
 package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
-import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.fixtures.UseValue;
+import org.sbrubbles.conditio.fixtures.logging.BasicCondition;
+import org.sbrubbles.conditio.fixtures.logging.UseValue;
 
 import java.util.List;
 

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.sbrubbles.conditio.fixtures.*;
+import org.sbrubbles.conditio.fixtures.logging.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -18,13 +18,13 @@ import java.util.stream.StreamSupport;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-public class SignallingTest {
+public class LoggingTest {
   private static final String FIXED_TEXT = "0000 FIXED TEXT";
   private static final Entry FIXED_ENTRY = new Entry(FIXED_TEXT);
   private static final Entry USE_VALUE_ENTRY = new Entry("1000 USE VALUE ENTRY");
 
-  private static final String GOOD_LOG = "../good.txt";
-  private static final String BAD_LOG = "../bad.txt";
+  private static final String GOOD_LOG = "../../good.txt";
+  private static final String BAD_LOG = "../../bad.txt";
 
   private LoggingFixture fixture;
 

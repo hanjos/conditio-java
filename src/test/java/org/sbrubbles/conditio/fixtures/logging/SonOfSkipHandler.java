@@ -1,4 +1,4 @@
-package org.sbrubbles.conditio.fixtures;
+package org.sbrubbles.conditio.fixtures.logging;
 
 public class SonOfSkipHandler extends SkipHandler {
   public SonOfSkipHandler(Entry value) {
