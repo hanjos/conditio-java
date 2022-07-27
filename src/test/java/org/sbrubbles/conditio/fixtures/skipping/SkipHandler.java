@@ -1,17 +1,17 @@
-package org.sbrubbles.conditio.fixtures.logging;
+package org.sbrubbles.conditio.fixtures.skipping;
 
 import org.sbrubbles.conditio.Condition;
 
 import java.util.Objects;
 
 public class SkipHandler implements Condition {
-  private final Entry value;
+  private final String value;
 
-  public SkipHandler(Entry value) {
+  public SkipHandler(String value) {
     this.value = value;
   }
 
-  public Entry getValue() {
+  public String getValue() {
     return value;
   }
 

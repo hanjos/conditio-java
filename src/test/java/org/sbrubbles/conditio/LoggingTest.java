@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -65,7 +64,7 @@ public class LoggingTest {
     List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
 
     String handlerTrace = expectedHandler.getMethodName() + ": " + MalformedLogEntry.class.getSimpleName();
-    String restartOptionTrace = expectedRestart.getRestartName();
+    String restartOptionTrace = expectedRestart.getRestartName() + ": " + restartOption.getClass().getSimpleName();
 
     assertEquals(expectedEntries, actual);
     assertLinesMatch( // the handler gets called once for each bad line in the log; in bad.txt, there's two
@@ -165,57 +164,6 @@ public class LoggingTest {
       fixture.getHandlerTrace());
     assertLinesMatch(
       Collections.emptyList(),
-      fixture.getRestartTrace());
-  }
-
-  @Test
-  public void readBadLogWithResignalling() throws Exception {
-    fixture.setConditionProvider(t -> new PleaseSignalSomethingElse());
-
-    List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
-
-    assertEquals(
-      Arrays.asList(
-        new AnalyzedEntry(goodLine(1), BAD_LOG),
-        new AnalyzedEntry(goodLine(3), BAD_LOG)),
-      actual);
-    assertLinesMatch(
-      Arrays.asList(
-        "logAnalyzer: " + PleaseSignalSomethingElse.class.getSimpleName(),
-        "analyzeLog: " + SomethingElse.class.getSimpleName(),
-        "logAnalyzer: " + PleaseSignalSomethingElse.class.getSimpleName(),
-        "analyzeLog: " + SomethingElse.class.getSimpleName()),
-      fixture.getHandlerTrace());
-    assertLinesMatch(
-      Arrays.asList("SkipEntry", "SkipEntry"),
-      fixture.getRestartTrace());
-  }
-
-  @ParameterizedTest
-  @MethodSource("skipHandlingProvider")
-  public void skipHandling(final Class<? extends Condition> conditionType, final Function<Entry, Condition> conditionBuilder) throws Exception {
-    final Entry SIGNAL_ENTRY = new Entry("OMG");
-
-    fixture.setConditionProvider(str -> conditionBuilder.apply(SIGNAL_ENTRY));
-
-    List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
-
-    assertEquals(
-      Arrays.asList(
-        new AnalyzedEntry(goodLine(1), BAD_LOG),
-        new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG),
-        new AnalyzedEntry(goodLine(3), BAD_LOG),
-        new AnalyzedEntry(SIGNAL_ENTRY, BAD_LOG)),
-      actual);
-    assertLinesMatch(
-      Arrays.asList(
-        "analyzeLog: " + conditionType.getSimpleName(),
-        "logAnalyzer: " + conditionType.getSimpleName(),
-        "analyzeLog: " + conditionType.getSimpleName(),
-        "logAnalyzer: " + conditionType.getSimpleName()),
-      fixture.getHandlerTrace());
-    assertLinesMatch(
-      Arrays.asList("UseValue", "UseValue"),
       fixture.getRestartTrace());
   }
 
@@ -394,13 +342,6 @@ public class LoggingTest {
           new AnalyzedEntry(goodLine(1), BAD_LOG),
           new AnalyzedEntry(goodLine(3), BAD_LOG)),
         new SkipEntry())
-    );
-  }
-
-  static Stream<Arguments> skipHandlingProvider() {
-    return Stream.of(
-      arguments(SkipHandler.class, (Function<Entry, Condition>) SkipHandler::new),
-      arguments(SonOfSkipHandler.class, (Function<Entry, Condition>) SonOfSkipHandler::new)
     );
   }
 

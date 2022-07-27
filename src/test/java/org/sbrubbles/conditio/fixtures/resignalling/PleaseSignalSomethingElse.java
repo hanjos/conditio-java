@@ -1,4 +1,4 @@
-package org.sbrubbles.conditio.fixtures.logging;
+package org.sbrubbles.conditio.fixtures.resignalling;
 
 import org.sbrubbles.conditio.Condition;
 

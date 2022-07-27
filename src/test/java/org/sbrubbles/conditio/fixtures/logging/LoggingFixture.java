@@ -3,6 +3,7 @@ package org.sbrubbles.conditio.fixtures.logging;
 import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
+import org.sbrubbles.conditio.fixtures.AbstractFixture;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
  * <p>
  * It's a pretty decent usage example, if somewhat distorted by the instrumentation and shunts added for the tests.
  */
-public class LoggingFixture {
+public class LoggingFixture extends AbstractFixture {
   private static final Entry SKIP_ENTRY_MARKER = new Entry(null);
 
   public boolean isWellFormed(String entry) {
@@ -32,15 +33,9 @@ public class LoggingFixture {
         return new Entry(text);
       } else {
         final Restart USE_VALUE = Restart.on(UseValue.class,
-          r -> {
-            traceRestart("UseValue");
-            return r.getValue();
-          });
+          traceRestart("UseValue", UseValue::getValue));
         final Restart RETRY_WITH = Restart.on(RetryWith.class,
-          r -> {
-            traceRestart("RetryWith");
-            return parseLogEntry(r.getText());
-          });
+          traceRestart("RetryWith", r -> parseLogEntry(r.getText())));
 
         return (Entry) scope.signal(
           getConditionProvider().apply(text),
@@ -60,14 +55,11 @@ public class LoggingFixture {
       List<String> lines = br.lines().collect(Collectors.toList());
       List<Entry> entries = new ArrayList<>();
 
-      final Restart SKIP_ENTRY = Restart.on(SkipEntry.class, r -> {
-        traceRestart("SkipEntry");
-        return SKIP_ENTRY_MARKER;
-      });
+      final Restart SKIP_ENTRY = Restart.on(SkipEntry.class,
+        traceRestart("SkipEntry", r -> SKIP_ENTRY_MARKER));
 
       for (String line : lines) {
-        Entry entry = scope.call(() -> parseLogEntry(line),
-          SKIP_ENTRY);
+        Entry entry = scope.call(() -> parseLogEntry(line), SKIP_ENTRY);
 
         if (!SKIP_ENTRY_MARKER.equals(entry)) {
           entries.add(entry);
@@ -87,25 +79,9 @@ public class LoggingFixture {
       // this flag's here to test handling in different scopes, but it's actually a pretty good demonstration: since
       // this isn't a language construct, handlers can be established dynamically
       if (isAnalyzeLog()) {
-        scope.handle(MalformedLogEntry.class, (c, ops) -> {
-          traceHandler("analyzeLog: " + c.getClass().getSimpleName());
-
-          return ops.restart(getRestartOptionToUse());
-        });
+        scope.handle(MalformedLogEntry.class,
+          traceHandler("analyzeLog", (c, ops) -> ops.restart(getRestartOptionToUse())));
       }
-
-      scope
-        .handle(SkipHandler.class, (c, ops) -> {
-          traceHandler("analyzeLog: " + c.getClass().getSimpleName());
-
-          return ops.skip();
-        })
-        .handle(SomethingElse.class, (c, ops) -> {
-          traceHandler("analyzeLog: " + c.getClass().getSimpleName());
-          loggedConditions.add(c);
-
-          return ops.restart(new SkipEntry());
-        });
 
       InputStream in = LoggingFixture.class.getResourceAsStream(filename);
       List<Entry> entries = parseLogFile(in);
@@ -122,31 +98,12 @@ public class LoggingFixture {
   public List<AnalyzedEntry> logAnalyzer(String... logfiles) throws Exception {
     try (Scope scope = Scope.create()) {
       if (isLogAnalyzer()) {
-        scope.handle(MalformedLogEntry.class, (c, ops) -> {
-          traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
-
-          return ops.restart(getRestartOptionToUse());
-        });
+        scope.handle(MalformedLogEntry.class,
+          traceHandler("logAnalyzer", (c, ops) -> ops.restart(getRestartOptionToUse())));
       }
 
-      scope
-        .handle(SkipHandler.class, (c, ops) -> {
-          traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
-
-          return ops.restart(new UseValue(c.getValue()));
-        })
-        .handle(NoRestartUsed.class, (c, ops) -> {
-          traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
-
-          return ops.use(c.getValue());
-        })
-        .handle(PleaseSignalSomethingElse.class, (c, ops) -> {
-          try (Scope s = Scope.create()) {
-            traceHandler("logAnalyzer: " + c.getClass().getSimpleName());
-
-            return ops.use(s.signal(new SomethingElse()));
-          }
-        });
+      scope.handle(NoRestartUsed.class,
+        traceHandler("logAnalyzer", (c, ops) -> ops.use(c.getValue())));
 
       List<AnalyzedEntry> logs = new ArrayList<>();
       for (String filename : logfiles) {
@@ -164,9 +121,6 @@ public class LoggingFixture {
   private Function<String, Condition> conditionProvider;
   private Restart.Option restartOptionToUse;
 
-  private final List<String> handlerTrace;
-  private final List<String> restartTrace;
-
   private final List<Condition> loggedConditions;
 
   public LoggingFixture() {
@@ -176,17 +130,7 @@ public class LoggingFixture {
     conditionProvider = MalformedLogEntry::new;
     restartOptionToUse = null;
 
-    handlerTrace = new ArrayList<>();
-    restartTrace = new ArrayList<>();
     loggedConditions = new ArrayList<>();
-  }
-
-  private void traceHandler(String trace) {
-    handlerTrace.add(trace);
-  }
-
-  private void traceRestart(String trace) {
-    restartTrace.add(trace);
   }
 
   public boolean isAnalyzeLog() {
@@ -219,14 +163,6 @@ public class LoggingFixture {
 
   public void setRestartOptionToUse(Restart.Option restartOptionToUse) {
     this.restartOptionToUse = restartOptionToUse;
-  }
-
-  public List<String> getHandlerTrace() {
-    return Collections.unmodifiableList(handlerTrace);
-  }
-
-  public List<String> getRestartTrace() {
-    return Collections.unmodifiableList(restartTrace);
   }
 
   public List<Condition> getLoggedConditions() { return Collections.unmodifiableList(loggedConditions); }
