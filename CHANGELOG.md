@@ -2,6 +2,7 @@
 
 * Handlers now take a Handler.Operations instead of a scope, which delimits the operations available.
 * Handlers now return a Handler.Decision, which is written in a way to effectively force the dev to use Handler.Operations to get an instance.
+* Condition now provides a protocol to Scope.signal to use. This can be overridden in Condition implementations, paving the way for Signal, Warning and other possible subtypes.
 * Reorganizing some tests to improve legibility.
 * Adding some possible usages in the tests. 
 
