@@ -75,7 +75,8 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
     Decision skip();
 
     /**
-     * Provides a value for {@link Scope#signal(Condition, Restart...) signal} to return directly.
+     * Provides a value for {@link Scope#signal(Condition, Restart...) signal} to return directly. This may cause a
+     * later {@link ClassCastException} if this value's type doesn't fit the one {@code signal} expects.
      *
      * @param object the value to be returned by {@code signal}.
      * @return (a decision holding) the given {@code object}.
