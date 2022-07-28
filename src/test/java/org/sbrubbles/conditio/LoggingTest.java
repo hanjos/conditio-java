@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.*;
 
 import java.util.Arrays;
@@ -12,7 +13,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -28,7 +28,7 @@ public class LoggingTest {
   private LoggingFixture fixture;
 
   @BeforeEach
-  public void buildFixture() {
+  public void setUp() {
     fixture = new LoggingFixture();
   }
 
@@ -143,99 +143,7 @@ public class LoggingTest {
     }
   }
 
-  @Test
-  public void readBadLogUsingNoRestarts() throws Exception {
-    final Entry FIXED_ENTRY = new Entry("1111 FIXED ENTRY");
-    fixture.setConditionProvider(t -> new NoRestartUsed(FIXED_ENTRY));
-
-    List<AnalyzedEntry> actual = fixture.logAnalyzer(BAD_LOG);
-
-    assertEquals(
-      Arrays.asList(
-        new AnalyzedEntry(goodLine(1), BAD_LOG),
-        new AnalyzedEntry(FIXED_ENTRY, BAD_LOG),
-        new AnalyzedEntry(goodLine(3), BAD_LOG),
-        new AnalyzedEntry(FIXED_ENTRY, BAD_LOG)),
-      actual);
-    assertLinesMatch(
-      Arrays.asList(
-        "logAnalyzer: " + NoRestartUsed.class.getSimpleName(),
-        "logAnalyzer: " + NoRestartUsed.class.getSimpleName()),
-      fixture.getHandlerTrace());
-    assertLinesMatch(
-      Collections.emptyList(),
-      fixture.getRestartTrace());
-  }
-
-  @Test
-  public void signalRemovesTheRestartsAfterwards() {
-    final Restart USE_VALUE = Restart.on(UseValue.class, UseValue::getValue);
-    final String TEST_STR = "test";
-    final Restart.Option u = new UseValue(TEST_STR);
-
-    try (Scope a = Scope.create()) {
-      // no restart before the handler...
-      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
-
-      a.handle(MalformedLogEntry.class, (c, ops) -> {
-        // now there's something!
-        // TODO add a getScope to Operations?
-        HandlerOperationsImpl opsImpl = (HandlerOperationsImpl) ops;
-        assertTrue(toStream(opsImpl.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
-
-        return ops.restart(u);
-      });
-
-      // no restart after either
-      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "after handle");
-
-      try (Scope b = Scope.create()) {
-        // no restart before signal...
-        assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "before signal");
-
-        assertEquals(TEST_STR, b.signal(new MalformedLogEntry(""), USE_VALUE));
-
-        // no restart after either...
-        assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "after signal");
-      }
-    }
-  }
-
-  @Test
-  public void callRemovesTheRestartsAfterwards() {
-    final Restart USE_VALUE = Restart.on(UseValue.class, UseValue::getValue);
-    final String TEST_STR = "test";
-    final Restart.Option u = new UseValue(TEST_STR);
-
-    try (Scope a = Scope.create()) {
-      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
-
-      a.handle(MalformedLogEntry.class, (c, ops) -> {
-        HandlerOperationsImpl opsImpl = (HandlerOperationsImpl) ops;
-        assertTrue(toStream(opsImpl.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
-
-        return ops.restart(u);
-      });
-
-      assertEquals(TEST_STR, a.call(
-        () -> {
-          try (Scope b = Scope.create()) {
-            assertTrue(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "inside call");
-
-            return b.signal(new MalformedLogEntry(""));
-          }
-        },
-        USE_VALUE));
-
-      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "after handle");
-    }
-  }
-
   // helpers
-  static <T> Stream<T> toStream(Iterable<T> iterable) {
-    return StreamSupport.stream(iterable.spliterator(), false);
-  }
-
   static Entry goodLine(int line) {
     return new Entry(String.format("%04d OK", line));
   }

@@ -19,7 +19,7 @@ public class TracingTest {
 
   @Test
   public void resuming() {
-    fixture.run();
+    fixture.resume();
 
     assertEquals(MAX_WORK, fixture.getWorkDone());
     assertEquals(Collections.nCopies(MAX_WORK, "run: WorkDone"), fixture.getHandlerTrace());
