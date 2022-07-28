@@ -15,13 +15,14 @@ package org.sbrubbles.conditio;
  */
 public interface Condition {
   /**
-   * Called before the handler search has begun.
+   * Called before the handler search has begun. The given scope will also enable restarts to be set.
    * <p>
    * This default implementation does nothing.
    *
-   * @param scope where the handler search will happen.
+   * @param scope where the handler search will happen. Restarts can also be set in it.
+   * @see WithRestarts
    */
-  default void onStart(Scope scope) { /**/ }
+  default <S extends Scope & WithRestarts> void onStart(S scope) { /**/ }
 
   /**
    * Called when no handler was found.

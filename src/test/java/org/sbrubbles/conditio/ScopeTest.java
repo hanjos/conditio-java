@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ScopeTest {
   @Test
   public void rootHasNullParent() {
-    try(Scope scope = Scope.create()) {
+    try (Scope scope = Stack.create()) {
       assertTrue(scope.isRoot());
       assertNull(scope.getParent());
     }
@@ -21,13 +21,13 @@ public class ScopeTest {
   public void everyInvocationChainHasItsOwnRoot() {
     Scope firstTry;
 
-    try(Scope scope = Scope.create()) {
+    try (Scope scope = Stack.create()) {
       assertTrue(scope.isRoot());
 
       firstTry = scope;
     }
 
-    try(Scope scope = Scope.create()) {
+    try (Scope scope = Stack.create()) {
       assertTrue(scope.isRoot());
       assertNotEquals(firstTry, scope);
     }
@@ -35,14 +35,14 @@ public class ScopeTest {
 
   @Test
   public void createReflectsTheTryStack() {
-    try(Scope a = Scope.create()) {
+    try (Scope a = Stack.create()) {
       assertTrue(a.isRoot());
 
-      try(Scope b = Scope.create()) {
+      try (Scope b = Stack.create()) {
         assertFalse(b.isRoot());
         assertEquals(b.getParent(), a);
 
-        try (Scope c = Scope.create()) {
+        try (Scope c = Stack.create()) {
           assertFalse(c.isRoot());
           assertEquals(c.getParent(), b);
         }
@@ -52,7 +52,7 @@ public class ScopeTest {
 
   @Test
   public void getHandlersIsUnmodifiable() {
-    try (Scope a = Scope.create()) {
+    try (Scope a = Stack.create()) {
       final List<Handler> hs = a.getHandlers();
       final Handler h = new HandlerImpl(BasicCondition.class, (c, ops) -> ops.use("test"));
 
@@ -63,7 +63,7 @@ public class ScopeTest {
 
   @Test
   public void getRestartsIsUnmodifiable() {
-    try (Scope a = Scope.create()) {
+    try (Scope a = Stack.create()) {
       final List<Restart> rs = a.getRestarts();
       final Restart r = new RestartImpl(UseValue.class, u -> "test");
 

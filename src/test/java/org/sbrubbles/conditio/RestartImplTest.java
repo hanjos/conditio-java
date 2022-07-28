@@ -12,7 +12,7 @@ public class RestartImplTest {
 
   @BeforeEach
   public void setUp() {
-    try (Scope scope = Scope.create()) {
+    try (Scope scope = Stack.create()) {
       rA = new RestartImpl(A.class, this::body);
       rB = new RestartImpl(B.class, this::body);
     }
@@ -20,7 +20,7 @@ public class RestartImplTest {
 
   @Test
   public void nullParametersAreNotAllowed() {
-    try (Scope scope = Scope.create()) {
+    try (Scope scope = Stack.create()) {
       assertThrows(NullPointerException.class,
         () -> new RestartImpl(null, this::body), "missing optionType");
       assertThrows(NullPointerException.class,

@@ -3,6 +3,7 @@ package org.sbrubbles.conditio.fixtures.logging;
 import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
+import org.sbrubbles.conditio.Stack;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
 
 import java.io.BufferedReader;
@@ -27,7 +28,7 @@ public class LoggingFixture extends AbstractFixture {
   }
 
   public Entry parseLogEntry(String text) {
-    try (Scope scope = Scope.create()) {
+    try (Scope scope = Stack.create()) {
       if (isWellFormed(text)) {
         return new Entry(text);
       } else {
@@ -50,7 +51,7 @@ public class LoggingFixture extends AbstractFixture {
 
   public List<Entry> parseLogFile(InputStream in) {
     try (BufferedReader br = new BufferedReader(new InputStreamReader(in));
-         Scope scope = Scope.create()) {
+         Scope scope = Stack.create()) {
       List<String> lines = br.lines().collect(Collectors.toList());
       List<Entry> entries = new ArrayList<>();
 
@@ -74,7 +75,7 @@ public class LoggingFixture extends AbstractFixture {
   }
 
   public List<AnalyzedEntry> analyzeLog(String filename) {
-    try (Scope scope = Scope.create()) {
+    try (Scope scope = Stack.create()) {
       // this flag's here to test handling in different scopes, but it's actually a pretty good demonstration: since
       // this isn't a language construct, handlers can be established dynamically
       if (isAnalyzeLog()) {
@@ -95,7 +96,7 @@ public class LoggingFixture extends AbstractFixture {
   }
 
   public List<AnalyzedEntry> logAnalyzer(String... logfiles) throws Exception {
-    try (Scope scope = Scope.create()) {
+    try (Scope scope = Stack.create()) {
       if (isLogAnalyzer()) {
         scope.handle(MalformedLogEntry.class,
           traceHandler("logAnalyzer", (c, ops) -> ops.restart(getRestartOptionToUse())));

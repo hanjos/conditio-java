@@ -26,7 +26,7 @@ public class BasicOperationsTest {
     final String TEST_STR = "test";
     final Restart.Option u = new UseValue(TEST_STR);
 
-    try (Scope a = Scope.create()) {
+    try (Scope a = Stack.create()) {
       // no restart before the handler...
       assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
 
@@ -40,7 +40,7 @@ public class BasicOperationsTest {
       // no restart after either
       assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "after handle");
 
-      try (Scope b = Scope.create()) {
+      try (Scope b = Stack.create()) {
         // no restart before signal...
         assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "before signal");
 
@@ -58,7 +58,7 @@ public class BasicOperationsTest {
     final String TEST_STR = "test";
     final Restart.Option u = new UseValue(TEST_STR);
 
-    try (Scope a = Scope.create()) {
+    try (Scope a = Stack.create()) {
       assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
 
       a.handle(MalformedLogEntry.class, (c, ops) -> {
@@ -69,7 +69,7 @@ public class BasicOperationsTest {
 
       assertEquals(TEST_STR, a.call(
         () -> {
-          try (Scope b = Scope.create()) {
+          try (Scope b = Stack.create()) {
             assertTrue(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "inside call");
 
             return b.signal(new MalformedLogEntry(""));
@@ -87,19 +87,19 @@ public class BasicOperationsTest {
     final String EXPECTED_RESULT = "<result>";
     final List<String> trace = new ArrayList<>();
 
-    try (Scope a = Scope.create()) {
+    try (Scope a = Stack.create()) {
       a.handle(BasicCondition.class, (c, ops) -> {
         trace.add("a");
         return ops.use(EXPECTED_RESULT);
       });
 
-      try (Scope b = Scope.create()) {
+      try (Scope b = Stack.create()) {
         b.handle(BasicCondition.class, (c, ops) -> {
           trace.add("b");
           return ops.skip();
         });
 
-        try (Scope c = Scope.create()) {
+        try (Scope c = Stack.create()) {
           Object actual = c.signal(builder.apply(EXPECTED_RESULT));
 
           assertEquals(EXPECTED_RESULT, actual);
@@ -116,14 +116,14 @@ public class BasicOperationsTest {
     final String EXPECTED_RESULT = "<result>";
     final List<String> trace = new ArrayList<>();
 
-    try (Scope a = Scope.create()) {
+    try (Scope a = Stack.create()) {
       a.handle(BasicCondition.class,
         (c, ops) -> {
           trace.add("a");
           return ops.use(EXPECTED_RESULT);
         });
 
-      try (Scope b = Scope.create()) {
+      try (Scope b = Stack.create()) {
         Object actual = b.signal(new BasicCondition(""));
 
         assertEquals(EXPECTED_RESULT, actual);
@@ -137,23 +137,23 @@ public class BasicOperationsTest {
     final String FIXED_RESULT = "<result>";
     final List<String> trace = new ArrayList<>();
 
-    try (Scope a = Scope.create()) {
+    try (Scope a = Stack.create()) {
       a.handle(PleaseSignalSomethingElse.class,
         (c, ops) -> {
           trace.add("a");
-          try (Scope s = Scope.create()) {
+          try (Scope s = Stack.create()) {
             return ops.use(s.signal(new BasicCondition(null)));
           }
         });
 
-      try (Scope b = Scope.create()) {
+      try (Scope b = Stack.create()) {
         b.handle(BasicCondition.class,
           (c, ops) -> {
             trace.add("b");
             return ops.use(FIXED_RESULT);
           });
 
-        try (Scope c = Scope.create()) {
+        try (Scope c = Stack.create()) {
           Object actual = c.signal(new PleaseSignalSomethingElse());
 
           assertEquals(FIXED_RESULT, actual);
@@ -169,7 +169,7 @@ public class BasicOperationsTest {
   public void signallingAConditionWithNoHandlersErrorsOut() {
     BasicCondition condition = new BasicCondition("test");
 
-    try (Scope a = Scope.create()) {
+    try (Scope a = Stack.create()) {
       a.signal(condition);
 
       fail();
@@ -182,7 +182,7 @@ public class BasicOperationsTest {
   public void signallingASignalWithNoHandlersJustNopesOut() {
     BasicSignal condition = new BasicSignal("test");
 
-    try (Scope a = Scope.create()) {
+    try (Scope a = Stack.create()) {
       a.signal(condition);
     }
 

@@ -7,32 +7,31 @@ import java.util.function.Supplier;
 
 /**
  * The <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">resource</a>
- * responsible for managing the signalling machinery and the available handlers and restarts.
+ * providing the main machinery.
  * <p>
  * The main operation is {@link #signal(Condition, Restart...)}, which is called when lower-level code doesn't know
  * how to handle a {@linkplain Condition condition}. In a nutshell, {@code signal} looks for something that can
- * {@linkplain #handle(Class, BiFunction) handle} the given condition. This {@linkplain Handler handler} then chooses
- * {@linkplain Handler.Operations what to do}, like returning a result directly, or looking for a recovery strategy
- * (also known as a {@linkplain Restart restart}) and using it to provide a result.
+ * {@linkplain #handle(Class, BiFunction) handle} the given condition in the call stack. This
+ * {@linkplain Handler handler} then chooses {@linkplain Handler.Operations what to do}, like returning a result
+ * directly, or looking for a recovery strategy (also known as a {@linkplain Restart restart}) and using it to provide
+ * a result.
+ * <p>
+ * Scopes are resources, with controlled {@linkplain Stack creation and closing} to ensure proper nesting. As a
+ * consequence, {@link Stack#create() create}ing a scope without {@link Scope#close() close}ing it properly will
+ * <strong>break</strong> the nesting. Just use it only in a {@code try}-with-resources, and you'll be fine :)
  * <p>
  * Restarts only make sense for specific invocations. Therefore, they're set only when a condition is
  * {@code signal}led, or when code calling a {@code signal}ling method wraps that call with
  * {@link #call(Supplier, Restart...)} to provide more restarts.
  * <p>
- * This class creates and manages a stack of nested {@code Scope}s, and provides ways to search for handlers and
- * restarts throughout this stack. This nesting is handled with {@link Scope#create()} and particularly
- * {@link Scope#close()}, which will unnest the scope as execution leaves it. As a
- * consequence, {@code create}ing a scope without {@code close}ing it properly will <strong>break</strong>
- * the nesting. Use it only in a {@code try}-with-resources, and you'll be fine :)
- * <p>
  * In practice, usage should look something like this:
  * <pre>
- *   try(Scope scope = Scope.create()) {
+ *   try(Scope scope = Stack.create()) {
  *     // establishing a new handler, which delegates the work to a RetryWith-compatible restart
  *     scope.handle(MalformedEntry.class, (c, ops) -&gt; ops.restart(new RetryWith("FAIL: " + c.getText())));
  *
  *     // ...somewhere deeper in the call stack...
- *     try(Scope scope = Scope.create()) {
+ *     try(Scope scope = Stack.create()) {
  *       // signals a condition, sets a restart, and waits for the result
  *       Entry entry = (Entry) scope.signal(new MalformedEntry("NOOOOOOOO"),
  *                                Restart.on(RetryWith.class, r -&gt; func(r.getValue())));
@@ -42,25 +41,12 @@ import java.util.function.Supplier;
  *   }
  * </pre>
  *
+ * @see Stack
  * @see Condition
  * @see Handler
  * @see Restart
  */
-public final class Scope implements AutoCloseable {
-  private static Scope current = null;
-
-  private final Scope parent;
-
-  private final List<Handler> handlers;
-  private final List<Restart> restarts;
-
-  private Scope(Scope parent) {
-    this.parent = parent;
-
-    this.handlers = new ArrayList<>();
-    this.restarts = new ArrayList<>();
-  }
-
+public interface Scope extends AutoCloseable {
   /**
    * Establishes a new {@linkplain Handler handler} in this scope. It is responsible for handling conditions, returning
    * a result for {@link #signal(Condition, Restart...) signal}.
@@ -72,11 +58,7 @@ public final class Scope implements AutoCloseable {
    * @see #signal(Condition, Restart...)
    * @see Handler
    */
-  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations, Handler.Decision> body) {
-    this.handlers.add(new HandlerImpl(conditionType, body));
-
-    return this;
-  }
+  <C extends Condition, T extends C> Scope handle(Class<T> conditionType, BiFunction<C, Handler.Operations, Handler.Decision> body);
 
   /**
    * Establishes some restarts, available to all handlers above in the call stack. It's useful for adding recovery
@@ -103,16 +85,7 @@ public final class Scope implements AutoCloseable {
    * @throws NullPointerException if at least one parameter is {@code null}.
    * @see Restart#on(Class, Function)
    */
-  public <T> T call(Supplier<T> body, Restart... restarts) {
-    Objects.requireNonNull(body, "body");
-    Objects.requireNonNull(restarts, "restarts");
-
-    try (Scope scope = Scope.create()) {
-      scope.establish(restarts);
-
-      return body.get();
-    }
-  }
+  <T> T call(Supplier<T> body, Restart... restarts);
 
   /**
    * Signals a situation which the currently running code doesn't know how to deal with. This method will
@@ -130,14 +103,103 @@ public final class Scope implements AutoCloseable {
    * @see Restart
    * @see Restart#on(Class, Function)
    */
+  Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException;
+
+  /**
+   * An object to iterate over all active handlers in the call stack, starting from this instance to the root scope.
+   *
+   * @return an iterable to get all active handlers in the call stack.
+   */
+  Iterable<Handler> getAllHandlers();
+
+  /**
+   * An object to iterate over all active restarts in the call stack, starting from this instance to the root scope.
+   *
+   * @return an iterable to get all active restarts in the call stack.
+   */
+  Iterable<Restart> getAllRestarts();
+
+  /**
+   * The active handlers in this scope.
+   *
+   * @return the active handlers in this scope, in an unmodifiable list.
+   */
+  List<Handler> getHandlers();
+
+  /**
+   * The active restarts in this scope.
+   *
+   * @return the active restarts in this scope, in an unmodifiable list.
+   */
+  List<Restart> getRestarts();
+
+  /**
+   * The {@link Scope} instance wrapping this one. May be {@code null} if this is the topmost {@code Scope}.
+   *
+   * @return the {@link Scope} instance wrapping this one, or {@code null} if this is a root scope.
+   */
+  Scope getParent();
+
+  /**
+   * If this is the topmost scope in its execution.
+   *
+   * @return {@code true} if this is the topmost scope.
+   */
+  boolean isRoot();
+
+  /**
+   * Updates the scope nesting when execution leaves the {@code try} block. Subtypes which override this should still
+   * call this method to ensure the proper nesting.
+   */
+  @Override
+  default void close() {
+    Stack.close();
+  }
+}
+
+final class ScopeImpl implements Scope {
+  private final Scope parent;
+
+  private final List<Handler> handlers;
+  private final List<Restart> restarts;
+
+  ScopeImpl(Scope parent) {
+    this.parent = parent;
+
+    this.handlers = new ArrayList<>();
+    this.restarts = new ArrayList<>();
+  }
+
+  @Override
+  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations, Handler.Decision> body) {
+    this.handlers.add(new HandlerImpl(conditionType, body));
+
+    return this;
+  }
+
+  @Override
+  public <T> T call(Supplier<T> body, Restart... restarts) {
+    Objects.requireNonNull(body, "body");
+    Objects.requireNonNull(restarts, "restarts");
+
+    try (Scope scope = Stack.create()) {
+      ScopeWithRestarts scopeWithRestarts = new ScopeWithRestarts((ScopeImpl) scope);
+      scopeWithRestarts.set(restarts);
+
+      return body.get();
+    }
+  }
+
+  @Override
   public Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
 
-    try (Scope scope = Scope.create()) {
-      scope.establish(restarts); // add restarts, but only for this signal call
+    try (Scope scope = Stack.create()) {
+      ScopeWithRestarts scopeWithRestarts = new ScopeWithRestarts((ScopeImpl) scope);
+      scopeWithRestarts.set(restarts); // add restarts, but only for this signal call
 
-      condition.onStart(scope);
+      condition.onStart(scopeWithRestarts);
 
       Handler.Operations ops = new HandlerOperationsImpl(scope);
       for (Handler h : scope.getAllHandlers()) {
@@ -157,100 +219,50 @@ public final class Scope implements AutoCloseable {
     }
   }
 
-  /**
-   * Establishes some restarts in this scope.
-   *
-   * @throws NullPointerException if a restart is null.
-   */
-  private void establish(Restart... restarts) {
-    assert restarts != null;
-
+  void set(Restart... restarts) {
     for (Restart r : restarts) {
       this.restarts.add(Objects.requireNonNull(r));
     }
   }
 
-  /**
-   * An object to iterate over all active handlers in the call stack, starting from this instance to the root scope.
-   *
-   * @return an iterable to get all active handlers in the call stack.
-   */
+  @Override
   public Iterable<Handler> getAllHandlers() {
     return () -> new FullSearchIterator<Handler>(this) {
       @Override
       Iterator<Handler> getNextIteratorFrom(Scope scope) {
-        return scope.handlers.iterator();
+        return scope.getHandlers().iterator();
       }
     };
   }
 
-  /**
-   * An object to iterate over all active restarts in the call stack, starting from this instance to the root scope.
-   *
-   * @return an iterable to get all active restarts in the call stack.
-   */
+  @Override
   public Iterable<Restart> getAllRestarts() {
     return () -> new FullSearchIterator<Restart>(this) {
       @Override
       Iterator<Restart> getNextIteratorFrom(Scope scope) {
-        return scope.restarts.iterator();
+        return scope.getRestarts().iterator();
       }
     };
   }
 
-  /**
-   * The active handlers in this scope.
-   *
-   * @return the active handlers in this scope, in an unmodifiable list.
-   */
+  @Override
   public List<Handler> getHandlers() {
     return Collections.unmodifiableList(this.handlers);
   }
 
-  /**
-   * The active restarts in this scope.
-   *
-   * @return the active restarts in this scope, in an unmodifiable list.
-   */
+  @Override
   public List<Restart> getRestarts() {
     return Collections.unmodifiableList(this.restarts);
   }
 
-  /**
-   * Creates and returns a new instance, nested in the (now former) current scope.
-   *
-   * @return a new instance.
-   */
-  public static Scope create() {
-    current = new Scope(current);
-
-    return current;
-  }
-
-  /**
-   * The {@link Scope} instance wrapping this one. May be {@code null} if this is the topmost {@code Scope}.
-   *
-   * @return the {@link Scope} instance wrapping this one, or {@code null} if this is a root scope.
-   */
+  @Override
   public Scope getParent() {
     return parent;
   }
 
-  /**
-   * If this is the topmost scope in its execution.
-   *
-   * @return {@code true} if this is the topmost scope.
-   */
+  @Override
   public boolean isRoot() {
     return getParent() == null;
-  }
-
-  /**
-   * Updates the current scope when execution leaves the {@code try} block.
-   */
-  @Override
-  public void close() {
-    current = getParent();
   }
 }
 
@@ -263,11 +275,11 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
   private Scope currentScope;
   private Scope endScope;
 
-  FullSearchIterator(Scope currentScope) {
+  FullSearchIterator(ScopeImpl currentScope) {
     this(currentScope, null);
   }
 
-  FullSearchIterator(Scope currentScope, Scope upToScope) {
+  FullSearchIterator(ScopeImpl currentScope, Scope upToScope) {
     this.currentScope = Objects.requireNonNull(currentScope, "currentScope");
     this.currentIterator = getNextIteratorFrom(currentScope);
     this.endScope = (upToScope == null) ? null : upToScope.getParent();
@@ -306,5 +318,52 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
     }
 
     return this.currentIterator.next();
+  }
+}
+
+/**
+ * Enables "adding" the ability to set restarts to a scope. It's a simple decorator, with some privileged access to
+ * set the restarts. Not my proudest code, but it seems to work...
+ */
+class ScopeWithRestarts implements Scope, WithRestarts {
+  private final ScopeImpl scope;
+
+  public ScopeWithRestarts(ScopeImpl scope) {
+    this.scope = scope;
+  }
+
+  @Override
+  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations, Handler.Decision> body) { return scope.handle(conditionType, body); }
+
+  @Override
+  public <T> T call(Supplier<T> body, Restart... restarts) { return scope.call(body, restarts); }
+
+  @Override
+  public Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException { return scope.signal(condition, restarts); }
+
+  @Override
+  public Iterable<Handler> getAllHandlers() { return scope.getAllHandlers(); }
+
+  @Override
+  public Iterable<Restart> getAllRestarts() { return scope.getAllRestarts(); }
+
+  @Override
+  public List<Handler> getHandlers() { return scope.getHandlers(); }
+
+  @Override
+  public List<Restart> getRestarts() { return scope.getRestarts(); }
+
+  @Override
+  public Scope getParent() { return scope.getParent(); }
+
+  @Override
+  public boolean isRoot() { return scope.isRoot(); }
+
+  @Override
+  public void close() { scope.close(); }
+
+  @Override
+  public void set(Restart... restarts) {
+    scope.set(restarts);
   }
 }
