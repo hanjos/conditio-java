@@ -12,6 +12,7 @@ import org.sbrubbles.conditio.fixtures.logging.UseValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -112,7 +113,7 @@ public class BasicOperationsTest {
   }
 
   @Test
-  public void use() throws Exception {
+  public void use() {
     final String EXPECTED_RESULT = "<result>";
     final List<String> trace = new ArrayList<>();
 
@@ -127,7 +128,7 @@ public class BasicOperationsTest {
         Object actual = b.signal(new BasicCondition(""));
 
         assertEquals(EXPECTED_RESULT, actual);
-        assertLinesMatch(Arrays.asList("a"), trace);
+        assertLinesMatch(Collections.singletonList("a"), trace);
       }
     }
   }
