@@ -2,6 +2,8 @@
 
 * Handlers now take a Handler.Operations instead of a scope, which delimits the operations available.
 * Handlers now return a Handler.Decision, which is written in a way to effectively force the dev to use Handler.Operations to get an instance.
+* Reorganizing some tests to improve legibility.
+* Adding some possible usages in the tests. 
 
 # 0.3
 
