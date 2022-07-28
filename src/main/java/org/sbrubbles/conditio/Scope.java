@@ -137,6 +137,8 @@ public final class Scope implements AutoCloseable {
     try (Scope scope = Scope.create()) {
       scope.establish(restarts); // add restarts, but only for this signal call
 
+      condition.onStart(scope);
+
       Handler.Operations ops = new HandlerOperationsImpl(scope);
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(condition)) {
@@ -151,7 +153,7 @@ public final class Scope implements AutoCloseable {
         return result.get();
       }
 
-      throw new HandlerNotFoundException(condition);
+      return condition.onHandlerNotFound(scope);
     }
   }
 

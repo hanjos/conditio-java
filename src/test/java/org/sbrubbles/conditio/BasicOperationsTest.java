@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
+import org.sbrubbles.conditio.fixtures.BasicSignal;
 import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
@@ -162,7 +163,30 @@ public class BasicOperationsTest {
         }
       }
     }
+  }
 
+  @Test
+  public void signallingAConditionWithNoHandlersErrorsOut() {
+    BasicCondition condition = new BasicCondition("test");
+
+    try (Scope a = Scope.create()) {
+      a.signal(condition);
+
+      fail();
+    } catch (HandlerNotFoundException e) {
+      assertEquals(condition, e.getCondition());
+    }
+  }
+
+  @Test
+  public void signallingASignalWithNoHandlersJustNopesOut() {
+    BasicSignal condition = new BasicSignal("test");
+
+    try (Scope a = Scope.create()) {
+      a.signal(condition);
+    }
+
+    // nothing happens, and the returned result is meaningless, so nothing to assert
   }
 
   static <T> Stream<T> toStream(Iterable<T> iterable) {
