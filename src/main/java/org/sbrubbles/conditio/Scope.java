@@ -10,7 +10,7 @@ import java.util.function.Supplier;
  * responsible for managing the signalling machinery and the available handlers and restarts.
  * <p>
  * The main operation is {@link #signal(Condition, Restart...)}, which is called when lower-level code doesn't know
- * how to handle a certain {@linkplain Condition situation}. In a nutshell, {@code signal} looks for something that can
+ * how to handle a {@linkplain Condition condition}. In a nutshell, {@code signal} looks for something that can
  * {@linkplain #handle(Class, BiFunction) handle} the given condition. This {@linkplain Handler handler} then chooses
  * {@linkplain Handler.Operations what to do}, like returning a result directly, or looking for a recovery strategy
  * (also known as a {@linkplain Restart restart}) and using it to provide a result.
