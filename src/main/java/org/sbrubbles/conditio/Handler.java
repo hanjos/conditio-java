@@ -82,6 +82,12 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
      */
     Decision use(Object object);
 
+    /**
+     * Returns the scope backing this instance's operations.
+     *
+     * @return the scope backing this instance's operations.
+     */
+    Scope getScope();
   }
 
   /**
@@ -179,7 +185,8 @@ class HandlerOperationsImpl implements Handler.Operations {
     return new Handler.Decision(object);
   }
 
-  Scope getScope() {
+  @Override
+  public Scope getScope() {
     return scope;
   }
 }

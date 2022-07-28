@@ -31,9 +31,7 @@ public class BasicOperationsTest {
 
       a.handle(MalformedLogEntry.class, (c, ops) -> {
         // now there's something!
-        // TODO add a getScope to Operations?
-        HandlerOperationsImpl opsImpl = (HandlerOperationsImpl) ops;
-        assertTrue(toStream(opsImpl.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
+        assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
 
         return ops.restart(u);
       });
@@ -63,8 +61,7 @@ public class BasicOperationsTest {
       assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
 
       a.handle(MalformedLogEntry.class, (c, ops) -> {
-        HandlerOperationsImpl opsImpl = (HandlerOperationsImpl) ops;
-        assertTrue(toStream(opsImpl.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
+        assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
 
         return ops.restart(u);
       });
