@@ -141,19 +141,12 @@ public interface Scope extends AutoCloseable {
   Scope getParent();
 
   /**
-   * If this is the topmost scope in its execution.
-   *
-   * @return {@code true} if this is the topmost scope.
-   */
-  boolean isRoot();
-
-  /**
    * Updates the scope nesting when execution leaves the {@code try} block. Subtypes which override this should still
    * call this method to ensure the proper nesting.
    */
   @Override
   default void close() {
-    Scopes.close();
+    Scopes.retire();
   }
 }
 
@@ -257,11 +250,6 @@ final class ScopeImpl implements Scope {
   public Scope getParent() {
     return parent;
   }
-
-  @Override
-  public boolean isRoot() {
-    return getParent() == null;
-  }
 }
 
 /**
@@ -347,9 +335,6 @@ class ScopeWithRestarts implements Scope, WithRestarts {
 
   @Override
   public Scope getParent() { return scope.getParent(); }
-
-  @Override
-  public boolean isRoot() { return scope.isRoot(); }
 
   @Override
   public void close() { scope.close(); }

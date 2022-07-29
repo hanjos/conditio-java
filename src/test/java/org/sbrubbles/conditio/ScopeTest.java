@@ -12,7 +12,6 @@ public class ScopeTest {
   @Test
   public void rootHasNullParent() {
     try (Scope scope = Scopes.create()) {
-      assertTrue(scope.isRoot());
       assertNull(scope.getParent());
     }
   }
@@ -22,13 +21,13 @@ public class ScopeTest {
     Scope firstTry;
 
     try (Scope scope = Scopes.create()) {
-      assertTrue(scope.isRoot());
+      assertNull(scope.getParent());
 
       firstTry = scope;
     }
 
     try (Scope scope = Scopes.create()) {
-      assertTrue(scope.isRoot());
+      assertNull(scope.getParent());
       assertNotEquals(firstTry, scope);
     }
   }
@@ -36,14 +35,12 @@ public class ScopeTest {
   @Test
   public void createReflectsTheTryStack() {
     try (Scope a = Scopes.create()) {
-      assertTrue(a.isRoot());
+      assertNull(a.getParent());
 
       try (Scope b = Scopes.create()) {
-        assertFalse(b.isRoot());
         assertEquals(b.getParent(), a);
 
         try (Scope c = Scopes.create()) {
-          assertFalse(c.isRoot());
           assertEquals(c.getParent(), b);
         }
       }

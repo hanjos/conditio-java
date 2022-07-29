@@ -31,7 +31,7 @@ public final class Scopes {
    * This is intended to be called by a scope when it {@linkplain Scope#close() closes}, to correct the nesting. Avoid
    * manual management; {@code try}-with-resources should do all the work :)
    */
-  public static void close() {
+  public static void retire() {
     if (current == null) {
       return;
     }
