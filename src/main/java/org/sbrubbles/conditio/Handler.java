@@ -104,10 +104,10 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
 
     private final Object result;
 
-    // Package-private for a reason; only classes in this package should create instances.
+    // Only classes in this package should create instances
     Decision(Object result) { this.result = result; }
 
-    // Package-private for a reason; only classes in this package should use this.
+    // Only classes in this package should use this
     Object get() { return result; }
   }
 }
