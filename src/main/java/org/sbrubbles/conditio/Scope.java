@@ -271,16 +271,10 @@ final class ScopeImpl implements Scope {
 abstract class FullSearchIterator<T> implements Iterator<T> {
   private Iterator<T> currentIterator;
   private Scope currentScope;
-  private Scope endScope;
 
   FullSearchIterator(ScopeImpl currentScope) {
-    this(currentScope, null);
-  }
-
-  FullSearchIterator(ScopeImpl currentScope, Scope upToScope) {
     this.currentScope = Objects.requireNonNull(currentScope, "currentScope");
     this.currentIterator = getNextIteratorFrom(currentScope);
-    this.endScope = (upToScope == null) ? null : upToScope.getParent();
   }
 
   /**
@@ -298,7 +292,7 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
     }
 
     do {
-      if (this.currentScope.getParent() == null || this.currentScope.getParent() == endScope) {
+      if (this.currentScope.getParent() == null) {
         return false;
       }
 
