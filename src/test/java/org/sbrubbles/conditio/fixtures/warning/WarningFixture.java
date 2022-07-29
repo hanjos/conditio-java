@@ -8,13 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WarningFixture extends AbstractFixture {
-  public static final String RESULT = "OK";
-
-  public String c(int i) {
+  public void c(int i) {
     try (Scope scope = Scopes.create()) {
       scope.signal(new Warning(i));
-
-      return RESULT;
     }
   }
 

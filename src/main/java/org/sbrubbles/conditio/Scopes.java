@@ -1,7 +1,8 @@
 package org.sbrubbles.conditio;
 
 /**
- * Manages the stack of nested {@linkplain Scope scopes}. Works as a {@code Scope} factory.
+ * Manages the stack of nested {@linkplain Scope scopes}. Works as a {@code Scope} factory,
+ * {@linkplain #create() pushing} and popping scopes as needed.
  * <p>
  * This class is not intended to be instanced or subclassed.
  *
@@ -24,9 +25,13 @@ public final class Scopes {
   }
 
   /**
-   * To be called when a scope {@linkplain Scope#close() closes}, to correct the nesting.
+   * "Pops" the current scope from the stack, leaving its {@linkplain Scope#getParent() parent} as the new
+   * current scope.
+   * <p>
+   * This is intended to be called by a scope when it {@linkplain Scope#close() closes}, to correct the nesting. Avoid
+   * manual management; {@code try}-with-resources should do all the work :)
    */
-  static void close() {
+  public static void close() {
     if (current == null) {
       return;
     }
