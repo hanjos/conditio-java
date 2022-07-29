@@ -39,34 +39,6 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
     Decision restart(Restart.Option restartOption) throws RestartNotFoundException;
 
     /**
-     * Signals for execution to proceed, "without" returning a value. Careful; this is meant for situations where the
-     * result of {@link Scope#signal(Condition, Restart...) signal} isn't used, and the handler means only to
-     * acknowledge the condition, like
-     * <pre>
-     *   try(Scope scope = Scopes.create()) {
-     *     scope.handle(Progress.class, (c, ops) -&gt; {
-     *       // do something
-     *       showProgressToUser(c.getValue());
-     *
-     *       // condition acknowledged; carry on
-     *       return ops.resume();
-     *     });
-     *
-     *     // note that result of signal() is ignored and thrown away
-     *     scope.signal(new Progress(0.6));
-     *
-     *     // ...
-     *   }
-     * </pre>
-     * <p>
-     * There's no useful value to "return". There's also no way to tell Java to "not return" a value here, so in this
-     * case {@code signal} will return a "garbage" object.
-     *
-     * @return an object representing the decision to continue execution.
-     */
-    Decision resume();
-
-    /**
      * When a handler opts to not handle a particular condition. By calling this, other handlers, bound later in the
      * stack, will have the chance instead.
      *
@@ -100,7 +72,6 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
    */
   class Decision {
     static final Decision SKIP = new Decision(null);
-    static final Decision RESUME = new Decision(new Object());
 
     private final Object result;
 
@@ -169,11 +140,6 @@ class HandlerOperationsImpl implements Handler.Operations {
     }
 
     throw new RestartNotFoundException(restartOption);
-  }
-
-  @Override
-  public Handler.Decision resume() {
-    return Handler.Decision.RESUME;
   }
 
   @Override
