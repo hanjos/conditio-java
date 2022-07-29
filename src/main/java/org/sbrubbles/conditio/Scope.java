@@ -175,7 +175,7 @@ final class ScopeImpl implements Scope {
     Objects.requireNonNull(body, "body");
     Objects.requireNonNull(restarts, "restarts");
 
-    try (ScopeWithRestarts scope = new ScopeWithRestarts((ScopeImpl) Scopes.create())) {
+    try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
       scope.set(restarts);
 
       return body.get();
@@ -187,7 +187,7 @@ final class ScopeImpl implements Scope {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
 
-    try (ScopeWithRestarts scope = new ScopeWithRestarts((ScopeImpl) Scopes.create())) {
+    try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
       scope.set(restarts); // add restarts, but only for this signal call
 
       Handler.Operations ops = new HandlerOperationsImpl(scope);
@@ -208,7 +208,12 @@ final class ScopeImpl implements Scope {
     }
   }
 
-  void set(Restart... restarts) {
+  /**
+   * Sets the given restarts in this scope.
+   *
+   * @param restarts some restarts to set.
+   */
+  public void set(Restart... restarts) {
     for (Restart r : restarts) {
       this.restarts.add(Objects.requireNonNull(r));
     }
@@ -296,49 +301,5 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
     }
 
     return this.currentIterator.next();
-  }
-}
-
-/**
- * Enables "adding" the ability to set restarts to a scope. It's a simple decorator, with some privileged access to
- * set the restarts. Not my proudest code, but it seems to work...
- */
-class ScopeWithRestarts implements Scope, WithRestarts {
-  private final ScopeImpl scope;
-
-  public ScopeWithRestarts(ScopeImpl scope) {
-    this.scope = scope;
-  }
-
-  @Override
-  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations, Handler.Decision> body) { return scope.handle(conditionType, body); }
-
-  @Override
-  public <T> T call(Supplier<T> body, Restart... restarts) { return scope.call(body, restarts); }
-
-  @Override
-  public Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException { return scope.signal(condition, restarts); }
-
-  @Override
-  public Iterable<Handler> getAllHandlers() { return scope.getAllHandlers(); }
-
-  @Override
-  public Iterable<Restart> getAllRestarts() { return scope.getAllRestarts(); }
-
-  @Override
-  public List<Handler> getHandlers() { return scope.getHandlers(); }
-
-  @Override
-  public List<Restart> getRestarts() { return scope.getRestarts(); }
-
-  @Override
-  public Scope getParent() { return scope.getParent(); }
-
-  @Override
-  public void close() { scope.close(); }
-
-  @Override
-  public void set(Restart... restarts) {
-    scope.set(restarts);
   }
 }
