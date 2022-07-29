@@ -4,8 +4,8 @@ package org.sbrubbles.conditio;
  * Represents an unusual situation, which the running code doesn't know how to deal with. Conditions are meant to
  * be {@linkplain Scope#signal(Condition, Restart...) signalled}.
  * <p>
- * This interface provides some callbacks for {@code Scope.signal}'s use, with default implementations. This creates a
- * protocol, one which subtypes may override. See {@link Signal} for an example.
+ * This interface provides some callbacks for {@code Scope.signal}, with default implementations. This creates a
+ * protocol which {@code Condition} subtypes may override. See {@link Signal} for an example.
  * <p>
  * In the default implementation, any subtypes of {@code Condition} which are not also subtypes of {@code Signal}
  * are <em>checked conditions</em>. This means that an exception will be thrown if no handler is found.
