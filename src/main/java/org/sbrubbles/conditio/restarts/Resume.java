@@ -5,9 +5,10 @@ import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
 
 /**
- * Indicates for execution to proceed, "without" returning a value. This is meant for situations where the
- * result of {@link Scope#signal(Condition, Restart...) signal} isn't used, and the handler means only to
- * acknowledge the condition, like
+ * A restart option to indicate that execution is to proceed, "without" returning a value.
+ * <p>
+ * This is meant for situations where the result of {@link Scope#signal(Condition, Restart...) signal} isn't used, and
+ * the handler means only to acknowledge the condition (and maybe do a side effect or two), like
  * <pre>
  *   try(Scope scope = Scopes.create()) {
  *     scope.handle(Progress.class, (c, ops) -&gt; {
@@ -28,7 +29,7 @@ import org.sbrubbles.conditio.Scope;
  * There's no useful value to "return". There's also no way to tell Java to "not return" a value here, so in this
  * case {@code signal} will return a "garbage" object.
  * <p>
- * This class stores no state; therefore, it provides a pre-instanced option and restart.
+ * This class stores no state. It provides a pre-instanced option and restart.
  */
 public class Resume implements Restart.Option {
   /**
