@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.warning.WarningFixture;
 
+import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,7 +21,7 @@ public class WarningTest {
   }
 
   @Test
-  public void test() {
+  public void warningInterception() {
     List<Integer> actual = fixture.a(10);
 
     // even numbers were muzzled by b
@@ -31,5 +33,19 @@ public class WarningTest {
         "b: Warning", "b: Warning", "a: Warning",
         "b: Warning", "b: Warning", "a: Warning"),
       fixture.getHandlerTrace());
+  }
+
+  @Test
+  public void noHandler() {
+    List<String> warnings = new ArrayList<>();
+
+    fixture.noHandler(new PrintStream(System.out, true) {
+      @Override
+      public void println(String x) {
+        warnings.add(x);
+      }
+    });
+
+    assertEquals(Arrays.asList("Warning: -1", "Warning: -2"), warnings);
   }
 }

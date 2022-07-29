@@ -4,13 +4,14 @@ import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WarningFixture extends AbstractFixture {
   public void c(int i) {
     try (Scope scope = Scopes.create()) {
-      scope.signal(new Warning(i));
+      scope.signal(new Warning(i, System.out));
     }
   }
 
@@ -44,6 +45,13 @@ public class WarningFixture extends AbstractFixture {
       b(n);
 
       return warnings;
+    }
+  }
+
+  public void noHandler(PrintStream out) {
+    try (Scope scope = Scopes.create()) {
+      scope.signal(new Warning(-1, out));
+      scope.signal(new Warning(-2, out));
     }
   }
 }
