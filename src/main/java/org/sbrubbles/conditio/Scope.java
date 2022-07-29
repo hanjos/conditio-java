@@ -182,9 +182,8 @@ final class ScopeImpl implements Scope {
     Objects.requireNonNull(body, "body");
     Objects.requireNonNull(restarts, "restarts");
 
-    try (Scope scope = Stack.create()) {
-      ScopeWithRestarts scopeWithRestarts = new ScopeWithRestarts((ScopeImpl) scope);
-      scopeWithRestarts.set(restarts);
+    try (ScopeWithRestarts scope = new ScopeWithRestarts((ScopeImpl) Stack.create())) {
+      scope.set(restarts);
 
       return body.get();
     }
@@ -195,11 +194,10 @@ final class ScopeImpl implements Scope {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
 
-    try (Scope scope = Stack.create()) {
-      ScopeWithRestarts scopeWithRestarts = new ScopeWithRestarts((ScopeImpl) scope);
-      scopeWithRestarts.set(restarts); // add restarts, but only for this signal call
+    try (ScopeWithRestarts scope = new ScopeWithRestarts((ScopeImpl) Stack.create())) {
+      scope.set(restarts); // add restarts, but only for this signal call
 
-      condition.onStart(scopeWithRestarts);
+      condition.onStart(scope);
 
       Handler.Operations ops = new HandlerOperationsImpl(scope);
       for (Handler h : scope.getAllHandlers()) {
