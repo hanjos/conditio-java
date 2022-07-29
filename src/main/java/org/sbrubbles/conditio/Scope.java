@@ -190,8 +190,6 @@ final class ScopeImpl implements Scope {
     try (ScopeWithRestarts scope = new ScopeWithRestarts((ScopeImpl) Scopes.create())) {
       scope.set(restarts); // add restarts, but only for this signal call
 
-      condition.onStart(scope);
-
       Handler.Operations ops = new HandlerOperationsImpl(scope);
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(condition)) {
