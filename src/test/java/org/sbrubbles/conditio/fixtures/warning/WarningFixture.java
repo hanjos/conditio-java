@@ -1,7 +1,7 @@
 package org.sbrubbles.conditio.fixtures.warning;
 
 import org.sbrubbles.conditio.Scope;
-import org.sbrubbles.conditio.Stack;
+import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
 
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ public class WarningFixture extends AbstractFixture {
   public static final String RESULT = "OK";
 
   public String c(int i) {
-    try (Scope scope = Stack.create()) {
+    try (Scope scope = Scopes.create()) {
       scope.signal(new Warning(i));
 
       return RESULT;
@@ -19,7 +19,7 @@ public class WarningFixture extends AbstractFixture {
   }
 
   public void b(int n) {
-    try (Scope scope = Stack.create()) {
+    try (Scope scope = Scopes.create()) {
       scope.handle(Warning.class,
         traceHandler("b", (c, ops) -> {
           if (c.getNumber() % 2 == 0) {
@@ -36,7 +36,7 @@ public class WarningFixture extends AbstractFixture {
   }
 
   public List<Integer> a(int n) {
-    try (Scope scope = Stack.create()) {
+    try (Scope scope = Scopes.create()) {
       List<Integer> warnings = new ArrayList<>();
 
       scope.handle(Warning.class,

@@ -1,7 +1,7 @@
 package org.sbrubbles.conditio.fixtures.tracing;
 
 import org.sbrubbles.conditio.Scope;
-import org.sbrubbles.conditio.Stack;
+import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
 
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import java.util.List;
 
 public class TracingFixture extends AbstractFixture {
   public void doWork(int workDone) {
-    try (Scope scope = Stack.create()) {
+    try (Scope scope = Scopes.create()) {
       traceWork(workDone);
 
       scope.signal(new WorkDone(workDone));
@@ -17,7 +17,7 @@ public class TracingFixture extends AbstractFixture {
   }
 
   public void resume() {
-    try (Scope scope = Stack.create()) {
+    try (Scope scope = Scopes.create()) {
       scope.handle(WorkDone.class, traceHandler("run", (c, ops) -> {
         increaseWorkDone(c.getAmount());
 

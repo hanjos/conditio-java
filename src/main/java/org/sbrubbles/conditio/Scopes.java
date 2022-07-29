@@ -1,15 +1,16 @@
 package org.sbrubbles.conditio;
 
 /**
- * Manages a stack of nested {@linkplain Scope scopes}. This class is not a resource itself; it just manages the
- * nesting by controlling its scopes' lifetime.
+ * Manages the stack of nested {@linkplain Scope scopes}. Works as a {@code Scope} factory.
+ * <p>
+ * This class is not intended to be instanced or subclassed.
  *
  * @see Scope
  */
-public final class Stack {
+public final class Scopes {
   private static Scope current;
 
-  private Stack() { /**/ }
+  private Scopes() { /**/ }
 
   /**
    * Creates and returns a new instance, nested in the (now former) current scope.

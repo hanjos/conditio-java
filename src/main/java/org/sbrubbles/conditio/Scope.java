@@ -16,8 +16,8 @@ import java.util.function.Supplier;
  * directly, or looking for a recovery strategy (also known as a {@linkplain Restart restart}) and using it to provide
  * a result.
  * <p>
- * Scopes are resources, with controlled {@linkplain Stack creation and closing} to ensure proper nesting. As a
- * consequence, {@link Stack#create() create}ing a scope without {@link Scope#close() close}ing it properly will
+ * Scopes are resources, with controlled {@linkplain Scopes creation and closing} to ensure proper nesting. As a
+ * consequence, {@link Scopes#create() create}ing a scope without {@link Scope#close() close}ing it properly will
  * <strong>break</strong> the nesting. Just use it only in a {@code try}-with-resources, and you'll be fine :)
  * <p>
  * Restarts only make sense for specific invocations. Therefore, they're set only when a condition is
@@ -26,12 +26,12 @@ import java.util.function.Supplier;
  * <p>
  * In practice, usage should look something like this:
  * <pre>
- *   try(Scope scope = Stack.create()) {
+ *   try(Scope scope = Scopes.create()) {
  *     // establishing a new handler, which delegates the work to a RetryWith-compatible restart
  *     scope.handle(MalformedEntry.class, (c, ops) -&gt; ops.restart(new RetryWith("FAIL: " + c.getText())));
  *
  *     // ...somewhere deeper in the call stack...
- *     try(Scope scope = Stack.create()) {
+ *     try(Scope scope = Scopes.create()) {
  *       // signals a condition, sets a restart, and waits for the result
  *       Entry entry = (Entry) scope.signal(new MalformedEntry("NOOOOOOOO"),
  *                                Restart.on(RetryWith.class, r -&gt; func(r.getValue())));
@@ -41,7 +41,7 @@ import java.util.function.Supplier;
  *   }
  * </pre>
  *
- * @see Stack
+ * @see Scopes
  * @see Condition
  * @see Handler
  * @see Restart
@@ -153,7 +153,7 @@ public interface Scope extends AutoCloseable {
    */
   @Override
   default void close() {
-    Stack.close();
+    Scopes.close();
   }
 }
 
@@ -182,7 +182,7 @@ final class ScopeImpl implements Scope {
     Objects.requireNonNull(body, "body");
     Objects.requireNonNull(restarts, "restarts");
 
-    try (ScopeWithRestarts scope = new ScopeWithRestarts((ScopeImpl) Stack.create())) {
+    try (ScopeWithRestarts scope = new ScopeWithRestarts((ScopeImpl) Scopes.create())) {
       scope.set(restarts);
 
       return body.get();
@@ -194,7 +194,7 @@ final class ScopeImpl implements Scope {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
 
-    try (ScopeWithRestarts scope = new ScopeWithRestarts((ScopeImpl) Stack.create())) {
+    try (ScopeWithRestarts scope = new ScopeWithRestarts((ScopeImpl) Scopes.create())) {
       scope.set(restarts); // add restarts, but only for this signal call
 
       condition.onStart(scope);

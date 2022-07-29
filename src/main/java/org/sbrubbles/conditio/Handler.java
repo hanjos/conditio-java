@@ -43,7 +43,7 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
      * result of {@link Scope#signal(Condition, Restart...) signal} isn't used, and the handler means only to
      * acknowledge the condition, like
      * <pre>
-     *   try(Scope scope = Stack.create()) {
+     *   try(Scope scope = Scopes.create()) {
      *     scope.handle(Progress.class, (c, ops) -&gt; {
      *       // do something
      *       showProgressToUser(c.getValue());
