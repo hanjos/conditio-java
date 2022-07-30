@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.UseValue;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -66,6 +68,16 @@ public class ScopeTest {
 
       assertThrows(UnsupportedOperationException.class, () -> rs.add(r));
       assertThrows(UnsupportedOperationException.class, () -> rs.remove(r));
+    }
+  }
+
+  @Test
+  public void theIteratorFollowsTheProperProtocol() {
+    try (Scope a = Scopes.create()) {
+      Iterator<Handler> iterator = a.getAllHandlers().iterator();
+
+      assertFalse(iterator.hasNext());
+      assertThrows(NoSuchElementException.class, () -> iterator.next());
     }
   }
 }
