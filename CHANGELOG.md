@@ -2,12 +2,10 @@
 
 * Handlers now take a Handler.Operations instead of a scope, which delimits the operations available.
 * Handlers now return a Handler.Decision, which is written in a way to effectively force the dev to use Handler.Operations to get an instance.
-* Condition now provides a callback for Scope.signal, paving the way for Signal and other possible subtypes protocols, enabling even setting restarts.
+* Condition now provides a callback for Scope.signal, paving the way for Signal, Warning and other possible subtype protocols.
 * Scope is now an interface, with the Scopes class managing the stack.
-* Resume is a ready-made restart option.
-* There's some clever tricks now. Not sure how I feel about them, but, for now, they're there...
-* Reorganizing some tests to improve legibility.
-* Adding some possible usages in the tests. 
+* Some general use restart options, like Resume.
+* Reorganizing the tests to improve legibility, and adding some possible usages.
 
 # 0.3
 

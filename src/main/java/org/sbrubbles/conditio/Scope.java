@@ -2,7 +2,6 @@ package org.sbrubbles.conditio;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -55,14 +54,13 @@ public interface Scope extends AutoCloseable {
    * @param body          the handler code.
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
-   * @see #signal(Condition, Restart...)
-   * @see Handler
    */
   <C extends Condition, T extends C> Scope handle(Class<T> conditionType, BiFunction<C, Handler.Operations, Handler.Decision> body);
 
   /**
-   * Establishes some restarts, available to all handlers above in the call stack. It's useful for adding recovery
-   * strategies to calls that may signal conditions.
+   * Evaluates {@code body}, providing additional restarts for it. It's useful for scopes that may not know how to
+   * handle a particular condition, but are able to provide recovery strategies for it, similarly to Common Lisp's
+   * <a href="https://lispcookbook.github.io/cl-cookbook/error_handling.html#defining-restarts-restart-case">{@code restart-case}</a>.
    * <p>
    * Usage example:
    * <pre>
@@ -83,7 +81,6 @@ public interface Scope extends AutoCloseable {
    * @param restarts some restarts, which will be available to all handlers above in the call stack.
    * @return the result of calling {@code body}.
    * @throws NullPointerException if at least one parameter is {@code null}.
-   * @see Restart#on(Class, Function)
    */
   <T> T call(Supplier<T> body, Restart... restarts);
 
@@ -100,10 +97,6 @@ public interface Scope extends AutoCloseable {
    * @throws HandlerNotFoundException      if no available handler was able to handle this condition, and the condition
    *                                       itself doesn't provide a fallback.
    * @throws UnsupportedOperationException if the handler's decision is unknown or unsupported, like {@code null}.
-   * @see #handle(Class, BiFunction)
-   * @see #getAllHandlers()
-   * @see Restart
-   * @see Restart#on(Class, Function)
    */
   Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException, UnsupportedOperationException;
 
