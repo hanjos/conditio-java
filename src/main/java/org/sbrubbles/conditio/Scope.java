@@ -89,21 +89,23 @@ public interface Scope extends AutoCloseable {
 
   /**
    * Signals a situation which the currently running code doesn't know how to deal with. This method will
-   * {@linkplain #getAllHandlers() search} for a compatible {@linkplain Handler handler} and run it, returning the
-   * end result.
+   * {@linkplain #getAllHandlers() search} for a compatible {@linkplain Handler handler} and run it, interpreting the
+   * handler's {@linkplain Handler.Decision decision} and returning the end result.
    *
    * @param condition a condition, representing a situation which {@linkplain #handle(Class, BiFunction) higher-level
    *                  code} will decide how to handle.
    * @param restarts  some {@linkplain Restart restarts}, which will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
-   * @throws NullPointerException     if at least one argument was {@code null}.
-   * @throws HandlerNotFoundException if no available handler was able to handle this condition.
+   * @throws NullPointerException          if at least one argument was {@code null}.
+   * @throws HandlerNotFoundException      if no available handler was able to handle this condition, and the condition
+   *                                       itself doesn't provide a fallback.
+   * @throws UnsupportedOperationException if the handler's decision is unknown or unsupported, like {@code null}.
    * @see #handle(Class, BiFunction)
    * @see #getAllHandlers()
    * @see Restart
    * @see Restart#on(Class, Function)
    */
-  Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException;
+  Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException, UnsupportedOperationException;
 
   /**
    * An object to iterate over all active handlers in the call stack, starting from this instance to the root scope.
@@ -183,7 +185,7 @@ final class ScopeImpl implements Scope {
   }
 
   @Override
-  public Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException {
+  public Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException, UnsupportedOperationException {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
 
@@ -197,7 +199,9 @@ final class ScopeImpl implements Scope {
         }
 
         Handler.Decision result = h.apply(condition, ops);
-        if (result == Handler.Decision.SKIP) {
+        if (result == null) {
+          throw new UnsupportedOperationException("Unsupported decision: null");
+        } else if (result == Handler.Decision.SKIP) {
           continue;
         }
 

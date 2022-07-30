@@ -80,4 +80,13 @@ public class ScopeTest {
       assertThrows(NoSuchElementException.class, () -> iterator.next());
     }
   }
+
+  @Test
+  public void signalThrowsIfHandlerReturnsNull() {
+    try (Scope a = Scopes.create()) {
+      a.handle(BasicCondition.class, (c, ops) -> null);
+
+      assertThrows(UnsupportedOperationException.class, () -> a.signal(new BasicCondition("oops")));
+    }
+  }
 }
