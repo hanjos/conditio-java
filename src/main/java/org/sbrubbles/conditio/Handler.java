@@ -11,8 +11,8 @@ import java.util.function.Predicate;
  * A handler can do two things:
  * <ul>
  *   <li>check if it can handle a given condition (with {@link #test(Object) test}); and</li>
- *   <li>given a condition and the {@linkplain Operations operations available}, make a decision (with
- *       {@link #apply(Object, Object) apply}).</li>
+ *   <li>given a condition and the {@linkplain Operations operations available}, make a {@linkplain Decision decision}
+ *       (with {@link #apply(Object, Object) apply}).</li>
  * </ul>
  * <p>
  * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain BiFunction (bi)function}, this
