@@ -1,6 +1,6 @@
 package org.sbrubbles.conditio.fixtures;
 
-import org.sbrubbles.conditio.Signal;
+import org.sbrubbles.conditio.conditions.Signal;
 
 import java.util.Objects;
 

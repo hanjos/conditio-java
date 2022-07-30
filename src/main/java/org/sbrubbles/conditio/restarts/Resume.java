@@ -33,12 +33,15 @@ import org.sbrubbles.conditio.Scope;
  */
 public class Resume implements Restart.Option {
   /**
-   * A pre-built instance, for usage in restart calls.
+   * A pre-built instance of this class. Since this class stores no state,
+   * {@linkplain org.sbrubbles.conditio.Handler.Operations#restart(Restart.Option) restart calls} could just reuse this
+   * constant instead of creating a new object.
    */
   public static final Resume OPTION = new Resume();
 
   /**
-   * A pre-built restart, for usage in restart setting.
+   * A pre-built restart for this option, which just returns {@code null}. Since the idea is to ignore the return value,
+   * {@link Scope#signal(Condition, Restart...) signal}s can just reuse this constant instead of creating a new object.
    */
   public static final Restart RESTART = Restart.on(Resume.class, r -> null);
 }

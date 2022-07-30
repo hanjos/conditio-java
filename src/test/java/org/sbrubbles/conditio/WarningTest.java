@@ -22,16 +22,16 @@ public class WarningTest {
 
   @Test
   public void warningInterception() {
-    List<Integer> actual = fixture.a(10);
+    List<String> actual = fixture.a(10);
 
     // even numbers were muzzled by b
-    assertEquals(Arrays.asList(1, 3, 5, 7, 9), actual);
+    assertEquals(Arrays.asList("1", "3", "5", "7", "9"), actual);
     assertLinesMatch(
-      Arrays.asList("b: Warning", "b: Warning", "a: Warning",
-        "b: Warning", "b: Warning", "a: Warning",
-        "b: Warning", "b: Warning", "a: Warning",
-        "b: Warning", "b: Warning", "a: Warning",
-        "b: Warning", "b: Warning", "a: Warning"),
+      Arrays.asList("b: IntWarning", "b: IntWarning", "a: IntWarning",
+        "b: IntWarning", "b: IntWarning", "a: IntWarning",
+        "b: IntWarning", "b: IntWarning", "a: IntWarning",
+        "b: IntWarning", "b: IntWarning", "a: IntWarning",
+        "b: IntWarning", "b: IntWarning", "a: IntWarning"),
       fixture.getHandlerTrace());
   }
 
@@ -46,6 +46,6 @@ public class WarningTest {
       }
     });
 
-    assertEquals(Arrays.asList("Warning: -1", "Warning: -2"), warnings);
+    assertEquals(Arrays.asList("[WARN] -1", "[WARN] -2"), warnings);
   }
 }

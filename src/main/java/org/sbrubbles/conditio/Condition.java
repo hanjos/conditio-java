@@ -1,5 +1,7 @@
 package org.sbrubbles.conditio;
 
+import org.sbrubbles.conditio.conditions.Signal;
+
 /**
  * Represents an unusual situation, which the running code doesn't know how to deal with. Conditions are meant to
  * be {@linkplain Scope#signal(Condition, Restart...) signalled}.

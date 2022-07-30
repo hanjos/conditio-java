@@ -1,15 +1,18 @@
-package org.sbrubbles.conditio;
+package org.sbrubbles.conditio.conditions;
+
+import org.sbrubbles.conditio.Condition;
+import org.sbrubbles.conditio.Scope;
 
 /**
  * {@code Signal} and its implementations are <em>unchecked conditions</em>, meaning that if no handler is found, they
- * simply do nothing instead of erroring out.
+ * don't error out.
  * <p>
- * As a consequence, {@link Scope#signal signal}ing them has no meaningful return value. So {@code Signal}s work better
- * as notifications, which can be {@linkplain Handler.Operations#resume() acknowledged} and maybe generate some useful
- * side effects.
+ * As a consequence, {@link Scope#signal signal}ing a {@code Signal} has no meaningful return value. {@code Signal}s
+ * work better as notifications, which can be safely {@linkplain org.sbrubbles.conditio.restarts.Resume resumed}, and
+ * maybe generate some useful side effects.
  *
  * @see Condition
- * @see Handler.Operations#resume()
+ * @see org.sbrubbles.conditio.restarts.Resume
  */
 public interface Signal extends Condition {
   /**
