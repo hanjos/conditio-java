@@ -1,13 +1,13 @@
 package org.sbrubbles.conditio.fixtures;
 
-import org.sbrubbles.conditio.conditions.Signal;
+import org.sbrubbles.conditio.conditions.Notice;
 
 import java.util.Objects;
 
-public class BasicSignal extends Signal {
+public class BasicNotice extends Notice {
   private final String value;
 
-  public BasicSignal(String value) {
+  public BasicNotice(String value) {
     this.value = value;
   }
 
@@ -19,7 +19,7 @@ public class BasicSignal extends Signal {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    BasicSignal that = (BasicSignal) o;
+    BasicNotice that = (BasicNotice) o;
     return Objects.equals(getValue(), that.getValue());
   }
 

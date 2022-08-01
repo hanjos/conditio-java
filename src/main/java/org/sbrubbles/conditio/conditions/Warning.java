@@ -5,11 +5,9 @@ import org.sbrubbles.conditio.Scope;
 import java.io.PrintStream;
 
 /**
- * A {@linkplain Signal signal} that prints a warning message if no handler is found.
- *
- * @see org.sbrubbles.conditio.restarts.Resume
+ * A {@linkplain Notice notice} that prints a warning message if no handler is found.
  */
-public class Warning extends Signal {
+public class Warning extends Notice {
   private final String message;
   private final PrintStream output;
 

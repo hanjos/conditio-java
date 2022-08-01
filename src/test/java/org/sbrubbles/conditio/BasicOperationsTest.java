@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.fixtures.BasicSignal;
+import org.sbrubbles.conditio.fixtures.BasicNotice;
 import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
@@ -179,8 +179,8 @@ public class BasicOperationsTest {
   }
 
   @Test
-  public void signallingASignalWithNoHandlersJustNopesOut() {
-    BasicSignal condition = new BasicSignal("test");
+  public void signallingANoticeWithNoHandlersJustNopesOut() {
+    BasicNotice condition = new BasicNotice("test");
 
     try (Scope a = Scopes.create()) {
       a.signal(condition);
