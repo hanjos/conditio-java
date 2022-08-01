@@ -46,7 +46,7 @@ public class Resume implements Restart.Option, Restart {
    * Checks if the given option is an instance of this class.
    *
    * @param option a restart option.
-   * @return if {@code option} is an instance of {@code Resume}.
+   * @return if {@code option} is an instance of this class.
    */
   @Override
   public boolean test(Option option) {
@@ -78,6 +78,9 @@ public class Resume implements Restart.Option, Restart {
       (o != null && getClass() == o.getClass());
   }
 
+  /**
+   * Some constant number.
+   */
   @Override
   public int hashCode() {
     return -1;

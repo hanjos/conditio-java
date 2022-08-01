@@ -8,7 +8,9 @@ public class IntWarning extends Warning {
   private final int number;
 
   public IntWarning(int number) {
-    this(number, System.out);
+    super(Integer.toString(number));
+
+    this.number = number;
   }
 
   public IntWarning(int number, PrintStream output) {

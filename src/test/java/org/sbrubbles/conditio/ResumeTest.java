@@ -5,7 +5,7 @@ import org.sbrubbles.conditio.restarts.Resume;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class RestartsTest {
+public class ResumeTest {
   @Test
   public void resumeEqualsAnyOtherResume() {
     Resume expected = new Resume();
