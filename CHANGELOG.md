@@ -3,7 +3,7 @@
 * Handlers now take a Handler.Operations instead of a scope, which delimits the operations available.
 * Handlers now return a Handler.Decision, which is written in a way to effectively force the dev to use Handler.Operations to get an instance.
 * Scope is now an interface, with the Scopes class managing the stack.
-* Condition now provides a callback for Scope.signal, paving the way for Signal, Warning and other possible subtype protocols.
+* Condition is now a class which provides a callback for Scope.signal, paving the way for Signal (the RuntimeException to Condition's Exception), Warning and other possible subtype protocols.
 * Provided some general use restart options, like Resume.
 * Reorganizing the tests to improve legibility, and adding some possible usages.
 

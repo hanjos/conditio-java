@@ -4,7 +4,7 @@ import org.sbrubbles.conditio.Condition;
 
 import java.util.Objects;
 
-public class MalformedLogEntry implements Condition {
+public class MalformedLogEntry extends Condition {
   private final String text;
 
   public MalformedLogEntry(String text) {

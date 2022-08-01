@@ -4,8 +4,7 @@ import org.sbrubbles.conditio.conditions.Warning;
 
 import java.io.PrintStream;
 
-public class IntWarning implements Warning {
-  private final PrintStream output;
+public class IntWarning extends Warning {
   private final int number;
 
   public IntWarning(int number) {
@@ -13,18 +12,9 @@ public class IntWarning implements Warning {
   }
 
   public IntWarning(int number, PrintStream output) {
+    super(Integer.toString(number), output);
+
     this.number = number;
-    this.output = output;
-  }
-
-  @Override
-  public String getMessage() {
-    return Integer.toString(number);
-  }
-
-  @Override
-  public PrintStream getOutput() {
-    return output;
   }
 
   public int getNumber() {

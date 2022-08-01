@@ -4,7 +4,7 @@ import org.sbrubbles.conditio.conditions.Signal;
 
 import java.util.Objects;
 
-public class BasicSignal implements Signal {
+public class BasicSignal extends Signal {
   private final String value;
 
   public BasicSignal(String value) {
