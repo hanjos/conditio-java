@@ -16,10 +16,9 @@ import org.sbrubbles.conditio.Scope;
  */
 public interface Signal extends Condition {
   /**
-   * This implementation does not error out, doing nothing otherwise.
+   * This implementation does nothing.
    * <p>
-   * There's nothing meaningful for a {@code Signal} to return, so the actual value here may change in further versions.
-   * Just ignore it, and you'll be fine.
+   * There's nothing meaningful for a {@code Signal} to return. Just ignore the value, and you'll be fine.
    *
    * @return a garbage value, to be ignored.
    */
