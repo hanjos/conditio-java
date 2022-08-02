@@ -1,8 +1,11 @@
 package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
+import org.sbrubbles.conditio.fixtures.aborting.AbortingFixture;
 import org.sbrubbles.conditio.restarts.Abort;
 import org.sbrubbles.conditio.restarts.AbortException;
+
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,5 +38,15 @@ public class AbortTest {
     assertThrows(AbortException.class, () -> a.apply(new Abort()));
     assertThrows(AbortException.class, () -> a.apply(null));
     assertThrows(AbortException.class, () -> a.apply(new Restart.Option() { }));
+  }
+
+  @Test
+  public void testRun() {
+    AbortingFixture fixture = new AbortingFixture();
+
+    assertEquals(AbortingFixture.FAIL, fixture.handle());
+    assertLinesMatch(
+      Arrays.asList("signal: AbortException", "handle: AbortException"),
+      fixture.getTrace());
   }
 }
