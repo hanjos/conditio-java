@@ -44,9 +44,9 @@ public class AbortTest {
   public void testRun() {
     AbortingFixture fixture = new AbortingFixture();
 
-    assertEquals(AbortingFixture.FAIL, fixture.handle());
+    assertEquals(AbortingFixture.HANDLE, fixture.handle());
     assertLinesMatch(
-      Arrays.asList("signal: AbortException", "handle: AbortException"),
+      Arrays.asList("signal: AbortException", "passThrough: AbortException", "handle: AbortException"),
       fixture.getTrace());
   }
 }

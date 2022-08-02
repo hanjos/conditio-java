@@ -11,16 +11,26 @@ import java.util.Collections;
 import java.util.List;
 
 public class AbortingFixture {
-  public static final String FAIL = "FAIL";
-  public static final String PASS = "PASS";
+  public static final String HANDLE = "HANDLE";
+  public static final String SIGNAL = "SIGNAL";
 
   public String signal() {
     try (Scope scope = Scopes.create()) {
       scope.signal(new BasicCondition(""), Abort.INSTANCE);
 
-      return PASS;
+      return SIGNAL;
     } catch (Exception e) {
       trace.add("signal: " + e.getClass().getSimpleName());
+
+      throw e;
+    }
+  }
+
+  public String passThrough() {
+    try {
+      return signal();
+    } catch (Exception e) {
+      trace.add("passThrough: " + e.getClass().getSimpleName());
 
       throw e;
     }
@@ -30,12 +40,12 @@ public class AbortingFixture {
     try (Scope scope = Scopes.create()) {
       scope.handle(BasicCondition.class, (c, ops) -> ops.restart(Abort.INSTANCE));
 
-      return signal();
+      return passThrough();
     } catch (AbortException e) {
       trace.add("handle: " + e.getClass().getSimpleName());
     }
 
-    return FAIL;
+    return HANDLE;
   }
 
   private final List<String> trace;
