@@ -3,12 +3,12 @@ package org.sbrubbles.conditio.restarts;
 import org.sbrubbles.conditio.Restart;
 
 /**
- * A restart which indicates the wish to abort execution and unwind the stack. This does so by throwing
+ * A restart which indicates the wish to abort execution and unwind the stack. It does so by throwing
  * {@link AbortException}.
  * <p>
- * Exceptions can always be thrown from within handlers or restarts. But the use of this restart expresses the intent
+ * Exceptions can always be thrown from within handlers or restarts. Using this restart expresses the intent
  * to offer aborting as a possibility, and should be followed by a {@code try-catch} clause at the desired level to
- * stop the stack unwinding.
+ * stop unwinding the stack.
  * <p>
  * Example
  * <pre>

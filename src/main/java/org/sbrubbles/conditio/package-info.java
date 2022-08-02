@@ -9,11 +9,8 @@
  *   <li>{@linkplain org.sbrubbles.conditio.Restart Restarts}, which provide recovery strategies for handlers.</li>
  * </ul>
  * <p>
- * The {@code org.sbrubbles.conditio} package provides the main abstractions and machinery of the condition system.
+ * This package provides the main abstractions and machinery of the condition system.
  * The {@link org.sbrubbles.conditio.restarts} package provides some general use restarts.
- * The {@link org.sbrubbles.conditio.conditions} package provides some general use conditions, which enable
- * alternative handling protocols.
- *
- * @see <a href='https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html'>Beyond Exception Handling: Conditions and Restarts</a>
+ * The {@link org.sbrubbles.conditio.conditions} package provides some general use conditions.
  */
 package org.sbrubbles.conditio;
