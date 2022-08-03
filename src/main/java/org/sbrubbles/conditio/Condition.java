@@ -1,39 +1,31 @@
 package org.sbrubbles.conditio;
 
+import org.sbrubbles.conditio.conditions.Notice;
+
 /**
- * Represents an unusual situation, which the running code doesn't know how to deal with. Conditions are meant to
- * be {@linkplain Scope#signal(Condition, Restart...) signalled}.
+ * Represents an unusual situation, which the running code doesn't know how to deal with, but the code that called it
+ * might. Conditions are meant to be {@linkplain Scope#signal(Condition, Restart...) signalled}, which is how
+ * lower-level code communicates what happened.
  * <p>
- * This interface provides some callbacks for {@code Scope.signal}'s use, with default implementations. This creates a
- * protocol, one which subtypes may override. See {@link Signal} for an example.
- * <p>
- * In the default implementation, any subtypes of {@code Condition} which are not also subtypes of {@code Signal}
- * are <em>checked conditions</em>. This means that an exception will be thrown if no handler is found.
+ * This class is the superclass of all conditions in this library. It provides a callback for {@code Scope.signal},
+ * which creates a protocol that {@code Condition} subtypes may override. See {@link Notice} for an example.
+ * In the default implementation, an exception will be thrown if no handler is found.
  *
  * @see Scope#signal(Condition, Restart...)
- * @see Signal
+ * @see Notice
  */
-public interface Condition {
-  /**
-   * Called before the handler search has begun.
-   * <p>
-   * This default implementation does nothing.
-   *
-   * @param scope where the handler search will happen.
-   */
-  default void onStart(Scope scope) { /**/ }
-
+public class Condition {
   /**
    * Called when no handler was found.
    * <p>
-   * This default implementation errors out with a {@link HandlerNotFoundException}. Other subtypes may generate or
-   * compute some values, which will be returned by {@code signal}.
+   * This implementation errors out with a {@link HandlerNotFoundException}. Other subtypes may compute some values to
+   * return.
    *
    * @param scope where the handler search started.
    * @return the value to be returned by {@code signal}.
-   * @throws HandlerNotFoundException if the implementation decides to error out.
+   * @throws HandlerNotFoundException if no handler is found.
    */
-  default Object onHandlerNotFound(Scope scope) throws HandlerNotFoundException {
+  public Object onHandlerNotFound(Scope scope) throws HandlerNotFoundException {
     throw new HandlerNotFoundException(this);
   }
 }

@@ -11,8 +11,8 @@ import java.util.function.Predicate;
  * A handler can do two things:
  * <ul>
  *   <li>check if it can handle a given condition (with {@link #test(Object) test}); and</li>
- *   <li>given a condition and the {@linkplain Operations operations available}, make a decision (with
- *       {@link #apply(Object, Object) apply}).</li>
+ *   <li>given a condition and the {@linkplain Operations operations available}, make a {@linkplain Decision decision}
+ *       (with {@link #apply(Object, Object) apply}).</li>
  * </ul>
  * <p>
  * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain BiFunction (bi)function}, this
@@ -37,34 +37,6 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
      * @throws RestartNotFoundException if no restart compatible with {@code restartOption} could be found.
      */
     Decision restart(Restart.Option restartOption) throws RestartNotFoundException;
-
-    /**
-     * Signals for execution to proceed, "without" returning a value. Careful; this is meant for situations where the
-     * result of {@link Scope#signal(Condition, Restart...) signal} isn't used, and the handler means only to
-     * acknowledge the condition, like
-     * <pre>
-     *   try(Scope scope = Scope.create()) {
-     *     scope.handle(Progress.class, (c, ops) -&gt; {
-     *       // do something
-     *       showProgressToUser(c.getValue());
-     *
-     *       // condition acknowledged; carry on
-     *       return ops.resume();
-     *     });
-     *
-     *     // note that result of signal() is ignored and thrown away
-     *     scope.signal(new Progress(0.6));
-     *
-     *     // ...
-     *   }
-     * </pre>
-     * <p>
-     * There's no useful value to "return". There's also no way to tell Java to "not return" a value here, so in this
-     * case {@code signal} will return a "garbage" object.
-     *
-     * @return an object representing the decision to continue execution.
-     */
-    Decision resume();
 
     /**
      * When a handler opts to not handle a particular condition. By calling this, other handlers, bound later in the
@@ -100,14 +72,13 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
    */
   class Decision {
     static final Decision SKIP = new Decision(null);
-    static final Decision RESUME = new Decision(new Object());
 
     private final Object result;
 
-    // Package-private for a reason; only classes in this package should create instances.
+    // Only classes in this package should create instances
     Decision(Object result) { this.result = result; }
 
-    // Package-private for a reason; only classes in this package should use this.
+    // Only classes in this package should use this
     Object get() { return result; }
   }
 }
@@ -169,11 +140,6 @@ class HandlerOperationsImpl implements Handler.Operations {
     }
 
     throw new RestartNotFoundException(restartOption);
-  }
-
-  @Override
-  public Handler.Decision resume() {
-    return Handler.Decision.RESUME;
   }
 
   @Override

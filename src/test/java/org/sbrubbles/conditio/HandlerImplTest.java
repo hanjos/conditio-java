@@ -11,14 +11,14 @@ public class HandlerImplTest {
 
   @BeforeEach
   public void setUp() {
-    try (Scope a = Scope.create()) {
+    try (Scope a = Scopes.create()) {
       h = new HandlerImpl(BasicCondition.class, this::body);
     }
   }
 
   @Test
   public void nullParametersAreNotAllowed() {
-    try(Scope scope = Scope.create()) {
+    try (Scope scope = Scopes.create()) {
       assertThrows(NullPointerException.class, () -> new HandlerImpl(null, this::body), "missing conditionType");
       assertThrows(NullPointerException.class, () -> new HandlerImpl(BasicCondition.class, null), "missing body");
       assertThrows(NullPointerException.class, () -> new HandlerImpl(null, null), "missing both");
@@ -27,7 +27,7 @@ public class HandlerImplTest {
 
   @Test
   public void test() {
-    try (Scope scope = Scope.create()) {
+    try (Scope scope = Scopes.create()) {
       assertTrue(h.test(new BasicCondition("string")));
       assertFalse(h.test(null));
     }
@@ -35,7 +35,7 @@ public class HandlerImplTest {
 
   @Test
   public void apply() {
-    try (Scope scope = Scope.create()) {
+    try (Scope scope = Scopes.create()) {
       Handler.Operations ops = new HandlerOperationsImpl(scope);
 
       Condition c = new BasicCondition("OMGWTFBBQ");

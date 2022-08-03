@@ -1,26 +1,28 @@
 package org.sbrubbles.conditio.fixtures.tracing;
 
 import org.sbrubbles.conditio.Scope;
+import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
+import org.sbrubbles.conditio.restarts.Resume;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TracingFixture extends AbstractFixture {
   public void doWork(int workDone) {
-    try (Scope scope = Scope.create()) {
+    try (Scope scope = Scopes.create()) {
       traceWork(workDone);
 
-      scope.signal(new WorkDone(workDone));
+      scope.signal(new WorkDone(workDone), Resume.INSTANCE);
     }
   }
 
   public void resume() {
-    try (Scope scope = Scope.create()) {
+    try (Scope scope = Scopes.create()) {
       scope.handle(WorkDone.class, traceHandler("run", (c, ops) -> {
         increaseWorkDone(c.getAmount());
 
-        return ops.resume();
+        return ops.restart(Resume.INSTANCE);
       }));
 
       while (getWorkDone() < getMaxWork()) {
