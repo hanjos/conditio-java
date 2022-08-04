@@ -20,7 +20,7 @@ Although Common Lisp and at least [some](https://github.com/clojureman/special) 
 
 ```Java
 public void analyzeLog(String filename) throws Exception {
-  try(Scope scope = Stack.create()) {
+  try(Scope scope = Scope.create()) {
     // establish a handler, which here picked a restart to use
     scope.handle(MalformedLogEntry.class, (condition, s) -> s.restart(new RetryWith("...")));
 
@@ -34,7 +34,7 @@ public void analyzeLog(String filename) throws Exception {
 
 public List<Entry> parseLogFile(InputStream in) throws Exception {
   try(BufferedReader br = new BufferedReader(new InputStreamReader(in));
-      Scope scope = Stack.create()) {
+      Scope scope = Scope.create()) {
     List<String> lines = // ...
     List<Entry> entries = new ArrayList<>();
 
@@ -57,7 +57,7 @@ public List<Entry> parseLogFile(InputStream in) throws Exception {
 }
 
 public Entry parseLogEntry(String text) throws Exception {
-  try(Scope scope = Stack.create()) {
+  try(Scope scope = Scope.create()) {
     if(isWellFormed(text)) {
       return new Entry(text);
     }
