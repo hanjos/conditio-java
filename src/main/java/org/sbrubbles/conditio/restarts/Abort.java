@@ -33,8 +33,9 @@ import org.sbrubbles.conditio.Restart;
  *   }
  * </pre>
  * <p>
- * This class works both as a {@link Restart.Option} and a {@link Restart}. It stores no state, which means that any
- * one instance is equal to any other. So, for convenience, this class provides a pre-built instance.
+ * This class works both as a {@link org.sbrubbles.conditio.Restart.Option} and a {@link Restart}. It stores no state,
+ * which means that any one instance is equal to any other. So, for convenience, this class provides a pre-built
+ * instance.
  */
 public class Abort implements Restart.Option, Restart {
   /**

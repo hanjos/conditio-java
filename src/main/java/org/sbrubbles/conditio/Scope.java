@@ -59,7 +59,7 @@ public interface Scope extends AutoCloseable {
 
   /**
    * Evaluates {@code body}, providing additional restarts for it. It's useful for scopes that may not know how to
-   * handle a particular condition, but are able to provide recovery strategies for it, similarly to Common Lisp's
+   * handle a particular condition, but can provide recovery strategies for it, similarly to Common Lisp's
    * <a href="https://lispcookbook.github.io/cl-cookbook/error_handling.html#defining-restarts-restart-case">{@code restart-case}</a>.
    * <p>
    * Usage example:
@@ -137,7 +137,7 @@ public interface Scope extends AutoCloseable {
 
   /**
    * Updates the scope nesting when execution leaves the {@code try} block. Subtypes which override this should still
-   * call this method to ensure the proper nesting.
+   * call this method to preserve the proper nesting.
    */
   @Override
   default void close() {
