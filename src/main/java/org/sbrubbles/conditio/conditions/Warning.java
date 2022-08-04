@@ -11,10 +11,21 @@ public class Warning extends Notice {
   private final String message;
   private final PrintStream output;
 
+  /**
+   * Creates a new instance, with {@link System#out} as the print stream.
+   *
+   * @param message the message to print.
+   */
   public Warning(String message) {
     this(message, System.out);
   }
 
+  /**
+   * Creates a new instance.
+   *
+   * @param message the message to print.
+   * @param output  where to print.
+   */
   public Warning(String message, PrintStream output) {
     this.message = message;
     this.output = output;

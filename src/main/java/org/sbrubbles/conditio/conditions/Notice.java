@@ -8,7 +8,7 @@ import org.sbrubbles.conditio.Scope;
  * don't error out.
  * <p>
  * Notices are meant for conditions that may go unhandled entirely. They work better as hints or notifications to
- * higher-level code, which can be safely {@linkplain org.sbrubbles.conditio.restarts.Resume resumed}, and maybe
+ * higher-level code, which can be safely {@linkplain org.sbrubbles.conditio.restarts.Resume resumed} and maybe
  * generate some useful side effects.
  * <p>
  * As a consequence, {@link Scope#signal signal}ing a {@code Notice} has no meaningful return value.
