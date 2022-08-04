@@ -3,6 +3,7 @@ package org.sbrubbles.conditio;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Handles conditions, producing the result to be returned by {@link Scope#signal(Condition, Restart...) signal}. This
@@ -64,13 +65,13 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
   }
 
   /**
-   * Encodes how a {@linkplain Handler handler} decided to handle a condition. Instances are consumed by
-   * {@link Scope#signal(Condition, Restart...) signal}.
+   * How a handler decided to handle a condition. Instances are produced by {@linkplain Operations operations}, and
+   * consumed by {@link Scope#signal(Condition, Restart...) signal}.
    *
    * @see Operations
    * @see Scope#signal(Condition, Restart...)
    */
-  class Decision {
+  class Decision implements Supplier<Object> {
     static final Decision SKIP = new Decision(null);
 
     private final Object result;
@@ -78,8 +79,8 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
     // Only classes in this package should create instances
     Decision(Object result) { this.result = result; }
 
-    // Only classes in this package should use this
-    Object get() { return result; }
+    @Override
+    public Object get() { return result; }
   }
 }
 
@@ -94,7 +95,7 @@ class HandlerImpl implements Handler {
    * @param body          a function which receives a condition and the available operations, and returns the result.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  <T extends Condition, S extends T> HandlerImpl(Class<S> conditionType, BiFunction<T, Operations, Decision> body) {
+  <C extends Condition, S extends C> HandlerImpl(Class<S> conditionType, BiFunction<C, Operations, Decision> body) {
     Objects.requireNonNull(conditionType, "conditionType");
     Objects.requireNonNull(body, "body");
 

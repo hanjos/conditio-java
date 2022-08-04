@@ -21,15 +21,15 @@ import org.sbrubbles.conditio.Restart;
  *         // signals something which may result in the interruption of c as a whole
  *         Object result = c.signal(new SomeCondition(), Abort.INSTANCE);
  *
- *         // c...
+ *         // (execution won't reach here)
  *       }
  *
- *       // b...
+ *       // (execution won't reach here)
  *     } catch(AbortException e) {
  *       // stops the stack unwinding in b
  *     }
  *
- *     // a...
+ *     // (carries on in scope a)...
  *   }
  * </pre>
  * <p>

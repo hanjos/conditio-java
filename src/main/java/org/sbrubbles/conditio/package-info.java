@@ -9,7 +9,7 @@
  *   <li>{@linkplain org.sbrubbles.conditio.Restart Restarts}, which provide recovery strategies for handlers.</li>
  * </ul>
  * <p>
- * This package provides the main abstractions and machinery of the condition system.
+ * This package provides the main abstractions and machinery.
  * The {@link org.sbrubbles.conditio.restarts} package provides some general use restarts.
  * The {@link org.sbrubbles.conditio.conditions} package provides some general use conditions.
  */
