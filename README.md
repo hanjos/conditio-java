@@ -18,36 +18,36 @@ Although Common Lisp and at least [some](https://github.com/clojureman/special) 
 
 `try`-with-resources for the win: `Scope` is a resource which nests and closes scopes as execution enters and leaves `try` clauses, and provides a place to hang the signalling, handling and restarting machinery. In practice, the end result looks something like this:
 
-```Java
-public void analyzeLog(String filename)throws Exception{
-  try(Scope scope=Scopes.create()){
-  // establish a handler, which here picked a restart to use
-  scope.handle(MalformedLogEntry.class,(condition,ops)->ops.restart(new RetryWith("...")));
+```java
+public void analyzeLog(String filename) throws Exception {
+  try (Scope scope = Scopes.create()) {
+    // establish a handler, which here picked a restart to use
+    scope.handle(MalformedLogEntry.class, (condition, ops) -> ops.restart(new RetryWith("...")));
 
-  // load file content and parse it
+    // load file content and parse it
     InputStream in = // ...
-    List<Entry> entries = parseLogFile(in);
+    List <Entry> entries = parseLogFile(in);
 
     // ...
   }
 }
 
 public List<Entry> parseLogFile(InputStream in) throws Exception {
-  try(BufferedReader br=new BufferedReader(new InputStreamReader(in));
-  Scope scope=Scopes.create()){
-  List<String> lines= // ...
+  try (BufferedReader br = new BufferedReader(new InputStreamReader(in));
+       Scope scope = Scopes.create()) {
+    List<String> lines = // ...
     List<Entry> entries = new ArrayList<>();
 
     // create a restart, for skipping entries
     final Restart SKIP_ENTRY = Restart.on(SkipEntry.class, r -> SKIP_ENTRY_MARKER);
 
     // parse each line, and create an entry
-    for(String line : lines) {
+    for (String line : lines) {
       // establishing a new restart
       Entry entry = scope.call(() -> parseLogEntry(line), SKIP_ENTRY);
 
       // this is how the skipping is done
-      if(! SKIP_ENTRY_MARKER.equals(entry)) {
+      if (!SKIP_ENTRY_MARKER.equals(entry)) {
         entries.add(entry);
       }
     }
@@ -56,9 +56,9 @@ public List<Entry> parseLogFile(InputStream in) throws Exception {
   }
 }
 
-public Entry parseLogEntry(String text)throws Exception{
-  try(Scope scope=Scopes.create()){
-  if(isWellFormed(text)){
+public Entry parseLogEntry(String text) throws Exception {
+  try (Scope scope = Scopes.create()) {
+    if (isWellFormed(text)) {
       return new Entry(text);
     }
 
