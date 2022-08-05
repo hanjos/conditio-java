@@ -1,4 +1,4 @@
-[![CI](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml) [![Javadocs](https://img.shields.io/static/v1?label=Javadocs&message=0.3.0&color=informational&logo=read-the-docs)][vLatest] [![Maven package](https://img.shields.io/static/v1?label=Maven&message=0.3.0&color=orange&logo=apache-maven)](https://github.com/hanjos/conditio-java/packages/1543701)
+[![CI](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml) [![Javadocs](https://img.shields.io/static/v1?label=Javadocs&message=0.4.0&color=informational&logo=read-the-docs)][vLatest] [![Maven package](https://img.shields.io/static/v1?label=Maven&message=0.4.0&color=orange&logo=apache-maven)](https://github.com/hanjos/conditio-java/packages/1543701)
 
 A simple condition system for Java, without dynamic variables or reflection wizardry.
 
@@ -19,12 +19,12 @@ Although Common Lisp and at least [some](https://github.com/clojureman/special) 
 `try`-with-resources for the win: `Scope` is a resource which nests and closes scopes as execution enters and leaves `try` clauses, and provides a place to hang the signalling, handling and restarting machinery. In practice, the end result looks something like this:
 
 ```Java
-public void analyzeLog(String filename) throws Exception {
-  try(Scope scope = Scope.create()) {
-    // establish a handler, which here picked a restart to use
-    scope.handle(MalformedLogEntry.class, (condition, s) -> s.restart(new RetryWith("...")));
+public void analyzeLog(String filename)throws Exception{
+  try(Scope scope=Scopes.create()){
+  // establish a handler, which here picked a restart to use
+  scope.handle(MalformedLogEntry.class,(condition,ops)->ops.restart(new RetryWith("...")));
 
-    // load file content and parse it
+  // load file content and parse it
     InputStream in = // ...
     List<Entry> entries = parseLogFile(in);
 
@@ -33,9 +33,9 @@ public void analyzeLog(String filename) throws Exception {
 }
 
 public List<Entry> parseLogFile(InputStream in) throws Exception {
-  try(BufferedReader br = new BufferedReader(new InputStreamReader(in));
-      Scope scope = Scope.create()) {
-    List<String> lines = // ...
+  try(BufferedReader br=new BufferedReader(new InputStreamReader(in));
+  Scope scope=Scopes.create()){
+  List<String> lines= // ...
     List<Entry> entries = new ArrayList<>();
 
     // create a restart, for skipping entries
@@ -56,9 +56,9 @@ public List<Entry> parseLogFile(InputStream in) throws Exception {
   }
 }
 
-public Entry parseLogEntry(String text) throws Exception {
-  try(Scope scope = Scope.create()) {
-    if(isWellFormed(text)) {
+public Entry parseLogEntry(String text)throws Exception{
+  try(Scope scope=Scopes.create()){
+  if(isWellFormed(text)){
       return new Entry(text);
     }
 
@@ -83,5 +83,7 @@ Basically, Maven (or Gradle; anything compatible with Maven repos, really) and [
 
 
 [beh-cl]: https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html
+
 [pract-cl]: https://gigamonkeys.com/book/
-[vLatest]: https://sbrubbles.org/conditio-java/docs/0.3.0/apidocs/index.html
+
+[vLatest]: https://sbrubbles.org/conditio-java/docs/0.4.0/apidocs/index.html
