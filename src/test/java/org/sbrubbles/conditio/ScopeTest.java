@@ -62,7 +62,7 @@ public class ScopeTest {
     try (Scope a = Scopes.create()) {
       a.handle(BasicCondition.class, (c, ops) -> null);
 
-      assertThrows(UnsupportedOperationException.class, () -> a.signal(new BasicCondition("oops")));
+      assertThrows(NullPointerException.class, () -> a.signal(new BasicCondition("oops")));
     }
   }
 }

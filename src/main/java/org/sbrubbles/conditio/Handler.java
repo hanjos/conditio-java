@@ -6,15 +6,16 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * Handles conditions, producing the result to be returned by {@link Scope#signal(Condition, Restart...) signal}. This
- * result is communicated, and maybe computed, by invoking one of several {@linkplain Operations operations}.
+ * Handles conditions, producing the result to be returned by {@link Scope#signal(Condition, Restart...) signal}.
  * <p>
  * A handler can do two things:
  * <ul>
  *   <li>check if it can handle a given condition (with {@link #test(Object) test}); and</li>
- *   <li>given a condition and the {@linkplain Operations operations available}, make a {@linkplain Decision decision}
- *       (with {@link #apply(Object, Object) apply}).</li>
+ *   <li>given a condition and the {@linkplain Operations operations available}, return a {@linkplain Decision decision}
+ *       object holding the result (with {@link #apply(Object, Object) apply}).</li>
  * </ul>
+ * <p>
+ * Decision objects are unwrapped by {@code signal}, and are expected to be non-{@code null}.
  * <p>
  * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain BiFunction (bi)function}, this
  * interface extends both.
