@@ -97,8 +97,9 @@ public interface Scope extends AutoCloseable {
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition, and the condition
    *                                  itself doesn't provide a fallback.
+   * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
    */
-  Object signal(Condition condition, Restart... restarts) throws NullPointerException, HandlerNotFoundException;
+  <T> T signal(Condition condition, Restart... restarts) throws NullPointerException, HandlerNotFoundException;
 
   /**
    * An object to iterate over all reachable handlers in the call stack, starting from this instance to the root scope.
@@ -164,7 +165,8 @@ final class ScopeImpl implements Scope {
   }
 
   @Override
-  public Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException, NullPointerException {
+  public <T> T signal(Condition condition, Restart... restarts)
+    throws HandlerNotFoundException, NullPointerException, ClassCastException {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
 
@@ -184,10 +186,10 @@ final class ScopeImpl implements Scope {
           continue;
         }
 
-        return result.get();
+        return (T) result.get();
       }
 
-      return condition.onHandlerNotFound(scope);
+      return (T) condition.onHandlerNotFound(scope);
     }
   }
 
