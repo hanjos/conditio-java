@@ -26,7 +26,7 @@ public void analyzeLog(String filename) throws Exception {
 
     // load file content and parse it
     InputStream in = // ...
-    List <Entry> entries = parseLogFile(in);
+    List<Entry> entries = parseLogFile(in);
 
     // ...
   }
