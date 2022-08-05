@@ -101,32 +101,18 @@ public interface Scope extends AutoCloseable {
   Object signal(Condition condition, Restart... restarts) throws HandlerNotFoundException, UnsupportedOperationException;
 
   /**
-   * An object to iterate over all active handlers in the call stack, starting from this instance to the root scope.
+   * An object to iterate over all reachable handlers in the call stack, starting from this instance to the root scope.
    *
-   * @return an iterable to get all active handlers in the call stack.
+   * @return an iterable to get all reachable handlers in the call stack.
    */
   Iterable<Handler> getAllHandlers();
 
   /**
-   * An object to iterate over all active restarts in the call stack, starting from this instance to the root scope.
+   * An object to iterate over all reachable restarts in the call stack, starting from this instance to the root scope.
    *
-   * @return an iterable to get all active restarts in the call stack.
+   * @return an iterable to get all reachable restarts in the call stack.
    */
   Iterable<Restart> getAllRestarts();
-
-  /**
-   * The active handlers in this scope.
-   *
-   * @return the active handlers in this scope, in an unmodifiable list.
-   */
-  List<Handler> getHandlers();
-
-  /**
-   * The active restarts in this scope.
-   *
-   * @return the active restarts in this scope, in an unmodifiable list.
-   */
-  List<Restart> getRestarts();
 
   /**
    * The {@link Scope} instance wrapping this one. May be {@code null} if this is the topmost {@code Scope}.
@@ -183,7 +169,7 @@ final class ScopeImpl implements Scope {
     Objects.requireNonNull(restarts, "restarts");
 
     try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
-      scope.set(restarts); // add restarts, but only for this signal call
+      scope.set(restarts);
 
       Handler.Operations ops = new HandlerOperationsImpl(scope);
       for (Handler h : scope.getAllHandlers()) {
@@ -220,8 +206,8 @@ final class ScopeImpl implements Scope {
   public Iterable<Handler> getAllHandlers() {
     return () -> new FullSearchIterator<Handler>(this) {
       @Override
-      Iterator<Handler> getNextIteratorFrom(Scope scope) {
-        return scope.getHandlers().iterator();
+      Iterator<Handler> getNextIteratorFrom(ScopeImpl scope) {
+        return scope.handlers.iterator();
       }
     };
   }
@@ -230,20 +216,10 @@ final class ScopeImpl implements Scope {
   public Iterable<Restart> getAllRestarts() {
     return () -> new FullSearchIterator<Restart>(this) {
       @Override
-      Iterator<Restart> getNextIteratorFrom(Scope scope) {
-        return scope.getRestarts().iterator();
+      Iterator<Restart> getNextIteratorFrom(ScopeImpl scope) {
+        return scope.restarts.iterator();
       }
     };
-  }
-
-  @Override
-  public List<Handler> getHandlers() {
-    return Collections.unmodifiableList(this.handlers);
-  }
-
-  @Override
-  public List<Restart> getRestarts() {
-    return Collections.unmodifiableList(this.restarts);
   }
 
   @Override
@@ -254,11 +230,11 @@ final class ScopeImpl implements Scope {
 
 /**
  * A single iterator to run through all values available in the active call stack. Which values to use is determined
- * by the implementation of {@link #getNextIteratorFrom(Scope)}.
+ * by the implementation of {@link #getNextIteratorFrom(ScopeImpl)}.
  */
 abstract class FullSearchIterator<T> implements Iterator<T> {
   private Iterator<T> currentIterator;
-  private Scope currentScope;
+  private ScopeImpl currentScope;
 
   FullSearchIterator(ScopeImpl currentScope) {
     this.currentScope = Objects.requireNonNull(currentScope, "currentScope");
@@ -271,7 +247,7 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
    * @param scope the new scope "holding" the desired values.
    * @return the iterator "holding" the values in {@code scope}.
    */
-  abstract Iterator<T> getNextIteratorFrom(Scope scope);
+  abstract Iterator<T> getNextIteratorFrom(ScopeImpl scope);
 
   @Override
   public boolean hasNext() {
@@ -284,7 +260,7 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
         return false;
       }
 
-      this.currentScope = this.currentScope.getParent();
+      this.currentScope = (ScopeImpl) this.currentScope.getParent();
       this.currentIterator = getNextIteratorFrom(this.currentScope);
     } while (!this.currentIterator.hasNext());
 

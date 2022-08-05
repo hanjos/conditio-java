@@ -2,10 +2,8 @@ package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.fixtures.logging.UseValue;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,28 +44,6 @@ public class ScopeTest {
           assertEquals(c.getParent(), b);
         }
       }
-    }
-  }
-
-  @Test
-  public void getHandlersIsUnmodifiable() {
-    try (Scope a = Scopes.create()) {
-      final List<Handler> hs = a.getHandlers();
-      final Handler h = new HandlerImpl(BasicCondition.class, (c, ops) -> ops.use("test"));
-
-      assertThrows(UnsupportedOperationException.class, () -> hs.add(h));
-      assertThrows(UnsupportedOperationException.class, () -> hs.remove(h));
-    }
-  }
-
-  @Test
-  public void getRestartsIsUnmodifiable() {
-    try (Scope a = Scopes.create()) {
-      final List<Restart> rs = a.getRestarts();
-      final Restart r = new RestartImpl(UseValue.class, u -> "test");
-
-      assertThrows(UnsupportedOperationException.class, () -> rs.add(r));
-      assertThrows(UnsupportedOperationException.class, () -> rs.remove(r));
     }
   }
 
