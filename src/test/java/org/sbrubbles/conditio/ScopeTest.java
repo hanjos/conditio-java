@@ -65,15 +65,4 @@ public class ScopeTest {
       assertThrows(NullPointerException.class, () -> a.signal(new BasicCondition("oops")));
     }
   }
-
-  @Test
-  public void signalThrowsIfHandlerGivesAnUnexpectedType() {
-    try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class, (c, ops) -> ops.use(new Object()));
-
-      assertThrows(ClassCastException.class, () -> {
-        String str = a.signal(new BasicCondition(""));
-      });
-    }
-  }
 }

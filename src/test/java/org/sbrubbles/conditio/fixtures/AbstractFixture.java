@@ -19,7 +19,8 @@ public class AbstractFixture {
     restartTrace = new ArrayList<>();
   }
 
-  public <C extends Condition> BiFunction<C, Handler.Operations, Handler.Decision> traceHandler(final String prefix, final BiFunction<C, Handler.Operations, Handler.Decision> body) {
+  public <R, C extends Condition<R>> BiFunction<C, Handler.Operations<R>, Handler.Decision<R>> traceHandler(
+    final String prefix, final BiFunction<C, Handler.Operations<R>, Handler.Decision<R>> body) {
     return (c, ops) -> {
       handlerTrace.add(prefix + ": " + c.getClass().getSimpleName());
 

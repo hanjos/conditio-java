@@ -55,7 +55,7 @@ public interface Scope extends AutoCloseable {
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
-  <C extends Condition, T extends C> Scope handle(Class<T> conditionType, BiFunction<C, Handler.Operations, Handler.Decision> body);
+  <R, C extends Condition<R>, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations<R>, Handler.Decision<R>> body);
 
   /**
    * Evaluates {@code body}, providing additional restarts for it. It's useful for scopes that may not know how to
@@ -82,7 +82,7 @@ public interface Scope extends AutoCloseable {
    * @return the result of calling {@code body}.
    * @throws NullPointerException if at least one parameter is {@code null}.
    */
-  <T> T call(Supplier<T> body, Restart... restarts);
+  <T> T call(Supplier<T> body, Restart<T>... restarts);
 
   /**
    * Signals a situation which the currently running code doesn't know how to deal with. This method will
@@ -97,7 +97,7 @@ public interface Scope extends AutoCloseable {
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition, and the condition
    *                                  itself doesn't provide a fallback.
-   * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
+   * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code S}.
    */
   <T> T signal(Condition<T> condition, Restart<T>... restarts) throws NullPointerException, HandlerNotFoundException;
 
@@ -146,14 +146,14 @@ final class ScopeImpl implements Scope {
   }
 
   @Override
-  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations, Handler.Decision> body) {
-    this.handlers.add(new HandlerImpl(conditionType, body));
+  public <R, C extends Condition<R>, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations<R>, Handler.Decision<R>> body) {
+    this.handlers.add(new HandlerImpl<>(conditionType, body));
 
     return this;
   }
 
   @Override
-  public <T> T call(Supplier<T> body, Restart... restarts) {
+  public <T> T call(Supplier<T> body, Restart<T>... restarts) {
     Objects.requireNonNull(body, "body");
     Objects.requireNonNull(restarts, "restarts");
 
@@ -164,8 +164,10 @@ final class ScopeImpl implements Scope {
     }
   }
 
+  @SuppressWarnings("rawtypes")
+  @SafeVarargs
   @Override
-  public <T> T signal(Condition<T> condition, Restart<T>... restarts)
+  public final <T> T signal(Condition<T> condition, Restart<T>... restarts)
     throws HandlerNotFoundException, NullPointerException, ClassCastException {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
@@ -179,7 +181,7 @@ final class ScopeImpl implements Scope {
           continue;
         }
 
-        Handler.Decision result = (Handler.Decision) h.apply((Condition) condition, (Handler.Operations) ops);
+        Handler.Decision result = h.apply((Condition) condition, (Handler.Operations) ops);
         if (result == null) {
           throw new NullPointerException("Null decisions are not recognized!");
         } else if (result == Handler.Decision.SKIP) {

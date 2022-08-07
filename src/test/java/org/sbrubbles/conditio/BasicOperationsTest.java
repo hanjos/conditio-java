@@ -85,7 +85,7 @@ public class BasicOperationsTest {
 
   @ParameterizedTest
   @MethodSource("skipHandlingProvider")
-  public void skip(Function<String, Condition> builder) {
+  public void skip(Function<String, Condition<String>> builder) {
     final String EXPECTED_RESULT = "<result>";
     final List<String> trace = new ArrayList<>();
 
@@ -102,7 +102,7 @@ public class BasicOperationsTest {
         });
 
         try (Scope c = Scopes.create()) {
-          Object actual = c.signal(builder.apply(EXPECTED_RESULT));
+          String actual = c.signal(builder.apply(EXPECTED_RESULT));
 
           assertEquals(EXPECTED_RESULT, actual);
           assertLinesMatch(
@@ -156,7 +156,7 @@ public class BasicOperationsTest {
           });
 
         try (Scope c = Scopes.create()) {
-          Object actual = c.signal(new PleaseSignalSomethingElse<>(Object.class));
+          Object actual = c.signal(new PleaseSignalSomethingElse());
 
           assertEquals(FIXED_RESULT, actual);
           assertLinesMatch(
@@ -195,7 +195,7 @@ public class BasicOperationsTest {
     return StreamSupport.stream(iterable.spliterator(), false);
   }
 
-  static Stream<Function<String, Condition>> skipHandlingProvider() {
+  static Stream<Function<String, Condition<String>>> skipHandlingProvider() {
     return Stream.of(
       BasicCondition::new,
       SonOfBasicCondition::new

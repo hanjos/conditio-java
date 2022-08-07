@@ -46,7 +46,7 @@ public interface Handler<R> extends Predicate<Condition<?>>, BiFunction<Conditio
      *
      * @return an object representing the decision to skip.
      */
-    Decision<?> skip();
+    <T> Decision<T> skip();
 
     /**
      * Provides a value for {@link Scope#signal(Condition, Restart...) signal} to return directly. This may cause a
@@ -73,7 +73,7 @@ public interface Handler<R> extends Predicate<Condition<?>>, BiFunction<Conditio
    * @see Scope#signal(Condition, Restart...)
    */
   class Decision<R> implements Supplier<R> {
-    static final Decision<Object> SKIP = new Decision(null);
+    static final Decision SKIP = new Decision(null);
 
     private final R result;
 
@@ -111,7 +111,7 @@ class HandlerImpl<R> implements Handler<R> {
 
   @SuppressWarnings("unchecked")
   @Override
-  public Decision apply(Condition c, Operations ops) {
+  public Decision<R> apply(Condition<R> c, Operations<R> ops) {
     return (Decision) ((BiFunction) getBody()).apply(c, ops);
   }
 
@@ -138,9 +138,9 @@ class HandlerOperationsImpl<R> implements Handler.Operations<R> {
 
   @Override
   public Handler.Decision<R> restart(Restart.Option restartOption) throws RestartNotFoundException {
-    for (Restart r : getScope().getAllRestarts()) {
+    for (Restart<?> r : getScope().getAllRestarts()) {
       if (r.test(restartOption)) {
-        return new Handler.Decision<R>(getResultType().cast(r.apply(restartOption)));
+        return new Handler.Decision<>(getResultType().cast(r.apply(restartOption)));
       }
     }
 
@@ -148,13 +148,13 @@ class HandlerOperationsImpl<R> implements Handler.Operations<R> {
   }
 
   @Override
-  public Handler.Decision<?> skip() {
+  public <T> Handler.Decision<T> skip() {
     return Handler.Decision.SKIP;
   }
 
   @Override
   public Handler.Decision<R> use(R object) {
-    return new Handler.Decision<R>(object);
+    return new Handler.Decision<>(object);
   }
 
   @Override

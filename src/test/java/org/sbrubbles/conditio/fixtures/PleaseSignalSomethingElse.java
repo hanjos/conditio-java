@@ -2,8 +2,8 @@ package org.sbrubbles.conditio.fixtures;
 
 import org.sbrubbles.conditio.Condition;
 
-public class PleaseSignalSomethingElse<R> extends Condition<R> {
-  public PleaseSignalSomethingElse(Class<R> resultType) {
-    super(resultType);
+public class PleaseSignalSomethingElse extends Condition<Object> {
+  public PleaseSignalSomethingElse() {
+    super(Object.class);
   }
 }
