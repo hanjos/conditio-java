@@ -7,21 +7,21 @@ import org.sbrubbles.conditio.fixtures.BasicCondition;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HandlerImplTest {
-  private Handler h;
+  private Handler<String> h;
 
   @BeforeEach
   public void setUp() {
     try (Scope a = Scopes.create()) {
-      h = new HandlerImpl(BasicCondition.class, this::body);
+      h = new HandlerImpl<>(BasicCondition.class, this::body);
     }
   }
 
   @Test
   public void nullParametersAreNotAllowed() {
     try (Scope scope = Scopes.create()) {
-      assertThrows(NullPointerException.class, () -> new HandlerImpl(null, this::body), "missing conditionType");
-      assertThrows(NullPointerException.class, () -> new HandlerImpl(BasicCondition.class, null), "missing body");
-      assertThrows(NullPointerException.class, () -> new HandlerImpl(null, null), "missing both");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl<>(null, this::body), "missing conditionType");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl<>(BasicCondition.class, null), "missing body");
+      assertThrows(NullPointerException.class, () -> new HandlerImpl<>(null, null), "missing both");
     }
   }
 
@@ -36,7 +36,7 @@ public class HandlerImplTest {
   @Test
   public void apply() {
     try (Scope scope = Scopes.create()) {
-      Handler.Operations ops = new HandlerOperationsImpl(scope);
+      Handler.Operations<String> ops = new HandlerOperationsImpl<>(scope, String.class);
 
       Condition c = new BasicCondition("OMGWTFBBQ");
       assertEquals("OK: OMGWTFBBQ", h.apply(c, ops).get());

@@ -7,14 +7,14 @@ import org.sbrubbles.conditio.fixtures.logging.UseValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RestartImplTest {
-  private Restart rA;
-  private Restart rB;
+  private Restart<String> rA;
+  private Restart<String> rB;
 
   @BeforeEach
   public void setUp() {
     try (Scope scope = Scopes.create()) {
-      rA = new RestartImpl(A.class, this::body);
-      rB = new RestartImpl(B.class, this::body);
+      rA = new RestartImpl<>(A.class, this::body);
+      rB = new RestartImpl<>(B.class, this::body);
     }
   }
 
@@ -22,11 +22,11 @@ public class RestartImplTest {
   public void nullParametersAreNotAllowed() {
     try (Scope scope = Scopes.create()) {
       assertThrows(NullPointerException.class,
-        () -> new RestartImpl(null, this::body), "missing optionType");
+        () -> new RestartImpl<>(null, this::body), "missing optionType");
       assertThrows(NullPointerException.class,
-        () -> new RestartImpl(A.class, null), "missing body");
+        () -> new RestartImpl<>(A.class, null), "missing body");
       assertThrows(NullPointerException.class,
-        () -> new RestartImpl(null, null), "missing both");
+        () -> new RestartImpl<>(null, null), "missing both");
     }
   }
 
@@ -86,7 +86,7 @@ public class RestartImplTest {
       rB.apply(new B("FAIL")));
   }
 
-  private Object body(A a) {
+  private String body(A a) {
     if (!"FAIL".equals(a.getValue())) {
       return "OK: " + a.getValue();
     } else {

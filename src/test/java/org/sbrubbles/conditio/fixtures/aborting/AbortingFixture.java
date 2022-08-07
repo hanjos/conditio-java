@@ -16,7 +16,7 @@ public class AbortingFixture {
 
   public String signal() {
     try (Scope scope = Scopes.create()) {
-      scope.signal(new BasicCondition(""), Abort.INSTANCE);
+      scope.signal(new BasicCondition(""), Abort.instance());
 
       return SIGNAL;
     } catch (Exception e) {
@@ -38,7 +38,7 @@ public class AbortingFixture {
 
   public String handle() {
     try (Scope scope = Scopes.create()) {
-      scope.handle(BasicCondition.class, (c, ops) -> ops.restart(Abort.INSTANCE));
+      scope.handle(BasicCondition.class, (c, ops) -> ops.restart(Abort.instance()));
 
       return passThrough();
     } catch (AbortException e) {

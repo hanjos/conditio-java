@@ -28,7 +28,7 @@ import java.util.function.Supplier;
  * @see Scope#signal(Condition, Restart...)
  * @see Scope#call(Supplier, Restart...)
  */
-public interface Restart extends Predicate<Restart.Option>, Function<Restart.Option, Object> {
+public interface Restart<R> extends Predicate<Restart.Option>, Function<Restart.Option, R> {
   /**
    * Serves both as input for restarts, and a way to select which restart to use: the earliest-bound one in the stack
    * which {@linkplain Restart#test(Object) accepts} it.
@@ -46,17 +46,17 @@ public interface Restart extends Predicate<Restart.Option>, Function<Restart.Opt
    * @return an instance of Restart, using a default implementation.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
-  static <O extends Restart.Option, S extends O> Restart on(Class<S> optionType, Function<O, ?> body) {
-    return new RestartImpl(optionType, body);
+  static <R, O extends Restart.Option, S extends O> Restart<R> on(Class<S> optionType, Function<O, R> body) {
+    return new RestartImpl<>(optionType, body);
   }
 }
 
 /**
  * A simple implementation of {@link Restart}, which delegates its functionality to its attributes.
  */
-class RestartImpl implements Restart {
+class RestartImpl<R> implements Restart<R> {
   private final Class<? extends Option> optionType;
-  private final Function<? extends Option, ?> body;
+  private final Function<? extends Option, R> body;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
@@ -65,7 +65,7 @@ class RestartImpl implements Restart {
    * @param body       a function which receives a restart option and returns a result.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  <O extends Option, S extends O> RestartImpl(Class<S> optionType, Function<O, ?> body) {
+  <O extends Option, S extends O> RestartImpl(Class<S> optionType, Function<O, R> body) {
     Objects.requireNonNull(optionType, "optionType");
     Objects.requireNonNull(body, "body");
 
@@ -80,15 +80,15 @@ class RestartImpl implements Restart {
 
   @SuppressWarnings("unchecked")
   @Override
-  public Object apply(Option data) {
-    return ((Function) getBody()).apply(data);
+  public R apply(Option data) {
+    return (R) ((Function) getBody()).apply(data);
   }
 
   public Class<? extends Option> getOptionType() {
     return optionType;
   }
 
-  public Function<? extends Option, ?> getBody() {
+  public Function<? extends Option, R> getBody() {
     return body;
   }
 }

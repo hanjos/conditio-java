@@ -7,6 +7,7 @@ import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.BasicNotice;
 import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
+import org.sbrubbles.conditio.fixtures.logging.Entry;
 import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
 import org.sbrubbles.conditio.fixtures.logging.UseValue;
 
@@ -23,9 +24,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BasicOperationsTest {
   @Test
   public void signalRemovesTheRestartsAfterwards() {
-    final Restart USE_VALUE = Restart.on(UseValue.class, UseValue::getValue);
-    final String TEST_STR = "test";
-    final Restart.Option u = new UseValue(TEST_STR);
+    final Restart<Entry> USE_VALUE = Restart.on(UseValue.class, r -> (Entry) r.getValue());
+    final Entry TEST_VALUE = new Entry("test");
+    final Restart.Option u = new UseValue(TEST_VALUE);
 
     try (Scope a = Scopes.create()) {
       // no restart before the handler...
@@ -45,7 +46,7 @@ public class BasicOperationsTest {
         // no restart before signal...
         assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "before signal");
 
-        assertEquals(TEST_STR, b.signal(new MalformedLogEntry(""), USE_VALUE));
+        assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), USE_VALUE));
 
         // no restart after either...
         assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "after signal");
@@ -55,9 +56,9 @@ public class BasicOperationsTest {
 
   @Test
   public void callRemovesTheRestartsAfterwards() {
-    final Restart USE_VALUE = Restart.on(UseValue.class, UseValue::getValue);
-    final String TEST_STR = "test";
-    final Restart.Option u = new UseValue(TEST_STR);
+    final Restart<Entry> USE_VALUE = Restart.on(UseValue.class, r -> (Entry) r.getValue());
+    final Entry TEST_VALUE = new Entry("test");
+    final Restart.Option u = new UseValue(TEST_VALUE);
 
     try (Scope a = Scopes.create()) {
       assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
@@ -68,7 +69,7 @@ public class BasicOperationsTest {
         return ops.restart(u);
       });
 
-      assertEquals(TEST_STR, a.call(
+      assertEquals(TEST_VALUE, a.call(
         () -> {
           try (Scope b = Scopes.create()) {
             assertTrue(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "inside call");
@@ -155,7 +156,7 @@ public class BasicOperationsTest {
           });
 
         try (Scope c = Scopes.create()) {
-          Object actual = c.signal(new PleaseSignalSomethingElse());
+          Object actual = c.signal(new PleaseSignalSomethingElse<>(Object.class));
 
           assertEquals(FIXED_RESULT, actual);
           assertLinesMatch(

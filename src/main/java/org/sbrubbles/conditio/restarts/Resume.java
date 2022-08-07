@@ -30,11 +30,8 @@ import org.sbrubbles.conditio.Scope;
  * which means that any one instance is equal to any other. So, for convenience, this class provides a pre-built
  * instance.
  */
-public class Resume implements Restart.Option, Restart {
-  /**
-   * A pre-built instance of this class.
-   */
-  public static final Resume INSTANCE = new Resume();
+public class Resume<R> implements Restart.Option, Restart<R> {
+  private static final Resume INSTANCE = new Resume();
 
   /**
    * Creates a new instance.
@@ -42,6 +39,11 @@ public class Resume implements Restart.Option, Restart {
    * This class stores no state, so developers can just reuse {@link #INSTANCE} instead of creating a new object.
    */
   public Resume() { /**/ }
+
+  /**
+   * A pre-built instance of this class.
+   */
+  public static <R> Resume<R> instance() { return INSTANCE; }
 
   /**
    * Checks if the given option is an instance of this class.
@@ -62,7 +64,7 @@ public class Resume implements Restart.Option, Restart {
    * @throws ClassCastException if {@code option} does not pass {@link #test(Option) test}.
    */
   @Override
-  public Object apply(Option option) {
+  public R apply(Option option) {
     if (!test(option)) {
       throw new ClassCastException();
     }

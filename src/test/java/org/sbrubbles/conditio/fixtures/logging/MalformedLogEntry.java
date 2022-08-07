@@ -4,10 +4,12 @@ import org.sbrubbles.conditio.Condition;
 
 import java.util.Objects;
 
-public class MalformedLogEntry extends Condition {
+public class MalformedLogEntry extends Condition<Entry> {
   private final String text;
 
   public MalformedLogEntry(String text) {
+    super(Entry.class);
+
     this.text = text;
   }
 

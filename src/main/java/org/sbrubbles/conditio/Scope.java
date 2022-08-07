@@ -99,21 +99,21 @@ public interface Scope extends AutoCloseable {
    *                                  itself doesn't provide a fallback.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
    */
-  <T> T signal(Condition condition, Restart... restarts) throws NullPointerException, HandlerNotFoundException;
+  <T> T signal(Condition<T> condition, Restart<T>... restarts) throws NullPointerException, HandlerNotFoundException;
 
   /**
    * An object to iterate over all reachable handlers in the call stack, starting from this instance to the root scope.
    *
    * @return an iterable to get all reachable handlers in the call stack.
    */
-  Iterable<Handler> getAllHandlers();
+  Iterable<Handler<?>> getAllHandlers();
 
   /**
    * An object to iterate over all reachable restarts in the call stack, starting from this instance to the root scope.
    *
    * @return an iterable to get all reachable restarts in the call stack.
    */
-  Iterable<Restart> getAllRestarts();
+  Iterable<Restart<?>> getAllRestarts();
 
   /**
    * The {@link Scope} instance wrapping this one. May be {@code null} if this is the topmost {@code Scope}.
@@ -135,8 +135,8 @@ public interface Scope extends AutoCloseable {
 final class ScopeImpl implements Scope {
   private final Scope parent;
 
-  private final List<Handler> handlers;
-  private final List<Restart> restarts;
+  private final List<Handler<?>> handlers;
+  private final List<Restart<?>> restarts;
 
   ScopeImpl(Scope parent) {
     this.parent = parent;
@@ -165,7 +165,7 @@ final class ScopeImpl implements Scope {
   }
 
   @Override
-  public <T> T signal(Condition condition, Restart... restarts)
+  public <T> T signal(Condition<T> condition, Restart<T>... restarts)
     throws HandlerNotFoundException, NullPointerException, ClassCastException {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
@@ -173,23 +173,23 @@ final class ScopeImpl implements Scope {
     try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
       scope.set(restarts);
 
-      Handler.Operations ops = new HandlerOperationsImpl(scope);
-      for (Handler h : scope.getAllHandlers()) {
+      Handler.Operations<T> ops = new HandlerOperationsImpl<>(scope, condition.getResultType());
+      for (Handler<?> h : scope.getAllHandlers()) {
         if (!h.test(condition)) {
           continue;
         }
 
-        Handler.Decision result = h.apply(condition, ops);
+        Handler.Decision result = (Handler.Decision) h.apply((Condition) condition, (Handler.Operations) ops);
         if (result == null) {
           throw new NullPointerException("Null decisions are not recognized!");
         } else if (result == Handler.Decision.SKIP) {
           continue;
         }
 
-        return (T) result.get();
+        return condition.getResultType().cast(result.get());
       }
 
-      return (T) condition.onHandlerNotFound(scope);
+      return condition.onHandlerNotFound(scope);
     }
   }
 
@@ -198,27 +198,27 @@ final class ScopeImpl implements Scope {
    *
    * @param restarts some restarts to set.
    */
-  public void set(Restart... restarts) {
-    for (Restart r : restarts) {
+  public void set(Restart<?>... restarts) {
+    for (Restart<?> r : restarts) {
       this.restarts.add(Objects.requireNonNull(r));
     }
   }
 
   @Override
-  public Iterable<Handler> getAllHandlers() {
-    return () -> new FullSearchIterator<Handler>(this) {
+  public Iterable<Handler<?>> getAllHandlers() {
+    return () -> new FullSearchIterator<Handler<?>>(this) {
       @Override
-      Iterator<Handler> getNextIteratorFrom(ScopeImpl scope) {
+      Iterator<Handler<?>> getNextIteratorFrom(ScopeImpl scope) {
         return scope.handlers.iterator();
       }
     };
   }
 
   @Override
-  public Iterable<Restart> getAllRestarts() {
-    return () -> new FullSearchIterator<Restart>(this) {
+  public Iterable<Restart<?>> getAllRestarts() {
+    return () -> new FullSearchIterator<Restart<?>>(this) {
       @Override
-      Iterator<Restart> getNextIteratorFrom(ScopeImpl scope) {
+      Iterator<Restart<?>> getNextIteratorFrom(ScopeImpl scope) {
         return scope.restarts.iterator();
       }
     };

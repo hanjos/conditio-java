@@ -37,11 +37,8 @@ import org.sbrubbles.conditio.Restart;
  * which means that any one instance is equal to any other. So, for convenience, this class provides a pre-built
  * instance.
  */
-public class Abort implements Restart.Option, Restart {
-  /**
-   * A pre-built instance of this class.
-   */
-  public static final Abort INSTANCE = new Abort();
+public class Abort<R> implements Restart.Option, Restart<R> {
+  private static final Abort INSTANCE = new Abort();
 
   /**
    * Creates a new instance.
@@ -49,6 +46,13 @@ public class Abort implements Restart.Option, Restart {
    * This class stores no state, so developers can just reuse {@link #INSTANCE} instead of creating a new object.
    */
   public Abort() { }
+
+  /**
+   * A pre-built instance of this class.
+   */
+  public static <R> Abort<R> instance() {
+    return INSTANCE;
+  }
 
   /**
    * Checks if the given option is an instance of this class.
@@ -69,7 +73,7 @@ public class Abort implements Restart.Option, Restart {
    * @throws AbortException to end execution in a scope and unwind the stack.
    */
   @Override
-  public Object apply(Option option) throws AbortException {
+  public R apply(Option option) throws AbortException {
     throw new AbortException();
   }
 

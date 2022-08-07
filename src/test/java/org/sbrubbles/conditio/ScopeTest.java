@@ -50,10 +50,10 @@ public class ScopeTest {
   @Test
   public void theIteratorFollowsTheProperProtocol() {
     try (Scope a = Scopes.create()) {
-      Iterator<Handler> iterator = a.getAllHandlers().iterator();
+      Iterator<Handler<?>> iterator = a.getAllHandlers().iterator();
 
       assertFalse(iterator.hasNext());
-      assertThrows(NoSuchElementException.class, () -> iterator.next());
+      assertThrows(NoSuchElementException.class, iterator::next);
     }
   }
 

@@ -1,8 +1,8 @@
 package org.sbrubbles.conditio.fixtures.tracing;
 
-import org.sbrubbles.conditio.Condition;
+import org.sbrubbles.conditio.conditions.Notice;
 
-public class WorkDone extends Condition {
+public class WorkDone extends Notice {
   private final int amount;
 
   public WorkDone(int amount) {
