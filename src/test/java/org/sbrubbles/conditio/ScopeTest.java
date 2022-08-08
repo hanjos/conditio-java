@@ -60,7 +60,7 @@ public class ScopeTest {
   @Test
   public void signalThrowsIfHandlerReturnsNull() {
     try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class, (c, ops) -> null);
+      a.handle(BasicCondition.class, (c, t, ops) -> null);
 
       assertThrows(NullPointerException.class, () -> a.signal(new BasicCondition("oops")));
     }

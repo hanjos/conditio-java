@@ -91,7 +91,7 @@ public class LoggingTest {
 
   @Test
   public void readBadLogWithNoHandlerFound() throws Exception {
-    final Condition<Entry> expectedCondition = new UnknownEntryCondition();
+    final Condition expectedCondition = new UnknownEntryCondition();
 
     fixture.setLogAnalyzer(true);
     fixture.setConditionProvider(str -> expectedCondition); // won't match MalformedLogEntry
@@ -278,9 +278,5 @@ public class LoggingTest {
     }
   }
 
-  static class UnknownEntryCondition extends Condition<Entry> {
-    public UnknownEntryCondition() {
-      super(Entry.class);
-    }
-  }
+  static class UnknownEntryCondition extends Condition { }
 }

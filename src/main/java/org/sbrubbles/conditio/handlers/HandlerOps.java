@@ -3,8 +3,7 @@ package org.sbrubbles.conditio.handlers;
 import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Handler;
 import org.sbrubbles.conditio.Restart;
-
-import java.util.function.BiFunction;
+import org.sbrubbles.conditio.util.TriFunction;
 
 /**
  * Some general use handler operations, ready for consumption.
@@ -14,15 +13,15 @@ import java.util.function.BiFunction;
 public final class HandlerOps {
   private HandlerOps() { }
 
-  public static <R> BiFunction<Condition<R>, Handler.Operations<R>, Handler.Decision<R>> restart(Restart.Option option) {
-    return (c, ops) -> ops.restart(option);
+  public static <R> TriFunction<Condition, Class<R>, Handler.Operations<R>, Handler.Decision<R>> restart(Restart.Option option) {
+    return (c, t, ops) -> ops.restart(option);
   }
 
-  public static <R> BiFunction<Condition<R>, Handler.Operations<R>, Handler.Decision<R>> skip() {
-    return (c, ops) -> ops.skip();
+  public static <R> TriFunction<Condition, Class<R>, Handler.Operations<R>, Handler.Decision<R>> skip() {
+    return (c, t, ops) -> ops.skip();
   }
 
-  public static <R> BiFunction<Condition<R>, Handler.Operations<R>, Handler.Decision<R>> use(R value) {
-    return (c, ops) -> ops.use(value);
+  public static <R> TriFunction<Condition, Class<R>, Handler.Operations<R>, Handler.Decision<R>> use(R value) {
+    return (c, t, ops) -> ops.use(value);
   }
 }

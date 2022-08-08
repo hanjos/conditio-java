@@ -4,12 +4,10 @@ import org.sbrubbles.conditio.Condition;
 
 import java.util.Objects;
 
-public class BasicCondition extends Condition<String> {
+public class BasicCondition extends Condition {
   private final Object value;
 
   public BasicCondition(Object value) {
-    super(String.class);
-
     this.value = value;
   }
 

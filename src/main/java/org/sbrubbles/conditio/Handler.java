@@ -1,5 +1,7 @@
 package org.sbrubbles.conditio;
 
+import org.sbrubbles.conditio.util.TriFunction;
+
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -12,7 +14,7 @@ import java.util.function.Supplier;
  * <ul>
  *   <li>check if it can handle a given condition (with {@link #test(Object) test}); and</li>
  *   <li>given a condition and the {@linkplain Operations operations available}, return a {@linkplain Decision decision}
- *       object holding the result (with {@link #apply(Object, Object) apply}).</li>
+ *       object holding the result (with {@link #apply(Object, Object, Object) apply}).</li>
  * </ul>
  * <p>
  * Decision objects are unwrapped by {@code signal}, and are expected to be non-{@code null}.
@@ -25,7 +27,7 @@ import java.util.function.Supplier;
  * @see Operations
  * @see Decision
  */
-public interface Handler<R> extends Predicate<Condition<?>>, BiFunction<Condition<R>, Handler.Operations<R>, Handler.Decision<R>> {
+public interface Handler<R> extends Predicate<Condition>, TriFunction<Condition, Class<R>, Handler.Operations<R>, Handler.Decision<R>> {
   /**
    * The ways a handler can handle a condition.
    */
@@ -86,8 +88,8 @@ public interface Handler<R> extends Predicate<Condition<?>>, BiFunction<Conditio
 }
 
 class HandlerImpl<R> implements Handler<R> {
-  private final Class<? extends Condition<R>> conditionType;
-  private final BiFunction<? extends Condition<R>, Operations<R>, Decision<R>> body;
+  private final Class<? extends Condition> conditionType;
+  private final TriFunction<? extends Condition, Class<R>, Operations<R>, Decision<R>> body;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
@@ -96,7 +98,7 @@ class HandlerImpl<R> implements Handler<R> {
    * @param body          a function which receives a condition and the available operations, and returns the result.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  <C extends Condition<R>, S extends C> HandlerImpl(Class<S> conditionType, BiFunction<C, Operations<R>, Decision<R>> body) {
+  <C extends Condition, S extends C> HandlerImpl(Class<S> conditionType, TriFunction<C, Class<R>, Operations<R>, Decision<R>> body) {
     Objects.requireNonNull(conditionType, "conditionType");
     Objects.requireNonNull(body, "body");
 
@@ -111,15 +113,15 @@ class HandlerImpl<R> implements Handler<R> {
 
   @SuppressWarnings("unchecked")
   @Override
-  public Decision<R> apply(Condition<R> c, Operations<R> ops) {
-    return (Decision) ((BiFunction) getBody()).apply(c, ops);
+  public Decision<R> apply(Condition c, Class<R> resultType, Operations<R> ops) {
+    return (Decision) ((TriFunction) getBody()).apply(c, resultType, ops);
   }
 
-  public Class<? extends Condition<R>> getConditionType() {
+  public Class<? extends Condition> getConditionType() {
     return conditionType;
   }
 
-  public BiFunction<? extends Condition<R>, Operations<R>, Decision<R>> getBody() {
+  public TriFunction<? extends Condition, Class<R>, Operations<R>, Decision<R>> getBody() {
     return body;
   }
 }

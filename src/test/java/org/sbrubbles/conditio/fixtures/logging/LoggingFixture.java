@@ -40,6 +40,7 @@ public class LoggingFixture extends AbstractFixture {
 
         return scope.signal(
           getConditionProvider().apply(text),
+          Entry.class,
           USE_VALUE,
           RETRY_WITH);
       }
@@ -116,7 +117,7 @@ public class LoggingFixture extends AbstractFixture {
   private boolean analyzeLog;
   private boolean logAnalyzer;
 
-  private Function<String, Condition<Entry>> conditionProvider;
+  private Function<String, Condition> conditionProvider;
   private Restart.Option restartOptionToUse;
 
   public LoggingFixture() {
@@ -143,11 +144,11 @@ public class LoggingFixture extends AbstractFixture {
     this.logAnalyzer = logAnalyzer;
   }
 
-  public Function<String, Condition<Entry>> getConditionProvider() {
+  public Function<String, Condition> getConditionProvider() {
     return conditionProvider;
   }
 
-  public void setConditionProvider(Function<String, Condition<Entry>> provider) {
+  public void setConditionProvider(Function<String, Condition> provider) {
     this.conditionProvider = provider;
   }
 

@@ -16,11 +16,7 @@ import org.sbrubbles.conditio.Scope;
  * @see Condition
  * @see org.sbrubbles.conditio.restarts.Resume
  */
-public class Notice extends Condition<Void> {
-  public Notice() {
-    super(Void.class);
-  }
-
+public class Notice extends Condition {
   /**
    * This implementation does nothing.
    * <p>

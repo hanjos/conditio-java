@@ -3,11 +3,11 @@ package org.sbrubbles.conditio.fixtures;
 import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Handler;
 import org.sbrubbles.conditio.Restart;
+import org.sbrubbles.conditio.util.TriFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class AbstractFixture {
@@ -19,12 +19,12 @@ public class AbstractFixture {
     restartTrace = new ArrayList<>();
   }
 
-  public <R, C extends Condition<R>> BiFunction<C, Handler.Operations<R>, Handler.Decision<R>> traceHandler(
-    final String prefix, final BiFunction<C, Handler.Operations<R>, Handler.Decision<R>> body) {
-    return (c, ops) -> {
+  public <R, C extends Condition> TriFunction<C, Class<R>, Handler.Operations<R>, Handler.Decision<R>> traceHandler(
+    final String prefix, final TriFunction<C, Class<R>, Handler.Operations<R>, Handler.Decision<R>> body) {
+    return (c, t, ops) -> {
       handlerTrace.add(prefix + ": " + c.getClass().getSimpleName());
 
-      return body.apply(c, ops);
+      return body.apply(c, t, ops);
     };
   }
 

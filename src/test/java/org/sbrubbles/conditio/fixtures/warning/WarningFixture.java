@@ -19,7 +19,7 @@ public class WarningFixture extends AbstractFixture {
   public void b(int n) {
     try (Scope scope = Scopes.create()) {
       scope.handle(IntWarning.class,
-        traceHandler("b", (c, ops) -> {
+        traceHandler("b", (c, t, ops) -> {
           if (c.getNumber() % 2 == 0) {
             return ops.restart(Restarts.resume()); // ignore pair warnings
           } else {
@@ -38,7 +38,7 @@ public class WarningFixture extends AbstractFixture {
       List<String> warnings = new ArrayList<>();
 
       scope.handle(IntWarning.class,
-        traceHandler("a", (c, ops) -> {
+        traceHandler("a", (c, t, ops) -> {
           warnings.add(c.getMessage());
           return ops.restart(Restarts.resume());
         }));
