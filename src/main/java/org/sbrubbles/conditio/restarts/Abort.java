@@ -14,12 +14,12 @@ import org.sbrubbles.conditio.Restart;
  * <pre>
  *   try(Scope a = Scopes.create()) {
  *     // decides to give up on the whole operation
- *     a.handle(SomeCondition.class, (c, ops) -&gt; ops.restart(Abort.INSTANCE))
+ *     a.handle(SomeCondition.class, (c, ops) -&gt; ops.restart(Restarts.abort()))
  *
  *     try(Scope b = Scopes.create()) {
  *       try(Scope c = Scopes.create()) {
  *         // signals something which may result in the interruption of c as a whole
- *         Object result = c.signal(new SomeCondition(), Abort.INSTANCE);
+ *         Object result = c.signal(new SomeCondition(), Restarts.abort());
  *
  *         // (execution won't reach here)
  *       }
@@ -34,25 +34,16 @@ import org.sbrubbles.conditio.Restart;
  * </pre>
  * <p>
  * This class works both as a {@link org.sbrubbles.conditio.Restart.Option} and a {@link Restart}. It stores no state,
- * which means that any one instance is equal to any other. So, for convenience, this class provides a pre-built
+ * which means that any one instance is equal to any other. So, for convenience, {@link Restarts} provides a pre-built
  * instance.
  */
 public class Abort<R> implements Restart.Option, Restart<R> {
-  private static final Abort INSTANCE = new Abort();
-
   /**
-   * Creates a new instance.
-   * <p>
-   * This class stores no state, so developers can just reuse {@link #INSTANCE} instead of creating a new object.
+   * Creates a new instance. Developers are encouraged to just reuse {@link Restarts#abort()} instead.
+   *
+   * @see Restarts
    */
   public Abort() { }
-
-  /**
-   * A pre-built instance of this class.
-   */
-  public static <R> Abort<R> instance() {
-    return INSTANCE;
-  }
 
   /**
    * Checks if the given option is an instance of this class.

@@ -1,3 +1,7 @@
+# 0.5
+
+* Scope.signal is now generic, avoiding the need to cast the resulting Object. That meant generifying the whole machinery, to propagate the expected type T to the handlers and restarts.
+
 # 0.4
 
 * Handlers now take a Handler.Operations instead of a scope, which delimits the operations available.

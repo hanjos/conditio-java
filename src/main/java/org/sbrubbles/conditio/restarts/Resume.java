@@ -16,34 +16,29 @@ import org.sbrubbles.conditio.Scope;
  *       showProgressToUser(c.getValue());
  *
  *       // condition acknowledged; carry on
- *       return ops.restart(Resume.INSTANCE);
+ *       return ops.restart(Restarts.resume());
  *     });
  *
  *     // note that result of signal() is ignored and thrown away
- *     scope.signal(new Progress(0.6), Resume.INSTANCE);
+ *     scope.signal(new Progress(0.6), Restarts.resume());
  *
  *     // ...
  *   }
  * </pre>
  * <p>
  * This class works both as a {@link org.sbrubbles.conditio.Restart.Option} and a {@link Restart}. It stores no state,
- * which means that any one instance is equal to any other. So, for convenience, this class provides a pre-built
+ * which means that any one instance is equal to any other. So, for convenience, {@link Restarts} provides a pre-built
  * instance.
+ *
+ * @see Restarts
  */
 public class Resume<R> implements Restart.Option, Restart<R> {
-  private static final Resume INSTANCE = new Resume();
-
   /**
-   * Creates a new instance.
-   * <p>
-   * This class stores no state, so developers can just reuse {@link #INSTANCE} instead of creating a new object.
+   * Creates a new instance. Developers can just reuse {@link Restarts#resume()} instead.
+   *
+   * @see Restarts
    */
   public Resume() { /**/ }
-
-  /**
-   * A pre-built instance of this class.
-   */
-  public static <R> Resume<R> instance() { return INSTANCE; }
 
   /**
    * Checks if the given option is an instance of this class.

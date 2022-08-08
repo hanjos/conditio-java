@@ -3,7 +3,7 @@ package org.sbrubbles.conditio.fixtures.warning;
 import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
-import org.sbrubbles.conditio.restarts.Resume;
+import org.sbrubbles.conditio.restarts.Restarts;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import java.util.List;
 public class WarningFixture extends AbstractFixture {
   public void c(int i) {
     try (Scope scope = Scopes.create()) {
-      scope.signal(new IntWarning(i), Resume.instance());
+      scope.signal(new IntWarning(i), Restarts.resume());
     }
   }
 
@@ -21,7 +21,7 @@ public class WarningFixture extends AbstractFixture {
       scope.handle(IntWarning.class,
         traceHandler("b", (c, ops) -> {
           if (c.getNumber() % 2 == 0) {
-            return ops.restart(Resume.instance()); // ignore pair warnings
+            return ops.restart(Restarts.resume()); // ignore pair warnings
           } else {
             return ops.skip();
           }
@@ -40,7 +40,7 @@ public class WarningFixture extends AbstractFixture {
       scope.handle(IntWarning.class,
         traceHandler("a", (c, ops) -> {
           warnings.add(c.getMessage());
-          return ops.restart(Resume.instance());
+          return ops.restart(Restarts.resume());
         }));
 
       b(n);
