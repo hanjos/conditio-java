@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.*;
 
 import java.util.Arrays;
@@ -92,7 +91,7 @@ public class LoggingTest {
 
   @Test
   public void readBadLogWithNoHandlerFound() throws Exception {
-    final Condition expectedCondition = new BasicCondition("oops");
+    final Condition<Entry> expectedCondition = new UnknownEntryCondition();
 
     fixture.setLogAnalyzer(true);
     fixture.setConditionProvider(str -> expectedCondition); // won't match MalformedLogEntry
@@ -275,7 +274,13 @@ public class LoggingTest {
 
     @Override
     public String toString() {
-      return "BadRestartOption(" + value + ")";
+      return "UnknownRestartOption(" + value + ")";
+    }
+  }
+
+  static class UnknownEntryCondition extends Condition<Entry> {
+    public UnknownEntryCondition() {
+      super(Entry.class);
     }
   }
 }

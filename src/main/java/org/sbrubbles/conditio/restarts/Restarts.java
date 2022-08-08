@@ -1,7 +1,7 @@
 package org.sbrubbles.conditio.restarts;
 
 /**
- * Some general use restarts and restart options, ready for use.
+ * Some general use restarts and restart options, ready for consumption.
  * <p>
  * This class acts as a namespace, and isn't meant to be inherited or instantiated.
  */

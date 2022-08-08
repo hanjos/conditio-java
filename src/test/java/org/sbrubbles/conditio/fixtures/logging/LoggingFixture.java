@@ -5,6 +5,7 @@ import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
+import org.sbrubbles.conditio.handlers.HandlerOps;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -32,12 +33,12 @@ public class LoggingFixture extends AbstractFixture {
       if (isWellFormed(text)) {
         return new Entry(text);
       } else {
-        final Restart USE_VALUE = Restart.on(UseValue.class,
-          traceRestart("UseValue", UseValue::getValue));
-        final Restart RETRY_WITH = Restart.on(RetryWith.class,
+        final Restart<Entry> USE_VALUE = Restart.on(UseValue.class,
+          traceRestart("UseValue", u -> (Entry) u.getValue()));
+        final Restart<Entry> RETRY_WITH = Restart.on(RetryWith.class,
           traceRestart("RetryWith", r -> parseLogEntry(r.getText())));
 
-        return (Entry) scope.signal(
+        return scope.signal(
           getConditionProvider().apply(text),
           USE_VALUE,
           RETRY_WITH);
@@ -55,7 +56,7 @@ public class LoggingFixture extends AbstractFixture {
       List<String> lines = br.lines().collect(Collectors.toList());
       List<Entry> entries = new ArrayList<>();
 
-      final Restart SKIP_ENTRY = Restart.on(SkipEntry.class,
+      final Restart<?> SKIP_ENTRY = Restart.on(SkipEntry.class,
         traceRestart("SkipEntry", r -> SKIP_ENTRY_MARKER));
 
       for (String line : lines) {
@@ -80,7 +81,7 @@ public class LoggingFixture extends AbstractFixture {
       // this isn't a language construct, handlers can be established dynamically
       if (isAnalyzeLog()) {
         scope.handle(MalformedLogEntry.class,
-          traceHandler("analyzeLog", (c, ops) -> ops.restart(getRestartOptionToUse())));
+          traceHandler("analyzeLog", HandlerOps.restart(getRestartOptionToUse())));
       }
 
       InputStream in = LoggingFixture.class.getResourceAsStream(filename);
@@ -99,7 +100,7 @@ public class LoggingFixture extends AbstractFixture {
     try (Scope scope = Scopes.create()) {
       if (isLogAnalyzer()) {
         scope.handle(MalformedLogEntry.class,
-          traceHandler("logAnalyzer", (c, ops) -> ops.restart(getRestartOptionToUse())));
+          traceHandler("logAnalyzer", HandlerOps.restart(getRestartOptionToUse())));
       }
 
       List<AnalyzedEntry> logs = new ArrayList<>();
@@ -115,7 +116,7 @@ public class LoggingFixture extends AbstractFixture {
   private boolean analyzeLog;
   private boolean logAnalyzer;
 
-  private Function<String, Condition> conditionProvider;
+  private Function<String, Condition<Entry>> conditionProvider;
   private Restart.Option restartOptionToUse;
 
   public LoggingFixture() {
@@ -142,11 +143,11 @@ public class LoggingFixture extends AbstractFixture {
     this.logAnalyzer = logAnalyzer;
   }
 
-  public Function<String, Condition> getConditionProvider() {
+  public Function<String, Condition<Entry>> getConditionProvider() {
     return conditionProvider;
   }
 
-  public void setConditionProvider(Function<String, Condition> provider) {
+  public void setConditionProvider(Function<String, Condition<Entry>> provider) {
     this.conditionProvider = provider;
   }
 
