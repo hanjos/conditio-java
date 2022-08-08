@@ -82,7 +82,7 @@ public interface Scope extends AutoCloseable {
    * @return the result of calling {@code body}.
    * @throws NullPointerException if at least one parameter is {@code null}.
    */
-  <T> T call(Supplier<T> body, Restart<T>... restarts);
+  <T> T call(Supplier<T> body, Restart<?>... restarts);
 
   /**
    * Signals a situation which the currently running code doesn't know how to deal with. This method will
@@ -153,7 +153,7 @@ final class ScopeImpl implements Scope {
   }
 
   @Override
-  public <T> T call(Supplier<T> body, Restart<T>... restarts) {
+  public <T> T call(Supplier<T> body, Restart<?>... restarts) {
     Objects.requireNonNull(body, "body");
     Objects.requireNonNull(restarts, "restarts");
 
