@@ -23,6 +23,8 @@ import java.util.function.Supplier;
  * Handlers are expected to know about the available restarts. It is good practice for a method to document
  * the restarts it establishes, along with those established by any methods it calls.
  *
+ * @param <R> the type returned by {@code apply}.
+ *
  * @see Restart.Option
  * @see org.sbrubbles.conditio.Handler.Operations#restart(Restart.Option)
  * @see Scope#signal(Condition, Restart...)
@@ -43,6 +45,10 @@ public interface Restart<R> extends Predicate<Restart.Option>, Function<Restart.
    *
    * @param optionType the type of {@linkplain Restart.Option restart options} accepted.
    * @param body       the code which will take an instance of {@code optionType} and generate a result.
+   * @param <R>        the type of the value returned by {@code body}.
+   * @param <O>        a subtype of {@code Restart.Option}.
+   * @param <S>        a subtype of {@code O}, so that {@code body} is still compatible with {@code O} but may accept subtypes
+   *                   other than {@code S}.
    * @return an instance of Restart, using a default implementation.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */

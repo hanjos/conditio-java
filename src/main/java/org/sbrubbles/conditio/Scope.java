@@ -28,13 +28,14 @@ import java.util.function.Supplier;
  * <pre>
  *   try(Scope scope = Scopes.create()) {
  *     // establishing a new handler, which delegates the work to a RetryWith-compatible restart
- *     scope.handle(MalformedEntry.class, (c, ops) -&gt; ops.restart(new RetryWith("FAIL: " + c.getText())));
+ *     scope.handle(MalformedEntry.class, (c, t, ops) -&gt; ops.restart(new RetryWith("FAIL: " + c.getText())));
  *
  *     // ...somewhere deeper in the call stack...
  *     try(Scope scope = Scopes.create()) {
  *       // signals a condition, sets a restart, and waits for the result
- *       Entry entry = (Entry) scope.signal(new MalformedEntry("NOOOOOOOO"),
- *                                Restart.on(RetryWith.class, r -&gt; func(r.getValue())));
+ *       Entry entry = scope.signal(new MalformedEntry("NOOOOOOOO"),
+ *                        Entry.class,
+ *                        Restart.on(RetryWith.class, r -&gt; func(r.getValue())));
  *
  *       // carry on...
  *     }
@@ -53,6 +54,10 @@ public interface Scope extends AutoCloseable {
    *
    * @param conditionType the type of conditions handled.
    * @param body          the handler code.
+   * @param <R>           the type of the result {@code signal} expects.
+   * @param <C>           a subtype of {@code Condition}.
+   * @param <S>           a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may accept subtypes
+   *                      other than {@code S}.
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
@@ -80,6 +85,7 @@ public interface Scope extends AutoCloseable {
    *
    * @param body     some code.
    * @param restarts some restarts, which will be available to all handlers above in the call stack.
+   * @param <T> the type returned by {@code body}.
    * @return the result of calling {@code body}.
    * @throws NullPointerException if at least one parameter is {@code null}.
    */
@@ -111,7 +117,6 @@ public interface Scope extends AutoCloseable {
    * @param condition a condition, representing a situation which {@linkplain #handle(Class, TriFunction) higher-level
    *                  code} will decide how to handle.
    * @param restarts  some {@linkplain Restart restarts}, which will be available to the eventual handler.
-   * @return the end result, as provided by the selected handler.
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition, and the condition
    *                                  itself doesn't provide a fallback.

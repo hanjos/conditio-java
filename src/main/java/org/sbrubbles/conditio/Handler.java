@@ -22,6 +22,8 @@ import java.util.function.Supplier;
  * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain BiFunction (bi)function}, this
  * interface extends both.
  *
+ * @param <R> the type to be returned in {@code signal}.
+ *
  * @see Condition
  * @see Restart
  * @see Operations
@@ -30,6 +32,8 @@ import java.util.function.Supplier;
 public interface Handler<R> extends Predicate<Condition>, TriFunction<Condition, Class<R>, Handler.Operations<R>, Handler.Decision<R>> {
   /**
    * The ways a handler can handle a condition.
+   *
+   * @param <R> the type to be returned in {@code signal}.
    */
   interface Operations<R> {
     /**
@@ -71,10 +75,12 @@ public interface Handler<R> extends Predicate<Condition>, TriFunction<Condition,
    * How a handler decided to handle a condition. Instances are produced by {@linkplain Operations operations}, and
    * consumed by {@link Scope#signal(Condition, Restart...) signal}.
    *
+   * @param <R> the type stored in this instance.
    * @see Operations
    * @see Scope#signal(Condition, Restart...)
    */
   class Decision<R> implements Supplier<R> {
+    @SuppressWarnings("rawtypes")
     static final Decision SKIP = new Decision(null);
 
     private final R result;
