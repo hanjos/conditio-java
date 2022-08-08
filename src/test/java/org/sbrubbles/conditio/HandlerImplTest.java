@@ -11,26 +11,20 @@ public class HandlerImplTest {
 
   @BeforeEach
   public void setUp() {
-    try (Scope a = Scopes.create()) {
-      h = new HandlerImpl<>(BasicCondition.class, this::body);
-    }
+    h = new HandlerImpl<>(BasicCondition.class, this::body);
   }
 
   @Test
   public void nullParametersAreNotAllowed() {
-    try (Scope scope = Scopes.create()) {
-      assertThrows(NullPointerException.class, () -> new HandlerImpl<>(null, this::body), "missing conditionType");
-      assertThrows(NullPointerException.class, () -> new HandlerImpl<>(BasicCondition.class, null), "missing body");
-      assertThrows(NullPointerException.class, () -> new HandlerImpl<>(null, null), "missing both");
-    }
+    assertThrows(NullPointerException.class, () -> new HandlerImpl<>(null, this::body), "missing conditionType");
+    assertThrows(NullPointerException.class, () -> new HandlerImpl<>(BasicCondition.class, null), "missing body");
+    assertThrows(NullPointerException.class, () -> new HandlerImpl<>(null, null), "missing both");
   }
 
   @Test
   public void test() {
-    try (Scope scope = Scopes.create()) {
-      assertTrue(h.test(new BasicCondition("string")));
-      assertFalse(h.test(null));
-    }
+    assertTrue(h.test(new BasicCondition("string")));
+    assertFalse(h.test(null));
   }
 
   @Test
@@ -38,15 +32,15 @@ public class HandlerImplTest {
     try (Scope scope = Scopes.create()) {
       Handler.Operations<String> ops = new HandlerOperationsImpl<>(scope, String.class);
 
-      Condition c = new BasicCondition("OMGWTFBBQ");
+      Condition<String> c = new BasicCondition("OMGWTFBBQ");
       assertEquals("OK: OMGWTFBBQ", h.apply(c, ops).get());
 
-      Condition f = new BasicCondition("FAIL");
+      Condition<String> f = new BasicCondition("FAIL");
       assertEquals("FAIL!", h.apply(f, ops).get());
     }
   }
 
-  private Handler.Decision body(BasicCondition c, Handler.Operations ops) {
+  private Handler.Decision<String> body(BasicCondition c, Handler.Operations<String> ops) {
     if (!"FAIL".equals(c.getValue())) {
       return ops.use("OK: " + c.getValue());
     } else {

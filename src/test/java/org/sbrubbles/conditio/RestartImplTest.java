@@ -12,22 +12,19 @@ public class RestartImplTest {
 
   @BeforeEach
   public void setUp() {
-    try (Scope scope = Scopes.create()) {
-      rA = new RestartImpl<>(A.class, this::body);
-      rB = new RestartImpl<>(B.class, this::body);
-    }
+    rA = new RestartImpl<>(A.class, this::body);
+    rB = new RestartImpl<>(B.class, this::body);
   }
 
   @Test
   public void nullParametersAreNotAllowed() {
-    try (Scope scope = Scopes.create()) {
-      assertThrows(NullPointerException.class,
-        () -> new RestartImpl<>(null, this::body), "missing optionType");
-      assertThrows(NullPointerException.class,
-        () -> new RestartImpl<>(A.class, null), "missing body");
-      assertThrows(NullPointerException.class,
-        () -> new RestartImpl<>(null, null), "missing both");
-    }
+
+    assertThrows(NullPointerException.class,
+      () -> new RestartImpl<>(null, this::body), "missing optionType");
+    assertThrows(NullPointerException.class,
+      () -> new RestartImpl<>(A.class, null), "missing body");
+    assertThrows(NullPointerException.class,
+      () -> new RestartImpl<>(null, null), "missing both");
   }
 
   @Test
