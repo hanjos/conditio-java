@@ -11,7 +11,7 @@ import org.sbrubbles.conditio.Scope;
  * used, and the handler means only to acknowledge the condition (and maybe do a side effect or two), like
  * <pre>
  *   try(Scope scope = Scopes.create()) {
- *     scope.handle(Progress.class, (c, ops) -&gt; {
+ *     scope.handle(Progress.class, (c, t, ops) -&gt; {
  *       // do something
  *       showProgressToUser(c.getValue());
  *
@@ -30,6 +30,7 @@ import org.sbrubbles.conditio.Scope;
  * which means that any one instance is equal to any other. So, for convenience, {@link Restarts} provides a pre-built
  * instance.
  *
+ * @param <R> unused, since any result is meant to be ignored.
  * @see Restarts
  */
 public class Resume<R> implements Restart.Option, Restart<R> {

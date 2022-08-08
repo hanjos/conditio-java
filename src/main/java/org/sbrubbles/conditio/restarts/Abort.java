@@ -10,11 +10,11 @@ import org.sbrubbles.conditio.Restart;
  * to offer aborting as a possibility, and should be followed by a {@code try-catch} clause at the desired level to
  * stop unwinding the stack.
  * <p>
- * Example
+ * Example:
  * <pre>
  *   try(Scope a = Scopes.create()) {
  *     // decides to give up on the whole operation
- *     a.handle(SomeCondition.class, (c, ops) -&gt; ops.restart(Restarts.abort()))
+ *     a.handle(SomeCondition.class, (c, t, ops) -&gt; ops.restart(Restarts.abort()))
  *
  *     try(Scope b = Scopes.create()) {
  *       try(Scope c = Scopes.create()) {
@@ -36,8 +36,11 @@ import org.sbrubbles.conditio.Restart;
  * This class works both as a {@link org.sbrubbles.conditio.Restart.Option} and a {@link Restart}. It stores no state,
  * which means that any one instance is equal to any other. So, for convenience, {@link Restarts} provides a pre-built
  * instance.
+ *
+ * @param <R> unused, since {@code apply} throws an exception instead of returning.
+ * @see Restarts
  */
-public class Abort<R> implements Restart.Option, Restart<R> {
+public final class Abort<R> implements Restart.Option, Restart<R> {
   /**
    * Creates a new instance. Developers are encouraged to just reuse {@link Restarts#abort()} instead.
    *
