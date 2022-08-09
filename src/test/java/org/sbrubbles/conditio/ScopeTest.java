@@ -50,7 +50,7 @@ public class ScopeTest {
   @Test
   public void theIteratorFollowsTheProperProtocol() {
     try (Scope a = Scopes.create()) {
-      Iterator<Handler<?>> iterator = a.getAllHandlers().iterator();
+      Iterator<Handler> iterator = a.getAllHandlers().iterator();
 
       assertFalse(iterator.hasNext());
       assertThrows(NoSuchElementException.class, iterator::next);
@@ -60,7 +60,7 @@ public class ScopeTest {
   @Test
   public void signalThrowsIfHandlerReturnsNull() {
     try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class, (c, t, ops) -> null);
+      a.handle(BasicCondition.class, (c, ops) -> null);
 
       assertThrows(NullPointerException.class, () -> a.signal(new BasicCondition("oops")));
     }

@@ -32,7 +32,7 @@ public class BasicOperationsTest {
       // no restart before the handler...
       assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
 
-      a.handle(MalformedLogEntry.class, (c, t, ops) -> {
+      a.handle(MalformedLogEntry.class, (c, ops) -> {
         // now there's something!
         assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
 
@@ -46,7 +46,7 @@ public class BasicOperationsTest {
         // no restart before signal...
         assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "before signal");
 
-        assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), Entry.class, USE_VALUE));
+        assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), USE_VALUE));
 
         // no restart after either...
         assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "after signal");
@@ -63,7 +63,7 @@ public class BasicOperationsTest {
     try (Scope a = Scopes.create()) {
       assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
 
-      a.handle(MalformedLogEntry.class, (c, t, ops) -> {
+      a.handle(MalformedLogEntry.class, (c, ops) -> {
         assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
 
         return ops.restart(u);
@@ -74,7 +74,7 @@ public class BasicOperationsTest {
           try (Scope b = Scopes.create()) {
             assertTrue(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "inside call");
 
-            return b.signal(new MalformedLogEntry(""), Entry.class);
+            return b.signal(new MalformedLogEntry(""));
           }
         },
         USE_VALUE));
@@ -90,19 +90,19 @@ public class BasicOperationsTest {
     final List<String> trace = new ArrayList<>();
 
     try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class, (c, t, ops) -> {
+      a.handle(BasicCondition.class, (c, ops) -> {
         trace.add("a");
         return ops.use(EXPECTED_RESULT);
       });
 
       try (Scope b = Scopes.create()) {
-        b.handle(BasicCondition.class, (c, t, ops) -> {
+        b.handle(BasicCondition.class, (c, ops) -> {
           trace.add("b");
           return ops.skip();
         });
 
         try (Scope c = Scopes.create()) {
-          String actual = c.signal(builder.apply(EXPECTED_RESULT), String.class);
+          String actual = c.signal(builder.apply(EXPECTED_RESULT));
 
           assertEquals(EXPECTED_RESULT, actual);
           assertLinesMatch(
@@ -120,13 +120,13 @@ public class BasicOperationsTest {
 
     try (Scope a = Scopes.create()) {
       a.handle(BasicCondition.class,
-        (c, t, ops) -> {
+        (c, ops) -> {
           trace.add("a");
           return ops.use(EXPECTED_RESULT);
         });
 
       try (Scope b = Scopes.create()) {
-        Object actual = b.signal(new BasicCondition(""), Object.class);
+        Object actual = b.signal(new BasicCondition(""));
 
         assertEquals(EXPECTED_RESULT, actual);
         assertLinesMatch(Collections.singletonList("a"), trace);
@@ -141,22 +141,22 @@ public class BasicOperationsTest {
 
     try (Scope a = Scopes.create()) {
       a.handle(PleaseSignalSomethingElse.class,
-        (c, t, ops) -> {
+        (c, ops) -> {
           trace.add("a");
           try (Scope s = Scopes.create()) {
-            return ops.use(s.signal(new BasicCondition(null), String.class));
+            return ops.use(s.signal(new BasicCondition(null)));
           }
         });
 
       try (Scope b = Scopes.create()) {
         b.handle(BasicCondition.class,
-          (c, t, ops) -> {
+          (c, ops) -> {
             trace.add("b");
             return ops.use(FIXED_RESULT);
           });
 
         try (Scope c = Scopes.create()) {
-          Object actual = c.signal(new PleaseSignalSomethingElse(), Object.class);
+          Object actual = c.signal(new PleaseSignalSomethingElse());
 
           assertEquals(FIXED_RESULT, actual);
           assertLinesMatch(

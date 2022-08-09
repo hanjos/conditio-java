@@ -40,7 +40,6 @@ public class LoggingFixture extends AbstractFixture {
 
         return scope.signal(
           getConditionProvider().apply(text),
-          Entry.class,
           USE_VALUE,
           RETRY_WITH);
       }

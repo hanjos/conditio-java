@@ -1,7 +1,5 @@
 package org.sbrubbles.conditio;
 
-import org.sbrubbles.conditio.util.TriFunction;
-
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -14,7 +12,7 @@ import java.util.function.Supplier;
  * <ul>
  *   <li>check if it can handle a given condition (with {@link #test(Object) test}); and</li>
  *   <li>given a condition and the {@linkplain Operations operations available}, return a {@linkplain Decision decision}
- *       object holding the result (with {@link #apply(Object, Object, Object) apply}).</li>
+ *       object holding the result (with {@link #apply(Object, Object) apply}).</li>
  * </ul>
  * <p>
  * Decision objects are unwrapped by {@code signal}, and are expected to be non-{@code null}.
@@ -22,20 +20,16 @@ import java.util.function.Supplier;
  * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain BiFunction (bi)function}, this
  * interface extends both.
  *
- * @param <R> the type to be returned in {@code signal}.
- *
  * @see Condition
  * @see Restart
  * @see Operations
  * @see Decision
  */
-public interface Handler<R> extends Predicate<Condition>, TriFunction<Condition, Class<R>, Handler.Operations<R>, Handler.Decision<R>> {
+public interface Handler extends Predicate<Condition>, BiFunction<Condition, Handler.Operations, Handler.Decision> {
   /**
    * The ways a handler can handle a condition.
-   *
-   * @param <R> the type to be returned in {@code signal}.
    */
-  interface Operations<R> {
+  interface Operations {
     /**
      * Invokes a previously set recovery strategy. This method will search for a compatible
      * {@linkplain Restart restart} and run it, returning the result.
@@ -44,7 +38,7 @@ public interface Handler<R> extends Predicate<Condition>, TriFunction<Condition,
      * @return (a decision representing) the result of the selected restart's execution.
      * @throws RestartNotFoundException if no restart compatible with {@code restartOption} could be found.
      */
-    Decision<R> restart(Restart.Option restartOption) throws RestartNotFoundException;
+    Decision restart(Restart.Option restartOption) throws RestartNotFoundException;
 
     /**
      * When a handler opts to not handle a particular condition. By calling this, other handlers, bound later in the
@@ -52,16 +46,9 @@ public interface Handler<R> extends Predicate<Condition>, TriFunction<Condition,
      *
      * @return an object representing the decision to skip.
      */
-    <T> Decision<T> skip();
+    Decision skip();
 
-    /**
-     * Provides a value for {@link Scope#signal(Condition, Restart...) signal} to return directly. This may cause a
-     * later {@link ClassCastException} if this value's type doesn't fit the one {@code signal} expects.
-     *
-     * @param object the value to be returned by {@code signal}.
-     * @return (a decision holding) the given {@code object}.
-     */
-    Decision<R> use(R object);
+    Decision use(Object result);
 
     /**
      * Returns the scope backing this instance's operations.
@@ -75,27 +62,25 @@ public interface Handler<R> extends Predicate<Condition>, TriFunction<Condition,
    * How a handler decided to handle a condition. Instances are produced by {@linkplain Operations operations}, and
    * consumed by {@link Scope#signal(Condition, Restart...) signal}.
    *
-   * @param <R> the type stored in this instance.
    * @see Operations
    * @see Scope#signal(Condition, Restart...)
    */
-  class Decision<R> implements Supplier<R> {
-    @SuppressWarnings("rawtypes")
+  class Decision implements Supplier<Object> {
     static final Decision SKIP = new Decision(null);
 
-    private final R result;
+    private final Object result;
 
     // Only classes in this package should create instances
-    Decision(R result) { this.result = result; }
+    Decision(Object result) { this.result = result; }
 
     @Override
-    public R get() { return result; }
+    public Object get() { return result; }
   }
 }
 
-class HandlerImpl<R> implements Handler<R> {
+class HandlerImpl implements Handler {
   private final Class<? extends Condition> conditionType;
-  private final TriFunction<? extends Condition, Class<R>, Operations<R>, Decision<R>> body;
+  private final BiFunction<? extends Condition, Operations, Decision> body;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
@@ -104,7 +89,7 @@ class HandlerImpl<R> implements Handler<R> {
    * @param body          a function which receives a condition and the available operations, and returns the result.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  <C extends Condition, S extends C> HandlerImpl(Class<S> conditionType, TriFunction<C, Class<R>, Operations<R>, Decision<R>> body) {
+  <C extends Condition, S extends C> HandlerImpl(Class<S> conditionType, BiFunction<C, Operations, Decision> body) {
     Objects.requireNonNull(conditionType, "conditionType");
     Objects.requireNonNull(body, "body");
 
@@ -119,36 +104,33 @@ class HandlerImpl<R> implements Handler<R> {
 
   @SuppressWarnings("unchecked")
   @Override
-  public Decision<R> apply(Condition c, Class<R> resultType, Operations<R> ops) {
-    return (Decision) ((TriFunction) getBody()).apply(c, resultType, ops);
+  public Decision apply(Condition c, Operations ops) {
+    return (Decision) ((BiFunction) getBody()).apply(c, ops);
   }
 
   public Class<? extends Condition> getConditionType() {
     return conditionType;
   }
 
-  public TriFunction<? extends Condition, Class<R>, Operations<R>, Decision<R>> getBody() {
+  public BiFunction<? extends Condition, Operations, Decision> getBody() {
     return body;
   }
 }
 
-class HandlerOperationsImpl<R> implements Handler.Operations<R> {
+class HandlerOperationsImpl implements Handler.Operations {
   private final Scope scope;
-  private final Class<R> resultType;
 
-  public HandlerOperationsImpl(Scope scope, Class<R> resultType) {
+  public HandlerOperationsImpl(Scope scope) {
     Objects.requireNonNull(scope, "scope");
-    Objects.requireNonNull(resultType, "resultType");
 
     this.scope = scope;
-    this.resultType = resultType;
   }
 
   @Override
-  public Handler.Decision<R> restart(Restart.Option restartOption) throws RestartNotFoundException {
+  public Handler.Decision restart(Restart.Option restartOption) throws RestartNotFoundException {
     for (Restart<?> r : getScope().getAllRestarts()) {
       if (r.test(restartOption)) {
-        return new Handler.Decision<>(getResultType().cast(r.apply(restartOption)));
+        return new Handler.Decision(r.apply(restartOption));
       }
     }
 
@@ -156,21 +138,17 @@ class HandlerOperationsImpl<R> implements Handler.Operations<R> {
   }
 
   @Override
-  public <T> Handler.Decision<T> skip() {
+  public Handler.Decision skip() {
     return Handler.Decision.SKIP;
   }
 
   @Override
-  public Handler.Decision<R> use(R object) {
-    return new Handler.Decision<>(object);
+  public Handler.Decision use(Object result) {
+    return new Handler.Decision(result);
   }
 
   @Override
   public Scope getScope() {
     return scope;
-  }
-
-  public Class<R> getResultType() {
-    return resultType;
   }
 }
