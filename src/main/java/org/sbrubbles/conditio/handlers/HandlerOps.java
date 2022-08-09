@@ -14,15 +14,21 @@ import java.util.function.BiFunction;
 public final class HandlerOps {
   private HandlerOps() { }
 
+  /**
+   * A handler body that invokes the restart matching the given option.
+   *
+   * @return a handler body that invokes the restart matching the given option.
+   */
   public static BiFunction<Condition, Handler.Operations, Handler.Decision> restart(Restart.Option option) {
     return (c, ops) -> ops.restart(option);
   }
 
+  /**
+   * A handler body that skips handling.
+   *
+   * @return a handler body that skips handling.
+   */
   public static BiFunction<Condition, Handler.Operations, Handler.Decision> skip() {
     return (c, ops) -> ops.skip();
-  }
-
-  public static BiFunction<Condition, Handler.Operations, Handler.Decision> use(Object value) {
-    return (c, ops) -> ops.use(value);
   }
 }

@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.logging.*;
+import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -189,7 +190,7 @@ public class LoggingTest {
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
           new AnalyzedEntry(goodLine(3), BAD_LOG),
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
-        new UseValue(USE_VALUE_ENTRY)),
+        new UseValue<>(USE_VALUE_ENTRY)),
       arguments(
         ExpectedHandler.ANALYZE_LOG,
         ExpectedRestart.USE_VALUE,
@@ -198,7 +199,7 @@ public class LoggingTest {
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
           new AnalyzedEntry(goodLine(3), BAD_LOG),
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
-        new UseValue(USE_VALUE_ENTRY)),
+        new UseValue<>(USE_VALUE_ENTRY)),
       arguments(
         ExpectedHandler.LOG_ANALYZER,
         ExpectedRestart.USE_VALUE,
@@ -207,7 +208,7 @@ public class LoggingTest {
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
           new AnalyzedEntry(goodLine(3), BAD_LOG),
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
-        new SonOfUseValue(USE_VALUE_ENTRY)),
+        new SonOfUseValue<>(USE_VALUE_ENTRY)),
       arguments(
         ExpectedHandler.ANALYZE_LOG,
         ExpectedRestart.USE_VALUE,
@@ -216,7 +217,7 @@ public class LoggingTest {
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
           new AnalyzedEntry(goodLine(3), BAD_LOG),
           new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
-        new SonOfUseValue(USE_VALUE_ENTRY)),
+        new SonOfUseValue<>(USE_VALUE_ENTRY)),
       arguments(
         ExpectedHandler.LOG_ANALYZER,
         ExpectedRestart.RETRY_WITH,

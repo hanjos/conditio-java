@@ -42,9 +42,9 @@ public class HandlerImplTest {
 
   private Handler.Decision body(BasicCondition c, Handler.Operations ops) {
     if (!"FAIL".equals(c.getValue())) {
-      return ops.use("OK: " + c.getValue());
+      return new Handler.Decision("OK: " + c.getValue());
     } else {
-      return ops.use("FAIL!");
+      return new Handler.Decision("FAIL!");
     }
   }
 }

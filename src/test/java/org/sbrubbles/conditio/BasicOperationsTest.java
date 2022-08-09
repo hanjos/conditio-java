@@ -9,12 +9,15 @@ import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.Entry;
 import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
-import org.sbrubbles.conditio.fixtures.logging.UseValue;
+import org.sbrubbles.conditio.handlers.HandlerOps;
+import org.sbrubbles.conditio.restarts.Restarts;
+import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -58,7 +61,7 @@ public class BasicOperationsTest {
   public void callRemovesTheRestartsAfterwards() {
     final Restart<Entry> USE_VALUE = Restart.on(UseValue.class, r -> (Entry) r.getValue());
     final Entry TEST_VALUE = new Entry("test");
-    final Restart.Option u = new UseValue(TEST_VALUE);
+    final Restart.Option u = new UseValue<>(TEST_VALUE);
 
     try (Scope a = Scopes.create()) {
       assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
@@ -87,27 +90,24 @@ public class BasicOperationsTest {
   @MethodSource("skipHandlingProvider")
   public void skip(Function<String, Condition> builder) {
     final String EXPECTED_RESULT = "<result>";
-    final List<String> trace = new ArrayList<>();
+    final List<String> trail = new ArrayList<>();
+    final Condition condition = builder.apply(EXPECTED_RESULT);
 
     try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class, (c, ops) -> {
-        trace.add("a");
-        return ops.use(EXPECTED_RESULT);
-      });
+      a.handle(BasicCondition.class, trace(trail, "a",
+        HandlerOps.restart(Restarts.use(EXPECTED_RESULT))));
 
       try (Scope b = Scopes.create()) {
-        b.handle(BasicCondition.class, (c, ops) -> {
-          trace.add("b");
-          return ops.skip();
-        });
+        b.handle(BasicCondition.class, trace(trail, "b",
+          HandlerOps.skip()));
 
         try (Scope c = Scopes.create()) {
-          String actual = c.signal(builder.apply(EXPECTED_RESULT));
+          String actual = c.signal(condition, Restarts.useValue());
 
           assertEquals(EXPECTED_RESULT, actual);
           assertLinesMatch(
             Arrays.asList("b", "a"),
-            trace);
+            trail);
         }
       }
     }
@@ -116,20 +116,17 @@ public class BasicOperationsTest {
   @Test
   public void use() {
     final String EXPECTED_RESULT = "<result>";
-    final List<String> trace = new ArrayList<>();
+    final List<String> trail = new ArrayList<>();
 
     try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class,
-        (c, ops) -> {
-          trace.add("a");
-          return ops.use(EXPECTED_RESULT);
-        });
+      a.handle(BasicCondition.class, trace(trail, "a",
+        HandlerOps.restart(Restarts.use(EXPECTED_RESULT))));
 
       try (Scope b = Scopes.create()) {
-        Object actual = b.signal(new BasicCondition(""));
+        Object actual = b.signal(new BasicCondition(""), Restarts.useValue());
 
         assertEquals(EXPECTED_RESULT, actual);
-        assertLinesMatch(Collections.singletonList("a"), trace);
+        assertLinesMatch(Collections.singletonList("a"), trail);
       }
     }
   }
@@ -137,31 +134,27 @@ public class BasicOperationsTest {
   @Test
   public void resignal() {
     final String FIXED_RESULT = "<result>";
-    final List<String> trace = new ArrayList<>();
+    final List<String> trail = new ArrayList<>();
 
     try (Scope a = Scopes.create()) {
       a.handle(PleaseSignalSomethingElse.class,
-        (c, ops) -> {
-          trace.add("a");
+        trace(trail, "a", (c, ops) -> {
           try (Scope s = Scopes.create()) {
-            return ops.use(s.signal(new BasicCondition(null)));
+            return ops.restart(Restarts.use(s.signal(new BasicCondition(null), Restarts.useValue())));
           }
-        });
+        }));
 
       try (Scope b = Scopes.create()) {
-        b.handle(BasicCondition.class,
-          (c, ops) -> {
-            trace.add("b");
-            return ops.use(FIXED_RESULT);
-          });
+        b.handle(BasicCondition.class, trace(trail, "b",
+          HandlerOps.restart(Restarts.use(FIXED_RESULT))));
 
         try (Scope c = Scopes.create()) {
-          Object actual = c.signal(new PleaseSignalSomethingElse());
+          Object actual = c.signal(new PleaseSignalSomethingElse(), Restarts.useValue());
 
           assertEquals(FIXED_RESULT, actual);
           assertLinesMatch(
             Arrays.asList("a", "b"),
-            trace);
+            trail);
         }
       }
     }
@@ -200,5 +193,13 @@ public class BasicOperationsTest {
       BasicCondition::new,
       SonOfBasicCondition::new
     );
+  }
+
+  static BiFunction<Condition, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Condition, Handler.Operations, Handler.Decision> body) {
+    return (c, ops) -> {
+      trail.add(message);
+
+      return body.apply(c, ops);
+    };
   }
 }

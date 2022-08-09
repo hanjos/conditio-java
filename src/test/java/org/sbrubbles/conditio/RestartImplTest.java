@@ -2,7 +2,7 @@ package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.sbrubbles.conditio.fixtures.logging.UseValue;
+import org.sbrubbles.conditio.restarts.UseValue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,7 +33,7 @@ public class RestartImplTest {
     assertTrue(rA.test(new B("string")));
 
     assertFalse(rA.test(null));
-    assertFalse(rA.test(new UseValue("nope")));
+    assertFalse(rA.test(new UseValue<>("nope")));
   }
 
   @Test
@@ -42,7 +42,7 @@ public class RestartImplTest {
 
     assertFalse(rB.test(new A("string")));
     assertFalse(rB.test(null));
-    assertFalse(rB.test(new UseValue("nope")));
+    assertFalse(rB.test(new UseValue<>("nope")));
   }
 
   @Test

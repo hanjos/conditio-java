@@ -48,8 +48,6 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
      */
     Decision skip();
 
-    Decision use(Object result);
-
     /**
      * Returns the scope backing this instance's operations.
      *
@@ -140,11 +138,6 @@ class HandlerOperationsImpl implements Handler.Operations {
   @Override
   public Handler.Decision skip() {
     return Handler.Decision.SKIP;
-  }
-
-  @Override
-  public Handler.Decision use(Object result) {
-    return new Handler.Decision(result);
   }
 
   @Override

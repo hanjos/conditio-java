@@ -1,7 +1,9 @@
 package org.sbrubbles.conditio.fixtures.logging;
 
-public class SonOfUseValue extends UseValue {
-  public SonOfUseValue(Object value) {
+import org.sbrubbles.conditio.restarts.UseValue;
+
+public class SonOfUseValue<R> extends UseValue<R> {
+  public SonOfUseValue(R value) {
     super(value);
   }
 }

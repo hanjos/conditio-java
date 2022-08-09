@@ -6,6 +6,7 @@ import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
 import org.sbrubbles.conditio.handlers.HandlerOps;
+import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -34,7 +35,7 @@ public class LoggingFixture extends AbstractFixture {
         return new Entry(text);
       } else {
         final Restart<Entry> USE_VALUE = Restart.on(UseValue.class,
-          traceRestart("UseValue", u -> (Entry) u.getValue()));
+          traceRestart("UseValue", UseValue<Entry>::getValue));
         final Restart<Entry> RETRY_WITH = Restart.on(RetryWith.class,
           traceRestart("RetryWith", r -> parseLogEntry(r.getText())));
 
