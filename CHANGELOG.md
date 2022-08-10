@@ -1,6 +1,9 @@
 # 0.5
 
-* Scope.signal is now generic, avoiding the need to cast the resulting Object. That meant generifying the whole machinery, to propagate the expected type T to the handlers and restarts.
+* Scope.signal is now generic, and so is Restart.
+* HandlerOps provides handler bodies for common uses.
+* Restarts provides restarts and restart options for common uses, substituting Abort.INSTANCE and Resume.INSTANCE.
+* Handler.Operations.use() no longer exists, being substituted by UseValue.
 
 # 0.4
 

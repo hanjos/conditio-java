@@ -27,13 +27,12 @@ import java.util.function.Supplier;
  * <pre>
  *   try(Scope scope = Scopes.create()) {
  *     // establishing a new handler, which delegates the work to a RetryWith-compatible restart
- *     scope.handle(MalformedEntry.class, (c, t, ops) -&gt; ops.restart(new RetryWith("FAIL: " + c.getText())));
+ *     scope.handle(MalformedEntry.class, (c, ops) -&gt; ops.restart(new RetryWith("FAIL: " + c.getText())));
  *
  *     // ...somewhere deeper in the call stack...
  *     try(Scope scope = Scopes.create()) {
  *       // signals a condition, sets a restart, and waits for the result
  *       Entry entry = scope.signal(new MalformedEntry("NOOOOOOOO"),
- *                        Entry.class,
  *                        Restart.on(RetryWith.class, r -&gt; func(r.getValue())));
  *
  *       // carry on...
@@ -205,6 +204,7 @@ final class ScopeImpl implements Scope {
    * Sets the given restarts in this scope.
    *
    * @param restarts some restarts to set.
+   * @throws NullPointerException if any of the given restarts is {@code null}.
    */
   public void set(Restart<?>... restarts) {
     for (Restart<?> r : restarts) {
