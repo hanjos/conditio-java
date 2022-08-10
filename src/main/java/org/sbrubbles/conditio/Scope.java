@@ -103,7 +103,7 @@ public interface Scope extends AutoCloseable {
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition, and the condition
    *                                  itself doesn't provide a fallback.
-   * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code S}.
+   * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
    */
   <T> T signal(Condition condition, Restart<T>... restarts) throws NullPointerException, HandlerNotFoundException;
 
