@@ -1,12 +1,14 @@
 package org.sbrubbles.conditio;
 
+import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
+
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * Handles conditions, producing the result to be returned by {@link Scope#signal(Condition, Restart...) signal}.
+ * Handles conditions, producing the result to be returned by {@link Scope#signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}.
  * <p>
  * A handler can do two things:
  * <ul>
@@ -58,10 +60,10 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
 
   /**
    * How a handler decided to handle a condition. Instances are produced by {@linkplain Operations operations}, and
-   * consumed by {@link Scope#signal(Condition, Restart...) signal}.
+   * consumed by {@link Scope#signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}.
    *
    * @see Operations
-   * @see Scope#signal(Condition, Restart...)
+   * @see Scope#signal(Condition, HandlerNotFoundPolicy, Restart[])
    */
   class Decision implements Supplier<Object> {
     static final Decision SKIP = new Decision(null);

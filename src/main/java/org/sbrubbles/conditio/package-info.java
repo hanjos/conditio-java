@@ -9,6 +9,6 @@
  * <p>
  * This package provides the core abstractions and machinery.
  * The {@link org.sbrubbles.conditio.restarts} package provides some general use restarts.
- * The {@link org.sbrubbles.conditio.conditions} package provides some general use conditions.
+ * The {@link org.sbrubbles.conditio.policies} package provides some general use conditions.
  */
 package org.sbrubbles.conditio;

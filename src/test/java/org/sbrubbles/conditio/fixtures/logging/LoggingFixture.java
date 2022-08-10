@@ -6,6 +6,7 @@ import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
 import org.sbrubbles.conditio.handlers.HandlerOps;
+import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.io.BufferedReader;
@@ -41,7 +42,7 @@ public class LoggingFixture extends AbstractFixture {
 
         return scope.signal(
           getConditionProvider().apply(text),
-          USE_VALUE,
+          Policies.error(), USE_VALUE,
           RETRY_WITH);
       }
     } catch (RuntimeException e) {

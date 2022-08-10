@@ -2,6 +2,7 @@ package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
+import org.sbrubbles.conditio.policies.Policies;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -62,7 +63,7 @@ public class ScopeTest {
     try (Scope a = Scopes.create()) {
       a.handle(BasicCondition.class, (c, ops) -> null);
 
-      assertThrows(NullPointerException.class, () -> a.signal(new BasicCondition("oops")));
+      assertThrows(NullPointerException.class, () -> a.signal(new BasicCondition("oops"), Policies.error()));
     }
   }
 }

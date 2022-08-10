@@ -4,12 +4,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.fixtures.BasicNotice;
 import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.Entry;
 import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
 import org.sbrubbles.conditio.handlers.HandlerOps;
+import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.restarts.Restarts;
 import org.sbrubbles.conditio.restarts.UseValue;
 
@@ -49,7 +49,7 @@ public class BasicOperationsTest {
         // no restart before signal...
         assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "before signal");
 
-        assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), USE_VALUE));
+        assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), Policies.error(), USE_VALUE));
 
         // no restart after either...
         assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "after signal");
@@ -77,7 +77,7 @@ public class BasicOperationsTest {
           try (Scope b = Scopes.create()) {
             assertTrue(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "inside call");
 
-            return b.signal(new MalformedLogEntry(""));
+            return b.signal(new MalformedLogEntry(""), Policies.error());
           }
         },
         USE_VALUE));
@@ -102,7 +102,7 @@ public class BasicOperationsTest {
           HandlerOps.skip()));
 
         try (Scope c = Scopes.create()) {
-          String actual = c.signal(condition, Restarts.useValue());
+          String actual = c.signal(condition, Policies.error(), Restarts.useValue());
 
           assertEquals(EXPECTED_RESULT, actual);
           assertLinesMatch(
@@ -123,7 +123,7 @@ public class BasicOperationsTest {
         HandlerOps.restart(Restarts.use(EXPECTED_RESULT))));
 
       try (Scope b = Scopes.create()) {
-        Object actual = b.signal(new BasicCondition(""), Restarts.useValue());
+        Object actual = b.signal(new BasicCondition(""), Policies.error(), Restarts.useValue());
 
         assertEquals(EXPECTED_RESULT, actual);
         assertLinesMatch(Collections.singletonList("a"), trail);
@@ -140,7 +140,7 @@ public class BasicOperationsTest {
       a.handle(PleaseSignalSomethingElse.class,
         trace(trail, "a", (c, ops) -> {
           try (Scope s = Scopes.create()) {
-            return ops.restart(Restarts.use(s.signal(new BasicCondition(null), Restarts.useValue())));
+            return ops.restart(Restarts.use(s.signal(new BasicCondition(null), Policies.error(), Restarts.useValue())));
           }
         }));
 
@@ -149,7 +149,7 @@ public class BasicOperationsTest {
           HandlerOps.restart(Restarts.use(FIXED_RESULT))));
 
         try (Scope c = Scopes.create()) {
-          Object actual = c.signal(new PleaseSignalSomethingElse(), Restarts.useValue());
+          Object actual = c.signal(new PleaseSignalSomethingElse(), Policies.error(), Restarts.useValue());
 
           assertEquals(FIXED_RESULT, actual);
           assertLinesMatch(
@@ -165,7 +165,7 @@ public class BasicOperationsTest {
     BasicCondition condition = new BasicCondition("test");
 
     try (Scope a = Scopes.create()) {
-      a.signal(condition);
+      a.signal(condition, Policies.error());
 
       fail();
     } catch (HandlerNotFoundException e) {
@@ -174,11 +174,9 @@ public class BasicOperationsTest {
   }
 
   @Test
-  public void signallingANoticeWithNoHandlersJustNopesOut() {
-    BasicNotice condition = new BasicNotice("test");
-
+  public void signallingWithNoHandlersAndAnIgnorePolicyJustNopesOut() {
     try (Scope a = Scopes.create()) {
-      a.signal(condition);
+      a.signal(new BasicCondition("test"), Policies.ignore());
     }
 
     // nothing happens, and the returned result is meaningless, so nothing to assert

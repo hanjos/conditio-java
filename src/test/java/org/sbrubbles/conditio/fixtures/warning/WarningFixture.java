@@ -12,7 +12,7 @@ import java.util.List;
 public class WarningFixture extends AbstractFixture {
   public void c(int i) {
     try (Scope scope = Scopes.create()) {
-      scope.signal(new IntWarning(i), Restarts.resume());
+      scope.signal(new IntWarning(i), new WarningPolicy(), Restarts.resume());
     }
   }
 
@@ -51,8 +51,8 @@ public class WarningFixture extends AbstractFixture {
 
   public void noHandler(PrintStream out) {
     try (Scope scope = Scopes.create()) {
-      scope.signal(new IntWarning(-1, out));
-      scope.signal(new IntWarning(-2, out));
+      scope.signal(new IntWarning(-1), new WarningPolicy(out));
+      scope.signal(new IntWarning(-2), new WarningPolicy(out));
     }
   }
 }

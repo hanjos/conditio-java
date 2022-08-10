@@ -1,5 +1,7 @@
 package org.sbrubbles.conditio;
 
+import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
+
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -8,7 +10,7 @@ import java.util.function.Supplier;
  * The <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">resource</a>
  * providing the main machinery.
  * <p>
- * The main operation is {@link #signal(Condition, Restart...)}, which is called when lower-level code doesn't know
+ * The main operation is {@link #signal(Condition, HandlerNotFoundPolicy, Restart[])}, which is called when lower-level code doesn't know
  * how to handle a {@linkplain Condition condition}. In a nutshell, {@code signal} looks for something that can
  * {@linkplain #handle(Class, BiFunction) handle} the given condition in the call stack. This
  * {@linkplain Handler handler} then chooses {@linkplain Handler.Operations what to do}, like returning a result
@@ -48,7 +50,7 @@ import java.util.function.Supplier;
 public interface Scope extends AutoCloseable {
   /**
    * Establishes a new {@linkplain Handler handler} in this scope. It is responsible for handling conditions, returning
-   * a result for {@link #signal(Condition, Restart...) signal}.
+   * a result for {@link #signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}.
    *
    * @param conditionType the type of conditions handled.
    * @param body          the handler code.
@@ -94,17 +96,18 @@ public interface Scope extends AutoCloseable {
    * handler's {@linkplain Handler.Decision decision} (which is expected to be not {@code null}) and returning the end
    * result.
    *
-   * @param condition a condition, representing a situation which {@linkplain #handle(Class, BiFunction) higher-level
-   *                  code} will decide how to handle.
-   * @param restarts  some {@linkplain Restart restarts}, which will be available to the eventual handler.
-   * @param <T>       the expected type of the object to be returned.
+   * @param <T>                   the expected type of the object to be returned.
+   * @param condition             a condition, representing a situation which {@linkplain #handle(Class, BiFunction) higher-level
+   *                              code} will decide how to handle.
+   * @param handlerNotFoundPolicy what to do if no handler is found.
+   * @param restarts              some {@linkplain Restart restarts}, which will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
-   * @throws HandlerNotFoundException if no available handler was able to handle this condition, and the condition
-   *                                  itself doesn't provide a fallback.
+   * @throws HandlerNotFoundException if no available handler was able to handle this condition.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
    */
-  <T> T signal(Condition condition, Restart<T>... restarts) throws NullPointerException, HandlerNotFoundException;
+  <T> T signal(Condition condition, HandlerNotFoundPolicy<T> handlerNotFoundPolicy, Restart<T>... restarts)
+    throws NullPointerException, HandlerNotFoundException;
 
   /**
    * An object to iterate over all reachable handlers in the call stack, starting from this instance to the root scope.
@@ -172,7 +175,7 @@ final class ScopeImpl implements Scope {
   @SuppressWarnings("rawtypes")
   @SafeVarargs
   @Override
-  public final <T> T signal(Condition condition, Restart<T>... restarts)
+  public final <T> T signal(Condition condition, HandlerNotFoundPolicy<T> handlerNotFoundPolicy, Restart<T>... restarts)
     throws HandlerNotFoundException, NullPointerException, ClassCastException {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
@@ -196,7 +199,7 @@ final class ScopeImpl implements Scope {
         return (T) result.get();
       }
 
-      return (T) condition.onHandlerNotFound(scope);
+      return handlerNotFoundPolicy.onHandlerNotFound(condition, scope);
     }
   }
 

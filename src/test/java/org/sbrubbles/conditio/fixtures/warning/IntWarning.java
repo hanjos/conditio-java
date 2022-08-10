@@ -1,25 +1,24 @@
 package org.sbrubbles.conditio.fixtures.warning;
 
-import org.sbrubbles.conditio.conditions.Warning;
+import org.sbrubbles.conditio.Condition;
 
-import java.io.PrintStream;
-
-public class IntWarning extends Warning {
+public class IntWarning extends Condition {
   private final int number;
 
   public IntWarning(int number) {
-    super(Integer.toString(number));
-
-    this.number = number;
-  }
-
-  public IntWarning(int number, PrintStream output) {
-    super(Integer.toString(number), output);
-
     this.number = number;
   }
 
   public int getNumber() {
     return number;
+  }
+
+  public String getMessage() {
+    return toString();
+  }
+
+  @Override
+  public String toString() {
+    return Integer.toString(getNumber());
   }
 }

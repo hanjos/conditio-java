@@ -4,6 +4,7 @@
 * HandlerOps provides handler bodies for common uses.
 * Restarts provides restarts and restart options for common uses, substituting Abort.INSTANCE and Resume.INSTANCE.
 * Handler.Operations.use() no longer exists, being substituted by UseValue.
+* onHandlerNotFound was removed from Condition and is now a _policy_ which can be provided to .signal. As a result, Notices and Warnings are no longer needed, and were replaced by the equivalent policies.
 
 # 0.4
 

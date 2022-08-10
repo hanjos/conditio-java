@@ -1,5 +1,7 @@
 package org.sbrubbles.conditio;
 
+import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
+
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -27,7 +29,7 @@ import java.util.function.Supplier;
  *
  * @see Restart.Option
  * @see org.sbrubbles.conditio.Handler.Operations#restart(Restart.Option)
- * @see Scope#signal(Condition, Restart...)
+ * @see Scope#signal(Condition, HandlerNotFoundPolicy, Restart[])
  * @see Scope#call(Supplier, Restart...)
  */
 public interface Restart<R> extends Predicate<Restart.Option>, Function<Restart.Option, R> {

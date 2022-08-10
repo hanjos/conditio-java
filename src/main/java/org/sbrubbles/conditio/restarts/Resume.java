@@ -3,11 +3,12 @@ package org.sbrubbles.conditio.restarts;
 import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
+import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 
 /**
  * A restart which indicates that execution may proceed "without" returning a value.
  * <p>
- * This is meant for situations where the result of {@link Scope#signal(Condition, Restart...) Scope.signal} isn't
+ * This is meant for situations where the result of {@link Scope#signal(Condition, HandlerNotFoundPolicy, Restart[]) Scope.signal} isn't
  * used, and the handler means only to acknowledge the condition (and maybe do a side effect or two), like
  * <pre>
  *   try(Scope scope = Scopes.create()) {
