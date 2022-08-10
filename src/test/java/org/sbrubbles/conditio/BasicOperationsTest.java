@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -77,7 +78,7 @@ public class BasicOperationsTest {
           try (Scope b = Scopes.create()) {
             assertTrue(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "inside call");
 
-            return b.signal(new MalformedLogEntry(""), Policies.error());
+            return b.signal(new MalformedLogEntry(""), Policies.error()); // the use value comes from call
           }
         },
         USE_VALUE));
@@ -102,31 +103,13 @@ public class BasicOperationsTest {
           HandlerOps.skip()));
 
         try (Scope c = Scopes.create()) {
-          String actual = c.signal(condition, Policies.error(), Restarts.useValue());
+          String actual = c.raise(condition);
 
           assertEquals(EXPECTED_RESULT, actual);
           assertLinesMatch(
             Arrays.asList("b", "a"),
             trail);
         }
-      }
-    }
-  }
-
-  @Test
-  public void use() {
-    final String EXPECTED_RESULT = "<result>";
-    final List<String> trail = new ArrayList<>();
-
-    try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class, trace(trail, "a",
-        HandlerOps.restart(Restarts.use(EXPECTED_RESULT))));
-
-      try (Scope b = Scopes.create()) {
-        Object actual = b.signal(new BasicCondition(""), Policies.error(), Restarts.useValue());
-
-        assertEquals(EXPECTED_RESULT, actual);
-        assertLinesMatch(Collections.singletonList("a"), trail);
       }
     }
   }
@@ -140,7 +123,7 @@ public class BasicOperationsTest {
       a.handle(PleaseSignalSomethingElse.class,
         trace(trail, "a", (c, ops) -> {
           try (Scope s = Scopes.create()) {
-            return ops.restart(Restarts.use(s.signal(new BasicCondition(null), Policies.error(), Restarts.useValue())));
+            return ops.restart(Restarts.use(s.raise(new BasicCondition(null))));
           }
         }));
 
@@ -149,7 +132,7 @@ public class BasicOperationsTest {
           HandlerOps.restart(Restarts.use(FIXED_RESULT))));
 
         try (Scope c = Scopes.create()) {
-          Object actual = c.signal(new PleaseSignalSomethingElse(), Policies.error(), Restarts.useValue());
+          Object actual = c.raise(new PleaseSignalSomethingElse());
 
           assertEquals(FIXED_RESULT, actual);
           assertLinesMatch(
@@ -161,7 +144,7 @@ public class BasicOperationsTest {
   }
 
   @Test
-  public void signallingAConditionWithNoHandlersErrorsOut() {
+  public void signallingAConditionWithNoHandlersAndAErrorPolicyErrorsOut() {
     BasicCondition condition = new BasicCondition("test");
 
     try (Scope a = Scopes.create()) {
@@ -174,12 +157,70 @@ public class BasicOperationsTest {
   }
 
   @Test
-  public void signallingWithNoHandlersAndAnIgnorePolicyJustNopesOut() {
+  public void signallingWithNoHandlersAndAnIgnorePolicyNopesOut() {
     try (Scope a = Scopes.create()) {
       a.signal(new BasicCondition("test"), Policies.ignore());
     }
 
     // nothing happens, and the returned result is meaningless, so nothing to assert
+  }
+
+  @Test
+  public void notifyIsTheSameAsSignallingWithAnIgnorePolicyAndResume() {
+    List<String> trail = new ArrayList<>();
+
+    try (Scope a = Scopes.create()) {
+      a.handle(BasicCondition.class, (c, ops) -> {
+        trail.add(c.getValue());
+
+        assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(Predicate.isEqual(Restarts.resume())));
+
+        return ops.skip(); // no handling provided
+      });
+
+      try (Scope b = Scopes.create()) {
+        b.notify(new BasicCondition("notify"));
+        b.signal(new BasicCondition("signal"), Policies.ignore(), Restarts.resume());
+      }
+    }
+
+    assertLinesMatch(Arrays.asList("notify", "signal"), trail);
+  }
+
+  @Test
+  public void raiseProvidesAUseValueRestart() {
+    final List<String> trail = new ArrayList<>();
+    final String TEST_VALUE = "<test>";
+    final UseValue<String> u = new UseValue<>(TEST_VALUE);
+
+    try (Scope a = Scopes.create()) {
+      a.handle(BasicCondition.class, (c, ops) -> {
+        trail.add(c.getValue());
+
+        assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(r -> r.test(u)));
+
+        return ops.restart(Restarts.use(TEST_VALUE));
+      });
+
+      try (Scope b = Scopes.create()) {
+        assertEquals(TEST_VALUE, b.raise(new BasicCondition("raise")));
+      }
+    }
+
+    assertLinesMatch(Collections.singletonList("raise"), trail);
+  }
+
+  @Test
+  public void raiseUsesAnErrorPolicy() {
+    BasicCondition condition = new BasicCondition("raise");
+
+    try (Scope a = Scopes.create()) {
+      a.raise(condition);
+
+      fail();
+    } catch (HandlerNotFoundException e) {
+      assertEquals(condition, e.getCondition());
+    }
   }
 
   static <T> Stream<T> toStream(Iterable<T> iterable) {

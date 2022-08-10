@@ -10,13 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WarningFixture extends AbstractFixture {
-  public void c(int i) {
+  public void low(int i) {
     try (Scope scope = Scopes.create()) {
       scope.signal(new IntWarning(i), new WarningPolicy(), Restarts.resume());
     }
   }
 
-  public void b(int n) {
+  public void mid(int n) {
     try (Scope scope = Scopes.create()) {
       scope.handle(IntWarning.class,
         traceHandler("b", (c, ops) -> {
@@ -28,12 +28,12 @@ public class WarningFixture extends AbstractFixture {
         }));
 
       for (int i = 0; i < n; i++) {
-        c(i);
+        low(i);
       }
     }
   }
 
-  public List<String> a(int n) {
+  public List<String> high(int n) {
     try (Scope scope = Scopes.create()) {
       List<String> warnings = new ArrayList<>();
 
@@ -43,7 +43,7 @@ public class WarningFixture extends AbstractFixture {
           return ops.restart(Restarts.resume());
         }));
 
-      b(n);
+      mid(n);
 
       return warnings;
     }

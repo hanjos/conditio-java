@@ -5,13 +5,13 @@ import org.sbrubbles.conditio.Condition;
 import java.util.Objects;
 
 public class BasicCondition extends Condition {
-  private final Object value;
+  private final String value;
 
-  public BasicCondition(Object value) {
+  public BasicCondition(String value) {
     this.value = value;
   }
 
-  public Object getValue() {
+  public String getValue() {
     return value;
   }
 

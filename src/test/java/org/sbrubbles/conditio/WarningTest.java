@@ -22,7 +22,7 @@ public class WarningTest {
 
   @Test
   public void warningInterception() {
-    List<String> actual = fixture.a(10);
+    List<String> actual = fixture.high(10);
 
     // even numbers were muzzled by b
     assertEquals(Arrays.asList("1", "3", "5", "7", "9"), actual);

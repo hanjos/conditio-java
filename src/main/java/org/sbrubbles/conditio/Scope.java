@@ -1,6 +1,8 @@
 package org.sbrubbles.conditio;
 
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
+import org.sbrubbles.conditio.policies.Policies;
+import org.sbrubbles.conditio.restarts.Restarts;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -34,7 +36,7 @@ import java.util.function.Supplier;
  *     // ...somewhere deeper in the call stack...
  *     try(Scope scope = Scopes.create()) {
  *       // signals a condition, sets a restart, and waits for the result
- *       Entry entry = scope.signal(new MalformedEntry("NOOOOOOOO"),
+ *       Entry entry = scope.raise(new MalformedEntry("NOOOOOOOO"),
  *                        Restart.on(RetryWith.class, r -&gt; func(r.getValue())));
  *
  *       // carry on...
@@ -95,19 +97,63 @@ public interface Scope extends AutoCloseable {
    * {@linkplain #getAllHandlers() search} for a compatible {@linkplain Handler handler} and run it, interpreting the
    * handler's {@linkplain Handler.Decision decision} (which is expected to be not {@code null}) and returning the end
    * result.
+   * <p>
+   * This method is a primitive operation. Common use cases can use other methods, with better ergonomics.
    *
    * @param <T>                   the expected type of the object to be returned.
-   * @param condition             a condition, representing a situation which {@linkplain #handle(Class, BiFunction) higher-level
-   *                              code} will decide how to handle.
+   * @param condition             a condition, representing a situation which {@linkplain #handle(Class, BiFunction)
+   *                              higher-level code} will decide how to handle.
    * @param handlerNotFoundPolicy what to do if no handler is found.
    * @param restarts              some {@linkplain Restart restarts}, which will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
-   * @throws HandlerNotFoundException if no available handler was able to handle this condition.
+   * @throws HandlerNotFoundException if the policy opts to error out.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
+   * @see #notify(Condition, Restart[])
+   * @see #raise(Condition, Restart[])
    */
   <T> T signal(Condition condition, HandlerNotFoundPolicy<T> handlerNotFoundPolicy, Restart<T>... restarts)
-    throws NullPointerException, HandlerNotFoundException;
+    throws NullPointerException, ClassCastException;
+
+  /**
+   * {@linkplain #signal(Condition, HandlerNotFoundPolicy, Restart[]) Signals} a condition which may go unhandled and
+   * returns no useful value.
+   * <p>
+   * This method works better as a way to provide hints or notifications to higher-level code, which can be safely
+   * resumed and maybe trigger some useful side effects. This method also provides a
+   * {@link org.sbrubbles.conditio.restarts.Resume Resume} restart, beyond the given restarts.
+   *
+   * @param condition a condition, which here acts as a notice that something happened.
+   * @param restarts  some restarts, which will be available to the eventual handler.
+   * @throws NullPointerException if one of the arguments, or the selected handler's decision is {@code null}.
+   * @see #signal(Condition, HandlerNotFoundPolicy, Restart[])
+   */
+  default void notify(Condition condition, Restart<?>... restarts) throws NullPointerException {
+    Restart[] args = new Restart[restarts.length + 1];
+    args[0] = Restarts.resume();
+    System.arraycopy(restarts, 0, args, 1, restarts.length);
+
+    signal(condition, Policies.ignore(), args);
+  }
+
+  /**
+   * {@linkplain #signal(Condition, HandlerNotFoundPolicy, Restart[]) Signals} a condition that must be handled and
+   * return a result. This method also provides a {@link org.sbrubbles.conditio.restarts.UseValue UseValue} restart,
+   * beyond the given restarts.
+   *
+   * @param condition a condition that must be handled.
+   * @param restarts  some restarts, which will be available to the eventual handler.
+   * @return the end result, as provided by the selected handler.
+   * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
+   * @throws HandlerNotFoundException if no available handler was able to handle this condition.
+   */
+  default <T> T raise(Condition condition, Restart<T>... restarts) throws HandlerNotFoundException {
+    Restart<T>[] args = new Restart[restarts.length + 1];
+    args[0] = Restarts.useValue();
+    System.arraycopy(restarts, 0, args, 1, restarts.length);
+
+    return signal(condition, Policies.error(), args);
+  }
 
   /**
    * An object to iterate over all reachable handlers in the call stack, starting from this instance to the root scope.

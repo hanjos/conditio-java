@@ -3,7 +3,6 @@ package org.sbrubbles.conditio.fixtures.tracing;
 import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
-import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.restarts.Restarts;
 
 import java.util.ArrayList;
@@ -14,7 +13,7 @@ public class TracingFixture extends AbstractFixture {
     try (Scope scope = Scopes.create()) {
       traceWork(workDone);
 
-      scope.signal(new WorkDone(workDone), Policies.error(), Restarts.resume());
+      scope.notify(new WorkDone(workDone));
     }
   }
 

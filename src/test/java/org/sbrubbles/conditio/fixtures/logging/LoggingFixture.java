@@ -35,6 +35,7 @@ public class LoggingFixture extends AbstractFixture {
       if (isWellFormed(text)) {
         return new Entry(text);
       } else {
+        // useful for tracing
         final Restart<Entry> USE_VALUE = Restart.on(UseValue.class,
           traceRestart("UseValue", UseValue<Entry>::getValue));
         final Restart<Entry> RETRY_WITH = Restart.on(RetryWith.class,
@@ -42,7 +43,8 @@ public class LoggingFixture extends AbstractFixture {
 
         return scope.signal(
           getConditionProvider().apply(text),
-          Policies.error(), USE_VALUE,
+          Policies.error(),
+          USE_VALUE,
           RETRY_WITH);
       }
     } catch (RuntimeException e) {
