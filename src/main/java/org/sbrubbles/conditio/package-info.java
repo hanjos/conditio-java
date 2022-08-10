@@ -8,7 +8,8 @@
  * </ul>
  * <p>
  * This package provides the core abstractions and machinery.
- * The {@link org.sbrubbles.conditio.restarts} package provides some general use restarts.
- * The {@link org.sbrubbles.conditio.policies} package provides some general use conditions.
+ * The {@link org.sbrubbles.conditio.restarts} package provides some general use restarts and restart options.
+ * The {@link org.sbrubbles.conditio.handlers} package offers some utility methods for handlers.
+ * The {@link org.sbrubbles.conditio.policies} package defines some policies for special cases.
  */
 package org.sbrubbles.conditio;
