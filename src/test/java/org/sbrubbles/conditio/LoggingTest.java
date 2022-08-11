@@ -77,7 +77,7 @@ public class LoggingTest {
 
   @Test
   public void readBadLogWithNoHandlingAtAll() {
-    final MalformedLogEntry expectedCondition = new MalformedLogEntry(badLine(2).getText());
+    final MalformedLogEntry expectedCondition = new MalformedLogEntry("0002 FAIL");
 
     try {
       fixture.logAnalyzer(BAD_LOG);
@@ -146,10 +146,6 @@ public class LoggingTest {
   // helpers
   static Entry goodLine(int line) {
     return new Entry(String.format("%04d OK", line));
-  }
-
-  static Entry badLine(int line) {
-    return new Entry(String.format("%04d FAIL", line));
   }
 
   enum ExpectedHandler {
