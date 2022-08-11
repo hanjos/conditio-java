@@ -14,6 +14,7 @@ public final class Policies {
    *
    * @return a policy which errors out when no handler is found.
    */
+  @SuppressWarnings("unchecked")
   public static <T> HandlerNotFoundPolicy<T> error() {
     return ERROR;
   }
@@ -23,6 +24,7 @@ public final class Policies {
    *
    * @return a policy to do nothing if no handlers are found.
    */
+  @SuppressWarnings("unchecked")
   public static <T> HandlerNotFoundPolicy<T> ignore() {
     return IGNORE;
   }

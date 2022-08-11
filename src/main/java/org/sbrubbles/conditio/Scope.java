@@ -227,7 +227,7 @@ final class ScopeImpl implements Scope {
     }
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings("unchecked")
   @SafeVarargs
   @Override
   public final <T> T signal(Condition condition, HandlerNotFoundPolicy<T> handlerNotFoundPolicy, Restart<T>... restarts)

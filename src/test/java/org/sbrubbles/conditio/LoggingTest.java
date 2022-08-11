@@ -33,7 +33,7 @@ public class LoggingTest {
   }
 
   @Test
-  public void readGoodLog() throws Exception {
+  public void readGoodLog() {
     List<AnalyzedEntry> expected = Arrays.asList(
       new AnalyzedEntry(goodLine(1), GOOD_LOG),
       new AnalyzedEntry(goodLine(2), GOOD_LOG),
@@ -49,7 +49,7 @@ public class LoggingTest {
 
   @ParameterizedTest
   @MethodSource("handleBadLogProvider")
-  public void handleBadLogWithRestarts(ExpectedHandler expectedHandler, ExpectedRestart expectedRestart, List<AnalyzedEntry> expectedEntries, Restart.Option restartOption) throws Exception {
+  public void handleBadLogWithRestarts(ExpectedHandler expectedHandler, ExpectedRestart expectedRestart, List<AnalyzedEntry> expectedEntries, Restart.Option restartOption) {
     switch (expectedHandler) {
       case LOG_ANALYZER:
         fixture.setLogAnalyzer(true);
@@ -76,7 +76,7 @@ public class LoggingTest {
   }
 
   @Test
-  public void readBadLogWithNoHandlingAtAll() throws Exception {
+  public void readBadLogWithNoHandlingAtAll() {
     final MalformedLogEntry expectedCondition = new MalformedLogEntry(badLine(2).getText());
 
     try {
@@ -91,12 +91,12 @@ public class LoggingTest {
   }
 
   @Test
-  public void readBadLogWithNoHandlerFound() throws Exception {
+  public void readBadLogWithNoHandlerFound() {
     final Condition expectedCondition = new UnknownEntryCondition();
 
     fixture.setLogAnalyzer(true);
     fixture.setConditionProvider(str -> expectedCondition); // won't match MalformedLogEntry
-    fixture.setRestartOptionToUse(new UseValue(USE_VALUE_ENTRY)); // should never be called
+    fixture.setRestartOptionToUse(new UseValue<>(USE_VALUE_ENTRY)); // should never be called
 
     try {
       fixture.logAnalyzer(BAD_LOG);
@@ -110,7 +110,7 @@ public class LoggingTest {
   }
 
   @Test
-  public void readBadLogWithNullRestartOption() throws Exception {
+  public void readBadLogWithNullRestartOption() {
     fixture.setLogAnalyzer(true);
     fixture.setRestartOptionToUse(null);
 
@@ -120,13 +120,13 @@ public class LoggingTest {
     } catch (RestartNotFoundException e) {
       assertNull(e.getRestartOption());
 
-      assertLinesMatch(Arrays.asList("logAnalyzer: " + MalformedLogEntry.class.getSimpleName()), fixture.getHandlerTrace());
+      assertLinesMatch(Collections.singletonList("logAnalyzer: " + MalformedLogEntry.class.getSimpleName()), fixture.getHandlerTrace());
       assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
     }
   }
 
   @Test
-  public void readBadLogWithNoRestartFound() throws Exception {
+  public void readBadLogWithNoRestartFound() {
     final Restart.Option UNKNOWN_RESTART_OPTION = new UnknownRestartOption("oops");
 
     fixture.setLogAnalyzer(true);
@@ -138,7 +138,7 @@ public class LoggingTest {
     } catch (RestartNotFoundException e) {
       assertEquals(UNKNOWN_RESTART_OPTION, e.getRestartOption());
 
-      assertLinesMatch(Arrays.asList("logAnalyzer: " + MalformedLogEntry.class.getSimpleName()), fixture.getHandlerTrace());
+      assertLinesMatch(Collections.singletonList("logAnalyzer: " + MalformedLogEntry.class.getSimpleName()), fixture.getHandlerTrace());
       assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
     }
   }

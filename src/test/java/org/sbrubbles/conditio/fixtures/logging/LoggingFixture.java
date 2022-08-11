@@ -100,7 +100,7 @@ public class LoggingFixture extends AbstractFixture {
     }
   }
 
-  public List<AnalyzedEntry> logAnalyzer(String... logfiles) throws Exception {
+  public List<AnalyzedEntry> logAnalyzer(String... logfiles) {
     try (Scope scope = Scopes.create()) {
       if (isLogAnalyzer()) {
         scope.handle(MalformedLogEntry.class,
