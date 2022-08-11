@@ -58,7 +58,7 @@ public class Resume<R> implements Restart.Option, Restart<R> {
    *
    * @param option a restart option.
    * @return a "garbage" value, to be ignored.
-   * @throws ClassCastException if {@code option} does not pass {@link #test(Option) test}.
+   * @throws ClassCastException if {@code option} does not pass {@link #test(Restart.Option) test}.
    */
   @Override
   public R apply(Option option) {

@@ -9,5 +9,8 @@ import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
  * @see Handler.Operations#abort()
  */
 public class AbortException extends RuntimeException {
+  /**
+   * Creates a new instance.
+   */
   public AbortException() { }
 }
