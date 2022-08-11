@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -30,30 +29,30 @@ public class BasicOperationsTest {
   public void signalRemovesTheRestartsAfterwards() {
     final Restart<Entry> USE_VALUE = Restart.on(UseValue.class, r -> (Entry) r.getValue());
     final Entry TEST_VALUE = new Entry("test");
-    final Restart.Option u = new UseValue(TEST_VALUE);
+    final Restart.Option u = new UseValue<>(TEST_VALUE);
 
     try (Scope a = Scopes.create()) {
       // no restart before the handler...
-      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
+      assertFalse(isIn(a.getAllRestarts(), u), "before handle");
 
       a.handle(MalformedLogEntry.class, (c, ops) -> {
         // now there's something!
-        assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
+        assertTrue(isIn(ops.getScope().getAllRestarts(), u), "inside handle");
 
         return ops.restart(u);
       });
 
       // no restart after either
-      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "after handle");
+      assertFalse(isIn(a.getAllRestarts(), u), "after handle");
 
       try (Scope b = Scopes.create()) {
         // no restart before signal...
-        assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "before signal");
+        assertFalse(isIn(b.getAllRestarts(), u), "before signal");
 
         assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), Policies.error(), USE_VALUE));
 
         // no restart after either...
-        assertFalse(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "after signal");
+        assertFalse(isIn(b.getAllRestarts(), u), "after signal");
       }
     }
   }
@@ -65,10 +64,10 @@ public class BasicOperationsTest {
     final Restart.Option u = new UseValue<>(TEST_VALUE);
 
     try (Scope a = Scopes.create()) {
-      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "before handle");
+      assertFalse(isIn(a.getAllRestarts(), u), "before handle");
 
       a.handle(MalformedLogEntry.class, (c, ops) -> {
-        assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(r -> r.test(u)), "inside handle");
+        assertTrue(isIn(ops.getScope().getAllRestarts(), u), "inside handle");
 
         return ops.restart(u);
       });
@@ -76,14 +75,14 @@ public class BasicOperationsTest {
       assertEquals(TEST_VALUE, a.call(
         () -> {
           try (Scope b = Scopes.create()) {
-            assertTrue(toStream(b.getAllRestarts()).anyMatch(r -> r.test(u)), "inside call");
+            assertTrue(isIn(b.getAllRestarts(), u), "inside call");
 
             return b.signal(new MalformedLogEntry(""), Policies.error()); // the use value comes from call
           }
         },
         USE_VALUE));
 
-      assertFalse(toStream(a.getAllRestarts()).anyMatch(r -> r.test(u)), "after handle");
+      assertFalse(isIn(a.getAllRestarts(), u), "after handle");
     }
   }
 
@@ -173,7 +172,9 @@ public class BasicOperationsTest {
       a.handle(BasicCondition.class, (c, ops) -> {
         trail.add(c.getValue());
 
-        assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(Predicate.isEqual(Restarts.resume())));
+        assertTrue(isIn(
+          ops.getScope().getAllRestarts(),
+          Restarts.resume()));
 
         return ops.skip(); // no handling provided
       });
@@ -197,7 +198,8 @@ public class BasicOperationsTest {
       a.handle(BasicCondition.class, (c, ops) -> {
         trail.add(c.getValue());
 
-        assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(r -> r.test(u)));
+        //assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(r -> r.test(u)));
+        assertTrue(isIn(ops.getScope().getAllRestarts(), u));
 
         return ops.restart(Restarts.use(TEST_VALUE));
       });
@@ -225,6 +227,10 @@ public class BasicOperationsTest {
 
   static <T> Stream<T> toStream(Iterable<T> iterable) {
     return StreamSupport.stream(iterable.spliterator(), false);
+  }
+
+  static boolean isIn(Iterable<Restart<?>> iterable, Restart.Option option) {
+    return toStream(iterable).anyMatch(r -> r.test(option));
   }
 
   static Stream<Function<String, Condition>> skipHandlingProvider() {
