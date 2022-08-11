@@ -1,11 +1,10 @@
 package org.sbrubbles.conditio.fixtures.aborting;
 
+import org.sbrubbles.conditio.AbortException;
 import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.handlers.HandlerOps;
-import org.sbrubbles.conditio.restarts.AbortException;
-import org.sbrubbles.conditio.restarts.Restarts;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +16,7 @@ public class AbortingFixture {
 
   public String signal() {
     try (Scope scope = Scopes.create()) {
-      scope.raise(new BasicCondition(""), Restarts.abort());
+      scope.raise(new BasicCondition(""));
 
       return SIGNAL;
     } catch (Exception e) {
@@ -39,7 +38,7 @@ public class AbortingFixture {
 
   public String handle() {
     try (Scope scope = Scopes.create()) {
-      scope.handle(BasicCondition.class, HandlerOps.restart(Restarts.abort()));
+      scope.handle(BasicCondition.class, HandlerOps.abort());
 
       return passThrough();
     } catch (AbortException e) {

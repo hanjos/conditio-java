@@ -31,4 +31,11 @@ public final class HandlerOps {
   public static BiFunction<Condition, Handler.Operations, Handler.Decision> skip() {
     return (c, ops) -> ops.skip();
   }
+
+  /**
+   * A handler body that aborts execution.
+   *
+   * @return a handler body that aborts execution.
+   */
+  public static BiFunction<Condition, Handler.Operations, Handler.Decision> abort() { return (c, ops) -> ops.abort(); }
 }

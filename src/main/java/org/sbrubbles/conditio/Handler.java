@@ -51,6 +51,42 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
     Decision skip();
 
     /**
+     * Aborts execution and unwinds the stack. This should be followed by a {@code try-catch} clause at the desired
+     * level to stop the unwinding.
+     * <p>
+     * Example:
+     * <pre>
+     *   try(Scope a = Scopes.create()) {
+     *     // decides to give up on the whole operation
+     *     a.handle(SomeCondition.class, (c, ops) -&gt; ops.abort())
+     *
+     *     try(Scope b = Scopes.create()) {
+     *       // some code...
+     *
+     *       try(Scope c = Scopes.create()) {
+     *         // signals something which may result in the interruption of c as a whole
+     *         Object result = c.raise(new SomeCondition());
+     *
+     *         // (execution won't reach here)
+     *       }
+     *
+     *       // (execution won't reach here)
+     *     } catch(AbortException e) {
+     *       // stops the stack unwinding here
+     *     }
+     *
+     *     // (carries on in scope a)...
+     *   }
+     * </pre>
+     *
+     * @return nothing, since this method always throws.
+     * @throws AbortException to interrupt execution and unwind the stack.
+     */
+    default Decision abort() throws AbortException {
+      throw new AbortException();
+    }
+
+    /**
      * Returns the scope backing this instance's operations.
      *
      * @return the scope backing this instance's operations.

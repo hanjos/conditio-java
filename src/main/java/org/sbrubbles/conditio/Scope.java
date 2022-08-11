@@ -109,11 +109,13 @@ public interface Scope extends AutoCloseable {
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if the policy opts to error out.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
+   * @throws AbortException           if the handlers opts to {@linkplain Handler.Operations#abort() abort execution}.
    * @see #notify(Condition, Restart[])
    * @see #raise(Condition, Restart[])
    */
+  @SuppressWarnings("unchecked")
   <T> T signal(Condition condition, HandlerNotFoundPolicy<T> handlerNotFoundPolicy, Restart<T>... restarts)
-    throws NullPointerException, HandlerNotFoundException, ClassCastException;
+    throws NullPointerException, HandlerNotFoundException, ClassCastException, AbortException;
 
   /**
    * {@linkplain #signal(Condition, HandlerNotFoundPolicy, Restart[]) Signals} a condition which may go unhandled and
@@ -126,9 +128,12 @@ public interface Scope extends AutoCloseable {
    * @param condition a condition, which here acts as a notice that something happened.
    * @param restarts  some restarts, which will be available to the eventual handler.
    * @throws NullPointerException if one of the arguments, or the selected handler's decision is {@code null}.
+   * @throws AbortException       if the handlers opts to {@linkplain Handler.Operations#abort() abort execution}.
    * @see #signal(Condition, HandlerNotFoundPolicy, Restart[])
    */
-  default void notify(Condition condition, Restart<?>... restarts) throws NullPointerException {
+  @SuppressWarnings("unchecked")
+  default void notify(Condition condition, Restart<?>... restarts)
+    throws NullPointerException, AbortException {
     Restart[] args = new Restart[restarts.length + 1];
     args[0] = Restarts.resume();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
@@ -147,9 +152,11 @@ public interface Scope extends AutoCloseable {
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
+   * @throws AbortException           if the handlers opts to {@linkplain Handler.Operations#abort() abort execution}.
    */
+  @SuppressWarnings("unchecked")
   default <T> T raise(Condition condition, Restart<T>... restarts)
-    throws NullPointerException, HandlerNotFoundException, ClassCastException {
+    throws NullPointerException, HandlerNotFoundException, ClassCastException, AbortException {
     Restart<T>[] args = new Restart[restarts.length + 1];
     args[0] = Restarts.useValue();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
