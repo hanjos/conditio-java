@@ -11,6 +11,7 @@ import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
 import org.sbrubbles.conditio.handlers.HandlerOps;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.restarts.Restarts;
+import org.sbrubbles.conditio.restarts.Resume;
 import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.util.ArrayList;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,56 +33,58 @@ public class BasicOperationsTest {
 
     try (Scope a = Scopes.create()) {
       // no restart before the handler...
-      assertFalse(isIn(a.getAllRestarts(), u), "before handle");
+      assertFalse(matches(a.getAllRestarts(), u), "before handle");
 
       a.handle(MalformedLogEntry.class, (c, ops) -> {
         // now there's something!
-        assertTrue(isIn(ops.getScope().getAllRestarts(), u), "inside handle");
+        assertTrue(matches(ops.getScope().getAllRestarts(), u), "inside handle");
 
         return ops.restart(u);
       });
 
       // no restart after either
-      assertFalse(isIn(a.getAllRestarts(), u), "after handle");
+      assertFalse(matches(a.getAllRestarts(), u), "after handle");
 
       try (Scope b = Scopes.create()) {
         // no restart before signal...
-        assertFalse(isIn(b.getAllRestarts(), u), "before signal");
+        assertFalse(matches(b.getAllRestarts(), u), "before signal");
 
         assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), Policies.error(), USE_VALUE));
 
         // no restart after either...
-        assertFalse(isIn(b.getAllRestarts(), u), "after signal");
+        assertFalse(matches(b.getAllRestarts(), u), "after signal");
       }
     }
   }
 
   @Test
   public void callRemovesTheRestartsAfterwards() {
-    final Restart<Entry> USE_VALUE = Restart.on(UseValue.class, r -> (Entry) r.getValue());
     final Entry TEST_VALUE = new Entry("test");
     final Restart.Option u = new UseValue<>(TEST_VALUE);
+    final Restart.Option r = new Resume();
 
     try (Scope a = Scopes.create()) {
-      assertFalse(isIn(a.getAllRestarts(), u), "before handle");
+      assertFalse(matches(a.getAllRestarts(), u, r), "before handle");
 
       a.handle(MalformedLogEntry.class, (c, ops) -> {
-        assertTrue(isIn(ops.getScope().getAllRestarts(), u), "inside handle");
+        assertTrue(matches(ops.getScope().getAllRestarts(), u, r), "inside handle");
 
         return ops.restart(u);
       });
 
-      assertEquals(TEST_VALUE, a.call(
-        () -> {
-          try (Scope b = Scopes.create()) {
-            assertTrue(isIn(b.getAllRestarts(), u), "inside call");
+      assertEquals(TEST_VALUE,
+        a.call(
+          () -> {
+            try (Scope b = Scopes.create()) {
+              assertTrue(matches(b.getAllRestarts(), u, r), "inside call");
 
-            return b.signal(new MalformedLogEntry(""), Policies.error()); // the use value comes from call
-          }
-        },
-        USE_VALUE));
+              return b.signal(new MalformedLogEntry(""), Policies.error()); // the use value comes from call
+            }
+          },
+          Restarts.useValue(),
+          Restarts.resume()));
 
-      assertFalse(isIn(a.getAllRestarts(), u), "after handle");
+      assertFalse(matches(a.getAllRestarts(), u, r), "after handle");
     }
   }
 
@@ -172,7 +174,7 @@ public class BasicOperationsTest {
       a.handle(BasicCondition.class, (c, ops) -> {
         trail.add(c.getValue());
 
-        assertTrue(isIn(
+        assertTrue(matches(
           ops.getScope().getAllRestarts(),
           Restarts.resume()));
 
@@ -198,8 +200,7 @@ public class BasicOperationsTest {
       a.handle(BasicCondition.class, (c, ops) -> {
         trail.add(c.getValue());
 
-        //assertTrue(toStream(ops.getScope().getAllRestarts()).anyMatch(r -> r.test(u)));
-        assertTrue(isIn(ops.getScope().getAllRestarts(), u));
+        assertTrue(matches(ops.getScope().getAllRestarts(), u));
 
         return ops.restart(Restarts.use(TEST_VALUE));
       });
@@ -225,12 +226,16 @@ public class BasicOperationsTest {
     }
   }
 
-  static <T> Stream<T> toStream(Iterable<T> iterable) {
-    return StreamSupport.stream(iterable.spliterator(), false);
-  }
+  static boolean matches(Iterable<Restart<?>> iterable, Restart.Option... options) {
+    return Arrays.stream(options).allMatch(o -> {
+      for (Restart<?> r : iterable) {
+        if (r.test(o)) {
+          return true;
+        }
+      }
 
-  static boolean isIn(Iterable<Restart<?>> iterable, Restart.Option option) {
-    return toStream(iterable).anyMatch(r -> r.test(option));
+      return false;
+    });
   }
 
   static Stream<Function<String, Condition>> skipHandlingProvider() {
