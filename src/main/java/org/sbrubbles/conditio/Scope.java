@@ -113,7 +113,7 @@ public interface Scope extends AutoCloseable {
    * @see #raise(Condition, Restart[])
    */
   <T> T signal(Condition condition, HandlerNotFoundPolicy<T> handlerNotFoundPolicy, Restart<T>... restarts)
-    throws NullPointerException, ClassCastException;
+    throws NullPointerException, HandlerNotFoundException, ClassCastException;
 
   /**
    * {@linkplain #signal(Condition, HandlerNotFoundPolicy, Restart[]) Signals} a condition which may go unhandled and
@@ -146,8 +146,10 @@ public interface Scope extends AutoCloseable {
    * @return the end result, as provided by the selected handler.
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
+   * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
    */
-  default <T> T raise(Condition condition, Restart<T>... restarts) throws HandlerNotFoundException {
+  default <T> T raise(Condition condition, Restart<T>... restarts)
+    throws NullPointerException, HandlerNotFoundException, ClassCastException {
     Restart<T>[] args = new Restart[restarts.length + 1];
     args[0] = Restarts.useValue();
     System.arraycopy(restarts, 0, args, 1, restarts.length);

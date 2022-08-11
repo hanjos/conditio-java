@@ -17,8 +17,7 @@ public interface HandlerNotFoundPolicy<T> {
   /**
    * Called when no handler is found.
    * <p>
-   * Implementations which error out are expected to do so with a {@link HandlerNotFoundException}. Other subtypes may
-   * compute some values to return.
+   * Implementations which error out are expected to do so with a {@link HandlerNotFoundException}.
    *
    * @param scope where the handler search started.
    * @return the value to be returned by {@code signal}.
