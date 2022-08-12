@@ -1,10 +1,9 @@
 package org.sbrubbles.conditio.restarts;
 
 import org.sbrubbles.conditio.Restart;
-import org.sbrubbles.conditio.Scope;
 
 /**
- * A restart option holding the value to be returned directly by {@link Scope#signal}.
+ * A restart option holding the value to be returned.
  *
  * @param <R> the type of the value to return.
  * @see Restarts

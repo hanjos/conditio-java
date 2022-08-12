@@ -12,22 +12,26 @@ import java.util.function.Supplier;
  * The <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">resource</a>
  * providing the main machinery.
  * <p>
- * The main operation is {@link #signal(Condition, HandlerNotFoundPolicy, Restart[])}, which is called when lower-level code doesn't know
- * how to handle a {@linkplain Condition condition}. In a nutshell, {@code signal} looks for something that can
- * {@linkplain #handle(Class, BiFunction) handle} the given condition in the call stack. This
+ * Scopes are resources, with controlled {@linkplain Scopes creation and closing} to ensure proper nesting. As a
+ * consequence, {@link Scopes#create() create}ing a scope without {@link Scope#close() close}ing it properly will
+ * <strong>break</strong> the nesting. Use it only in a {@code try}-with-resources, and you'll be fine :)
+ * <p>
+ * The core operation is {@link #signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}, which is called when
+ * lower-level code doesn't know how to handle a {@linkplain Condition condition}. First, {@code signal} looks
+ * for something that can {@linkplain #handle(Class, BiFunction) handle} the given condition in the call stack. This
  * {@linkplain Handler handler} then chooses {@linkplain Handler.Operations what to do}, like returning a result
  * directly, or looking for a recovery strategy (also known as a {@linkplain Restart restart}) and using it to provide
  * a result.
  * <p>
- * Scopes are resources, with controlled {@linkplain Scopes creation and closing} to ensure proper nesting. As a
- * consequence, {@link Scopes#create() create}ing a scope without {@link Scope#close() close}ing it properly will
- * <strong>break</strong> the nesting. Just use it only in a {@code try}-with-resources, and you'll be fine :)
+ * In practice, {@code signal} is quite low-level, and works better as a primitive operation.
+ * {@link #raise(Condition, Restart[]) raise} and {@link #notify(Condition, Restart[]) notify} provide better
+ * ergonomics, and should cover most use cases.
  * <p>
  * Restarts only make sense for specific invocations. Therefore, they're set only when a condition is
  * {@code signal}led, or when code calling a {@code signal}ling method wraps that call with
- * {@link #call(Supplier, Restart...)} to provide more restarts.
+ * {@link #call(Supplier, Restart...) call} to provide more restarts.
  * <p>
- * In practice, usage should look something like this:
+ * Usage should look something like this:
  * <pre>
  *   try(Scope scope = Scopes.create()) {
  *     // establishing a new handler, which delegates the work to a RetryWith-compatible restart
@@ -43,11 +47,6 @@ import java.util.function.Supplier;
  *     }
  *   }
  * </pre>
- *
- * @see Scopes
- * @see Condition
- * @see Handler
- * @see Restart
  */
 public interface Scope extends AutoCloseable {
   /**
@@ -109,7 +108,7 @@ public interface Scope extends AutoCloseable {
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if the policy opts to error out.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
-   * @throws AbortException           if the eventual handlers {@linkplain Handler.Operations#abort() aborts execution}.
+   * @throws AbortException           if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
    * @see #notify(Condition, Restart[])
    * @see #raise(Condition, Restart[])
    */
@@ -122,11 +121,11 @@ public interface Scope extends AutoCloseable {
    * returns no useful value.
    * <p>
    * This method is a way to provide hints or notifications to higher-level code, which can be safely resumed and
-   * maybe trigger some useful side effects. It also automatically provides a
-   * {@link org.sbrubbles.conditio.restarts.Resume Resume} restart, beyond the restarts in {@code restarts}.
+   * maybe trigger some useful side effects. This method always provides a
+   * {@link org.sbrubbles.conditio.restarts.Resume Resume} restart.
    *
    * @param condition a condition, which here acts as a notice that something happened.
-   * @param restarts  some restarts, which will be available to the eventual handler.
+   * @param restarts  some restarts, which, along with {@code Resume}, will be available to the eventual handler.
    * @throws NullPointerException if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws AbortException       if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
    * @see #signal(Condition, HandlerNotFoundPolicy, Restart[])
@@ -143,16 +142,15 @@ public interface Scope extends AutoCloseable {
 
   /**
    * {@linkplain #signal(Condition, HandlerNotFoundPolicy, Restart[]) Signals} a condition that must be handled and
-   * return a result. This method also provides a {@link org.sbrubbles.conditio.restarts.UseValue UseValue} restart,
-   * beyond the given restarts.
+   * return a result. This method always provides a {@link org.sbrubbles.conditio.restarts.UseValue UseValue} restart.
    *
    * @param condition a condition that must be handled.
-   * @param restarts  some restarts, which will be available to the eventual handler.
+   * @param restarts  some restarts, which, along with {@code UseValue}, will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
-   * @throws AbortException           if the eventual handlers {@linkplain Handler.Operations#abort() aborts execution}.
+   * @throws AbortException           if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
    */
   @SuppressWarnings("unchecked")
   default <T> T raise(Condition condition, Restart<T>... restarts)

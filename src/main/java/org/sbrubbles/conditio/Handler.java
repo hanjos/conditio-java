@@ -8,7 +8,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * Handles conditions, producing the result to be returned by {@link Scope#signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}.
+ * Handles conditions, producing the result to be returned by
+ * {@link Scope#signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}.
  * <p>
  * A handler can do two things:
  * <ul>
@@ -21,11 +22,6 @@ import java.util.function.Supplier;
  * <p>
  * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain BiFunction (bi)function}, this
  * interface extends both.
- *
- * @see Condition
- * @see Restart
- * @see Operations
- * @see Decision
  */
 public interface Handler extends Predicate<Condition>, BiFunction<Condition, Handler.Operations, Handler.Decision> {
   /**
@@ -36,11 +32,11 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
      * Invokes a previously set recovery strategy. This method will search for a compatible
      * {@linkplain Restart restart} and run it, returning the result.
      *
-     * @param restartOption identifies which restart to run, and holds any data required for that restart's operation.
+     * @param option identifies which restart to run, and holds any data required for that restart's operation.
      * @return (a decision representing) the result of the selected restart's execution.
      * @throws RestartNotFoundException if no restart compatible with {@code restartOption} could be found.
      */
-    Decision restart(Restart.Option restartOption) throws RestartNotFoundException;
+    Decision restart(Restart.Option option) throws RestartNotFoundException;
 
     /**
      * When a handler opts to not handle a particular condition. By calling this, other handlers, bound later in the
@@ -97,9 +93,6 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
   /**
    * How a handler decided to handle a condition. Instances are produced by {@linkplain Operations operations}, and
    * consumed by {@link Scope#signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}.
-   *
-   * @see Operations
-   * @see Scope#signal(Condition, HandlerNotFoundPolicy, Restart[])
    */
   class Decision implements Supplier<Object> {
     static final Decision SKIP = new Decision(null);
@@ -163,14 +156,14 @@ class HandlerOperationsImpl implements Handler.Operations {
   }
 
   @Override
-  public Handler.Decision restart(Restart.Option restartOption) throws RestartNotFoundException {
+  public Handler.Decision restart(Restart.Option option) throws RestartNotFoundException {
     for (Restart<?> r : getScope().getAllRestarts()) {
-      if (r.test(restartOption)) {
-        return new Handler.Decision(r.apply(restartOption));
+      if (r.test(option)) {
+        return new Handler.Decision(r.apply(option));
       }
     }
 
-    throw new RestartNotFoundException(restartOption);
+    throw new RestartNotFoundException(option);
   }
 
   @Override

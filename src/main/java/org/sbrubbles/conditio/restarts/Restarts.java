@@ -26,7 +26,8 @@ public final class Restarts {
   }
 
   /**
-   * A {@linkplain UseValue restart option} which indicates that {@link Scope#signal} should return the given value.
+   * A {@linkplain UseValue restart option} which indicates that {@link Scope#signal Scope.signal} should return the
+   * given value.
    *
    * @param value the value to be returned by {@code signal}.
    * @return a restart option.
