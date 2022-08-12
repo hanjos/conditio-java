@@ -33,26 +33,26 @@ public class BasicOperationsTest {
 
     try (Scope a = Scopes.create()) {
       // no restart before the handler...
-      assertFalse(matches(a.getAllRestarts(), u), "before handle");
+      assertOptionsMismatch(Collections.singletonList(u), a.getAllRestarts(), "before handle");
 
       a.handle(MalformedLogEntry.class, (c, ops) -> {
         // now there's something!
-        assertTrue(matches(ops.getScope().getAllRestarts(), u), "inside handle");
+        assertOptionsMatch(Collections.singletonList(u), ops.getScope().getAllRestarts(), "inside handle");
 
         return ops.restart(u);
       });
 
       // no restart after either
-      assertFalse(matches(a.getAllRestarts(), u), "after handle");
+      assertOptionsMismatch(Collections.singletonList(u), a.getAllRestarts(), "after handle");
 
       try (Scope b = Scopes.create()) {
         // no restart before signal...
-        assertFalse(matches(b.getAllRestarts(), u), "before signal");
+        assertOptionsMismatch(Collections.singletonList(u), b.getAllRestarts(), "before signal");
 
         assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), Policies.error(), USE_VALUE));
 
         // no restart after either...
-        assertFalse(matches(b.getAllRestarts(), u), "after signal");
+        assertOptionsMismatch(Collections.singletonList(u), b.getAllRestarts(), "after signal");
       }
     }
   }
@@ -61,13 +61,13 @@ public class BasicOperationsTest {
   public void callRemovesTheRestartsAfterwards() {
     final Entry TEST_VALUE = new Entry("test");
     final Restart.Option u = new UseValue<>(TEST_VALUE);
-    final Restart.Option r = new Resume();
+    final Restart.Option r = new Resume<>();
 
     try (Scope a = Scopes.create()) {
-      assertFalse(matches(a.getAllRestarts(), u, r), "before handle");
+      assertOptionsMismatch(Arrays.asList(u, r), a.getAllRestarts(), "before handle");
 
       a.handle(MalformedLogEntry.class, (c, ops) -> {
-        assertTrue(matches(ops.getScope().getAllRestarts(), u, r), "inside handle");
+        assertOptionsMatch(Arrays.asList(u, r), ops.getScope().getAllRestarts(), "inside handle");
 
         return ops.restart(u);
       });
@@ -76,7 +76,7 @@ public class BasicOperationsTest {
         a.call(
           () -> {
             try (Scope b = Scopes.create()) {
-              assertTrue(matches(b.getAllRestarts(), u, r), "inside call");
+              assertOptionsMatch(Arrays.asList(u, r), b.getAllRestarts(), "inside call");
 
               return b.signal(new MalformedLogEntry(""), Policies.error()); // the use value comes from call
             }
@@ -84,7 +84,7 @@ public class BasicOperationsTest {
           Restarts.useValue(),
           Restarts.resume()));
 
-      assertFalse(matches(a.getAllRestarts(), u, r), "after handle");
+      assertOptionsMismatch(Arrays.asList(u, r), a.getAllRestarts(), "after handle");
     }
   }
 
@@ -174,9 +174,9 @@ public class BasicOperationsTest {
       a.handle(BasicCondition.class, (c, ops) -> {
         trail.add(c.getValue());
 
-        assertTrue(matches(
-          ops.getScope().getAllRestarts(),
-          Restarts.resume()));
+        assertOptionsMatch(
+          Collections.singletonList(Restarts.resume()),
+          ops.getScope().getAllRestarts());
 
         return ops.skip(); // no handling provided
       });
@@ -200,7 +200,9 @@ public class BasicOperationsTest {
       a.handle(BasicCondition.class, (c, ops) -> {
         trail.add(c.getValue());
 
-        assertTrue(matches(ops.getScope().getAllRestarts(), u));
+        assertOptionsMatch(
+          Collections.singletonList(u),
+          ops.getScope().getAllRestarts());
 
         return ops.restart(Restarts.use(TEST_VALUE));
       });
@@ -226,8 +228,9 @@ public class BasicOperationsTest {
     }
   }
 
-  static boolean matches(Iterable<Restart<?>> iterable, Restart.Option... options) {
-    return Arrays.stream(options).allMatch(o -> {
+
+  static boolean matches(List<Restart.Option> options, Iterable<Restart<?>> iterable) {
+    return options.stream().allMatch(o -> {
       for (Restart<?> r : iterable) {
         if (r.test(o)) {
           return true;
@@ -236,6 +239,22 @@ public class BasicOperationsTest {
 
       return false;
     });
+  }
+
+  static void assertOptionsMatch(List<Restart.Option> options, Iterable<Restart<?>> iterable) {
+    assertTrue(matches(options, iterable));
+  }
+
+  static void assertOptionsMatch(List<Restart.Option> options, Iterable<Restart<?>> iterable, String message) {
+    assertTrue(matches(options, iterable), message);
+  }
+
+  static void assertOptionsMismatch(List<Restart.Option> options, Iterable<Restart<?>> iterable) {
+    assertFalse(matches(options, iterable));
+  }
+
+  static void assertOptionsMismatch(List<Restart.Option> options, Iterable<Restart<?>> iterable, String message) {
+    assertFalse(matches(options, iterable), message);
   }
 
   static Stream<Function<String, Condition>> skipHandlingProvider() {

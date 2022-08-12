@@ -109,7 +109,7 @@ public interface Scope extends AutoCloseable {
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if the policy opts to error out.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
-   * @throws AbortException           if the handlers opts to {@linkplain Handler.Operations#abort() abort execution}.
+   * @throws AbortException           if the eventual handlers {@linkplain Handler.Operations#abort() aborts execution}.
    * @see #notify(Condition, Restart[])
    * @see #raise(Condition, Restart[])
    */
@@ -121,14 +121,14 @@ public interface Scope extends AutoCloseable {
    * {@linkplain #signal(Condition, HandlerNotFoundPolicy, Restart[]) Signals} a condition which may go unhandled and
    * returns no useful value.
    * <p>
-   * This method works better as a way to provide hints or notifications to higher-level code, which can be safely
-   * resumed and maybe trigger some useful side effects. This method also provides a
-   * {@link org.sbrubbles.conditio.restarts.Resume Resume} restart, beyond the given restarts.
+   * This method is a way to provide hints or notifications to higher-level code, which can be safely resumed and
+   * maybe trigger some useful side effects. It also automatically provides a
+   * {@link org.sbrubbles.conditio.restarts.Resume Resume} restart, beyond the restarts in {@code restarts}.
    *
    * @param condition a condition, which here acts as a notice that something happened.
    * @param restarts  some restarts, which will be available to the eventual handler.
    * @throws NullPointerException if one of the arguments, or the selected handler's decision is {@code null}.
-   * @throws AbortException       if the handlers opts to {@linkplain Handler.Operations#abort() abort execution}.
+   * @throws AbortException       if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
    * @see #signal(Condition, HandlerNotFoundPolicy, Restart[])
    */
   @SuppressWarnings("unchecked")
@@ -152,7 +152,7 @@ public interface Scope extends AutoCloseable {
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
-   * @throws AbortException           if the handlers opts to {@linkplain Handler.Operations#abort() abort execution}.
+   * @throws AbortException           if the eventual handlers {@linkplain Handler.Operations#abort() aborts execution}.
    */
   @SuppressWarnings("unchecked")
   default <T> T raise(Condition condition, Restart<T>... restarts)
