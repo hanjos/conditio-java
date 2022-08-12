@@ -31,8 +31,10 @@ public interface Restart<R> extends Predicate<Restart.Option>, Function<Restart.
    * <p>
    * This is merely a marker interface, with no fields or methods of its own. Implementations typically hold extra
    * fields and data.
+   *
+   * @see org.sbrubbles.conditio.restarts.Restarts
    */
-  interface Option { /**/ }
+  interface Option { }
 
   /**
    * Creates and returns a new restart, with a default implementation.

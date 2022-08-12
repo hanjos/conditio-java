@@ -9,19 +9,21 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 /**
- * The <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">resource</a>
- * providing the main machinery.
+ * A scope is a <a
+ * href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">resource</a>
+ * which hosts the main machinery. They can be nested, creating a stack of scopes. The machinery is able to
+ * navigate this stack and search for the relevant objects.
  * <p>
- * Scopes are resources, with controlled {@linkplain Scopes creation and closing} to ensure proper nesting. As a
- * consequence, {@link Scopes#create() create}ing a scope without {@link Scope#close() close}ing it properly will
- * <strong>break</strong> the nesting. Use it only in a {@code try}-with-resources, and you'll be fine :)
+ * To ensure proper nesting, scopes have controlled {@linkplain Scopes creation and closing}. As a consequence,
+ * {@link Scopes#create() create}ing a scope without {@link Scope#close() close}ing it will <strong>break</strong>
+ * this nesting. Use it only in a {@code try}-with-resources, and you'll be fine :)
  * <p>
  * The core operation is {@link #signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}, which is called when
- * lower-level code doesn't know how to handle a {@linkplain Condition condition}. First, {@code signal} looks
- * for something that can {@linkplain #handle(Class, BiFunction) handle} the given condition in the call stack. This
- * {@linkplain Handler handler} then chooses {@linkplain Handler.Operations what to do}, like returning a result
- * directly, or looking for a recovery strategy (also known as a {@linkplain Restart restart}) and using it to provide
- * a result.
+ * lower-level code doesn't know how to handle a {@linkplain Condition condition}. {@code signal} looks
+ * for something that can {@linkplain #handle(Class, BiFunction) handle} the given condition in the call stack, and
+ * this {@linkplain Handler handler} then chooses {@linkplain Handler.Operations what to do}, like
+ * {@linkplain Handler.Operations#abort() aborting} or looking for a recovery strategy (also known as a
+ * {@linkplain Restart restart}) and using it to provide a result.
  * <p>
  * In practice, {@code signal} is quite low-level, and works better as a primitive operation.
  * {@link #raise(Condition, Restart[]) raise} and {@link #notify(Condition, Restart[]) notify} provide better
@@ -33,19 +35,20 @@ import java.util.function.Supplier;
  * <p>
  * Usage should look something like this:
  * <pre>
+ * try(Scope scope = Scopes.create()) {
+ *   // establishing a new handler, which accepts MalformedEntry conditions and
+ *   // delegates the work to a RetryWith-compatible restart
+ *   scope.handle(MalformedEntry.class, (c, ops) -&gt; ops.restart(new RetryWith("FAIL: " + c.getText())));
+ *
+ *   // ...somewhere deeper in the call stack...
  *   try(Scope scope = Scopes.create()) {
- *     // establishing a new handler, which delegates the work to a RetryWith-compatible restart
- *     scope.handle(MalformedEntry.class, (c, ops) -&gt; ops.restart(new RetryWith("FAIL: " + c.getText())));
+ *     // signals a condition, sets a restart, and waits for the result
+ *     Entry entry = scope.raise(new MalformedEntry("NOOOOOOOO"),
+ *                      Restart.on(RetryWith.class, r -&gt; func(r.getValue())));
  *
- *     // ...somewhere deeper in the call stack...
- *     try(Scope scope = Scopes.create()) {
- *       // signals a condition, sets a restart, and waits for the result
- *       Entry entry = scope.raise(new MalformedEntry("NOOOOOOOO"),
- *                        Restart.on(RetryWith.class, r -&gt; func(r.getValue())));
- *
- *       // carry on...
- *     }
+ *     // carry on...
  *   }
+ * }
  * </pre>
  */
 public interface Scope extends AutoCloseable {

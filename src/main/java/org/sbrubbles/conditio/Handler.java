@@ -34,7 +34,7 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
      *
      * @param option identifies which restart to run, and holds any data required for that restart's operation.
      * @return (a decision representing) the result of the selected restart's execution.
-     * @throws RestartNotFoundException if no restart compatible with {@code restartOption} could be found.
+     * @throws RestartNotFoundException if no restart compatible with {@code option} could be found.
      */
     Decision restart(Restart.Option option) throws RestartNotFoundException;
 
@@ -47,7 +47,7 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
     Decision skip();
 
     /**
-     * Aborts execution and unwinds the stack. This should be followed by a {@code try-catch} clause at the desired
+     * Aborts execution and unwinds the stack. There should be a {@code catch} clause at the desired
      * level to stop the unwinding.
      * <p>
      * Example:
@@ -102,6 +102,11 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
     // Only classes in this package should create instances
     Decision(Object result) { this.result = result; }
 
+    /**
+     * Returns the value produced.
+     *
+     * @return the value produced.
+     */
     @Override
     public Object get() { return result; }
   }
