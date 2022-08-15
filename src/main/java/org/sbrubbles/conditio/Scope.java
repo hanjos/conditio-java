@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 /**
  * A scope is a <a
  * href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">resource</a>
- * which hosts the main machinery. They can be nested, creating a stack of scopes. The machinery is able to
+ * which hosts this library's main machinery. They can be nested, creating a stack of scopes; the machinery is able to
  * navigate this stack and search for the relevant objects.
  * <p>
  * To ensure proper nesting, scopes have controlled {@linkplain Scopes creation and closing}. As a consequence,
@@ -121,17 +121,16 @@ public interface Scope extends AutoCloseable {
 
   /**
    * {@linkplain #signal(Condition, HandlerNotFoundPolicy, Restart[]) Signals} a condition which may go unhandled and
-   * returns no useful value.
+   * returns no useful value. This method always provides a {@link org.sbrubbles.conditio.restarts.Resume Resume}
+   * restart.
    * <p>
    * This method is a way to provide hints or notifications to higher-level code, which can be safely resumed and
-   * maybe trigger some useful side effects. This method always provides a
-   * {@link org.sbrubbles.conditio.restarts.Resume Resume} restart.
+   * maybe trigger some useful side effects.
    *
    * @param condition a condition, which here acts as a notice that something happened.
    * @param restarts  some restarts, which, along with {@code Resume}, will be available to the eventual handler.
    * @throws NullPointerException if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws AbortException       if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
-   * @see #signal(Condition, HandlerNotFoundPolicy, Restart[])
    */
   @SuppressWarnings("unchecked")
   default void notify(Condition condition, Restart<?>... restarts)

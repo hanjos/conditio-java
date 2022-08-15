@@ -4,10 +4,14 @@ import org.sbrubbles.conditio.HandlerNotFoundException;
 
 /**
  * Some general use policies.
+ * <p>
+ * This class acts as a namespace, and isn't meant to be inherited or instantiated.
  */
 public final class Policies {
   private static final HandlerNotFoundPolicy ERROR = (c, s) -> { throw new HandlerNotFoundException(c); };
   private static final HandlerNotFoundPolicy IGNORE = (c, s) -> null;
+
+  private Policies() { }
 
   /**
    * A policy which throws a {@link HandlerNotFoundException} when no handlers are found.

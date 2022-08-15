@@ -7,7 +7,7 @@ import org.sbrubbles.conditio.Restart;
 import java.util.function.BiFunction;
 
 /**
- * Some general use handler operations, ready for consumption.
+ * Some utility methods for handlers.
  * <p>
  * This class acts as a namespace, and isn't meant to be inherited or instantiated.
  */
