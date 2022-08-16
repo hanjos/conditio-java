@@ -11,8 +11,8 @@ import java.util.function.BiFunction;
  * <p>
  * This class acts as a namespace, and isn't meant to be inherited or instantiated.
  */
-public final class HandlerOps {
-  private HandlerOps() { }
+public final class Handlers {
+  private Handlers() { }
 
   /**
    * A handler body that invokes the restart matching the given option.

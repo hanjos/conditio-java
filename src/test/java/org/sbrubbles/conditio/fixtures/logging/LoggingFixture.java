@@ -5,7 +5,7 @@ import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
-import org.sbrubbles.conditio.handlers.HandlerOps;
+import org.sbrubbles.conditio.handlers.Handlers;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.restarts.UseValue;
 
@@ -60,12 +60,15 @@ public class LoggingFixture extends AbstractFixture {
       List<String> lines = br.lines().collect(Collectors.toList());
       List<Entry> entries = new ArrayList<>();
 
+      // skips malformed entries by returning a predefined "Entry", which can be checked and skipped
       final Restart<?> SKIP_ENTRY = Restart.on(SkipEntry.class,
         traceRestart("SkipEntry", r -> SKIP_ENTRY_MARKER));
 
       for (String line : lines) {
+        // provides an extra restart for the handlers
         Entry entry = scope.call(() -> parseLogEntry(line), SKIP_ENTRY);
 
+        // if entry is not SKIP_ENTRY_MARKER, then it actually came from parseLogEntry; add it
         if (!SKIP_ENTRY_MARKER.equals(entry)) {
           entries.add(entry);
         }
@@ -85,7 +88,7 @@ public class LoggingFixture extends AbstractFixture {
       // this isn't a language construct, handlers can be established dynamically
       if (isAnalyzeLog()) {
         scope.handle(MalformedLogEntry.class,
-          traceHandler("analyzeLog", HandlerOps.restart(getRestartOptionToUse())));
+          traceHandler("analyzeLog", Handlers.restart(getRestartOptionToUse())));
       }
 
       InputStream in = LoggingFixture.class.getResourceAsStream(filename);
@@ -104,7 +107,7 @@ public class LoggingFixture extends AbstractFixture {
     try (Scope scope = Scopes.create()) {
       if (isLogAnalyzer()) {
         scope.handle(MalformedLogEntry.class,
-          traceHandler("logAnalyzer", HandlerOps.restart(getRestartOptionToUse())));
+          traceHandler("logAnalyzer", Handlers.restart(getRestartOptionToUse())));
       }
 
       List<AnalyzedEntry> logs = new ArrayList<>();

@@ -4,7 +4,7 @@ import org.sbrubbles.conditio.AbortException;
 import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.handlers.HandlerOps;
+import org.sbrubbles.conditio.handlers.Handlers;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,7 +38,7 @@ public class AbortingFixture {
 
   public String handle() {
     try (Scope scope = Scopes.create()) {
-      scope.handle(BasicCondition.class, HandlerOps.abort());
+      scope.handle(BasicCondition.class, Handlers.abort());
 
       return passThrough();
     } catch (AbortException e) {

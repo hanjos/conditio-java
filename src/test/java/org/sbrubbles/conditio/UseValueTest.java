@@ -4,7 +4,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.handlers.HandlerOps;
+import org.sbrubbles.conditio.handlers.Handlers;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.restarts.Restarts;
 
@@ -24,7 +24,7 @@ public class UseValueTest {
 
     try (Scope a = Scopes.create()) {
       a.handle(BasicCondition.class, trace(trail, message,
-        HandlerOps.restart(Restarts.use(result))));
+        Handlers.restart(Restarts.use(result))));
 
       try (Scope b = Scopes.create()) {
         Object actual = b.signal(new BasicCondition(""), Policies.error(), Restarts.useValue());

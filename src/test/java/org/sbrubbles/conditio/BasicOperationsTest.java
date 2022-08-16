@@ -8,7 +8,7 @@ import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.Entry;
 import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
-import org.sbrubbles.conditio.handlers.HandlerOps;
+import org.sbrubbles.conditio.handlers.Handlers;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.restarts.Restarts;
 import org.sbrubbles.conditio.restarts.Resume;
@@ -33,7 +33,7 @@ public class BasicOperationsTest {
 
     try (Scope a = Scopes.create()) {
       // no restart before the handler...
-      assertOptionsMismatch(Collections.singletonList(u), a.getAllRestarts(), "before handle");
+      assertOptionsDontMatch(Collections.singletonList(u), a.getAllRestarts(), "before handle");
 
       a.handle(MalformedLogEntry.class, (c, ops) -> {
         // now there's something!
@@ -43,16 +43,16 @@ public class BasicOperationsTest {
       });
 
       // no restart after either
-      assertOptionsMismatch(Collections.singletonList(u), a.getAllRestarts(), "after handle");
+      assertOptionsDontMatch(Collections.singletonList(u), a.getAllRestarts(), "after handle");
 
       try (Scope b = Scopes.create()) {
         // no restart before signal...
-        assertOptionsMismatch(Collections.singletonList(u), b.getAllRestarts(), "before signal");
+        assertOptionsDontMatch(Collections.singletonList(u), b.getAllRestarts(), "before signal");
 
         assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), Policies.error(), USE_VALUE));
 
         // no restart after either...
-        assertOptionsMismatch(Collections.singletonList(u), b.getAllRestarts(), "after signal");
+        assertOptionsDontMatch(Collections.singletonList(u), b.getAllRestarts(), "after signal");
       }
     }
   }
@@ -64,7 +64,7 @@ public class BasicOperationsTest {
     final Restart.Option r = new Resume<>();
 
     try (Scope a = Scopes.create()) {
-      assertOptionsMismatch(Arrays.asList(u, r), a.getAllRestarts(), "before handle");
+      assertOptionsDontMatch(Arrays.asList(u, r), a.getAllRestarts(), "before handle");
 
       a.handle(MalformedLogEntry.class, (c, ops) -> {
         assertOptionsMatch(Arrays.asList(u, r), ops.getScope().getAllRestarts(), "inside handle");
@@ -84,7 +84,7 @@ public class BasicOperationsTest {
           Restarts.useValue(),
           Restarts.resume()));
 
-      assertOptionsMismatch(Arrays.asList(u, r), a.getAllRestarts(), "after handle");
+      assertOptionsDontMatch(Arrays.asList(u, r), a.getAllRestarts(), "after handle");
     }
   }
 
@@ -97,11 +97,11 @@ public class BasicOperationsTest {
 
     try (Scope a = Scopes.create()) {
       a.handle(BasicCondition.class, trace(trail, "a",
-        HandlerOps.restart(Restarts.use(EXPECTED_RESULT))));
+        Handlers.restart(Restarts.use(EXPECTED_RESULT))));
 
       try (Scope b = Scopes.create()) {
         b.handle(BasicCondition.class, trace(trail, "b",
-          HandlerOps.skip()));
+          Handlers.skip()));
 
         try (Scope c = Scopes.create()) {
           String actual = c.raise(condition);
@@ -130,7 +130,7 @@ public class BasicOperationsTest {
 
       try (Scope b = Scopes.create()) {
         b.handle(BasicCondition.class, trace(trail, "b",
-          HandlerOps.restart(Restarts.use(FIXED_RESULT))));
+          Handlers.restart(Restarts.use(FIXED_RESULT))));
 
         try (Scope c = Scopes.create()) {
           Object actual = c.raise(new PleaseSignalSomethingElse());
@@ -249,11 +249,11 @@ public class BasicOperationsTest {
     assertTrue(matches(options, iterable), message);
   }
 
-  static void assertOptionsMismatch(List<Restart.Option> options, Iterable<Restart<?>> iterable) {
+  static void assertOptionsDontMatch(List<Restart.Option> options, Iterable<Restart<?>> iterable) {
     assertFalse(matches(options, iterable));
   }
 
-  static void assertOptionsMismatch(List<Restart.Option> options, Iterable<Restart<?>> iterable, String message) {
+  static void assertOptionsDontMatch(List<Restart.Option> options, Iterable<Restart<?>> iterable, String message) {
     assertFalse(matches(options, iterable), message);
   }
 

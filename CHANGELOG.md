@@ -2,12 +2,12 @@
 
 * Several substitutions:
   * `Resume.INSTANCE` became a method in `Restarts`.
-  * `Handler.Operations.use()` is now a restart, `UseValue`.
-  * `Condition.onHandlerNotFound` no longer exists; now `Scope.signal` takes a _policy_ as a parameter. As a result, `Notice`s and `Warning`s are no longer needed.
-  * `Abort` became a method in `Handler.Operations`.
+  * `Handler.Operations.use()` became a restart, `UseValue`.
+  * `Condition.onHandlerNotFound` no longer exists; now `Scope.signal` takes a _policy_ as an extra parameter. So `Notice`s and `Warning`s are no more as well.
+  * `Abort` became a method, `Handler.Operations.abort()`.
 * `Scope.signal` is now generic, and so is `Restart`.
-* `HandlerOps` provides handler bodies for common uses.
-* `Scope.notify` and `Scope.raise` cover common `Scope.signal` uses, with better ergonomics. `Scope.signal` works as a primitive operation, backing the others.
+* `Handlers` provides handler bodies for common uses.
+* `Scope.notify` and `Scope.raise` cover common `Scope.signal` uses, with better ergonomics. `Scope.signal` works better as a primitive operation, backing the others.
 
 # 0.4
 
