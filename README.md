@@ -1,4 +1,4 @@
-[![CI](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml) [![Javadocs](https://img.shields.io/static/v1?label=Javadocs&message=0.4.0&color=informational&logo=read-the-docs)][vLatest] [![Maven package](https://img.shields.io/static/v1?label=Maven&message=0.4.0&color=orange&logo=apache-maven)](https://github.com/hanjos/conditio-java/packages/1543701)
+[![CI](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hanjos/conditio-java/actions/workflows/ci.yml) [![Javadocs](https://img.shields.io/static/v1?label=Javadocs&message=0.5.0&color=informational&logo=read-the-docs)][vLatest] [![Maven package](https://img.shields.io/static/v1?label=Maven&message=0.5.0&color=orange&logo=apache-maven)](https://github.com/hanjos/conditio-java/packages/1543701)
 
 A simple condition system for Java, without dynamic variables or reflection wizardry.
 
@@ -63,7 +63,7 @@ public Entry parseLogEntry(String text) throws Exception {
     }
 
     // signal a condition, and establish a restart
-    return (Entry) scope.signal(
+    return scope.raise(
       new MalformedLogEntry(text),
       Restart.on(RetryWith.class, r -> parseLogEntry(r.getText())));
   }
@@ -77,13 +77,9 @@ Basically, Maven (or Gradle; anything compatible with Maven repos, really) and [
 ## Caveats and stuff to mull over
 
 * There is no attempt whatsoever to make this thread-safe; to be honest, I'm not even sure what that'd look like.
-* Providing some general-use restarts would be nice :)
-* This does no stack unwinding at all. I figured _that_ could be done by just throwing an exception, although it wouldn't be pretty (something like `SkipEntry` in the example above?). Some ergonomics might be in order...
 * As far as I can tell, a _full_ condition system would [need continuations](https://news.ycombinator.com/item?id=20496043), or some form of nonlocal transfer of control without stack unwinding. Which in Java is... [complicated](https://stackoverflow.com/questions/1456083/continuations-in-java). So, I'll punt on fullness for the moment. Let's see how far I get...
 
 
 [beh-cl]: https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html
-
 [pract-cl]: https://gigamonkeys.com/book/
-
-[vLatest]: https://sbrubbles.org/conditio-java/docs/0.4.0/apidocs/index.html
+[vLatest]: https://sbrubbles.org/conditio-java/docs/0.5.0/apidocs/index.html
