@@ -9,6 +9,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unchecked")
 public class WarningFixture extends AbstractFixture {
   public void low(int i) {
     try (Scope scope = Scopes.create()) {

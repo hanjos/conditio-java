@@ -31,12 +31,12 @@ public class HandlerImplTest {
   public void apply() {
     try (Scope scope = Scopes.create()) {
       Condition c = new BasicCondition("OMGWTFBBQ");
-      final Handler.Context ctxC = new HandlerContextImpl(c, scope);
+      final Handler.Context<Condition> ctxC = new HandlerContextImpl<>(c, scope);
 
       assertEquals("OK: OMGWTFBBQ", h.apply(ctxC).get());
 
       Condition f = new BasicCondition("FAIL");
-      final Handler.Context ctxF = new HandlerContextImpl(f, scope);
+      final Handler.Context<Condition> ctxF = new HandlerContextImpl<>(f, scope);
 
       assertEquals("FAIL!", h.apply(ctxF).get());
     }
@@ -46,7 +46,7 @@ public class HandlerImplTest {
   public void getters() {
     try (Scope a = Scopes.create()) {
       Condition c = new BasicCondition("OMGWTFBBQ");
-      final Handler.Context ctx = new HandlerContextImpl(c, a);
+      final Handler.Context<Condition> ctx = new HandlerContextImpl<>(c, a);
 
       assertEquals(c, ctx.getCondition());
       assertEquals(a, ctx.getScope());

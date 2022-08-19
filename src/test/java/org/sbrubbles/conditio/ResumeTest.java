@@ -8,8 +8,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ResumeTest {
   @Test
   public void resumeEqualsAnyOtherResume() {
-    Resume expected = new Resume();
-    Resume actual = new Resume();
+    Resume<?> expected = new Resume<>();
+    Resume<?> actual = new Resume<>();
 
     assertEquals(expected, actual);
     assertEquals(expected.hashCode(), actual.hashCode());
@@ -17,10 +17,10 @@ public class ResumeTest {
 
   @Test
   public void resumeTestOnlyTakesResumes() {
-    Resume r = new Resume();
+    Resume<?> r = new Resume<>();
 
     assertTrue(r.test(r));
-    assertTrue(r.test(new Resume()));
+    assertTrue(r.test(new Resume<>()));
 
     assertFalse(r.test(null));
     assertFalse(r.test(new Restart.Option() { }));
@@ -28,10 +28,10 @@ public class ResumeTest {
 
   @Test
   public void resumeApplyOnlyTakesResumes() {
-    Resume r = new Resume();
+    Resume<?> r = new Resume<>();
 
     assertNull(r.apply(r));
-    assertNull(r.apply(new Resume()));
+    assertNull(r.apply(new Resume<>()));
 
     assertThrows(ClassCastException.class, () -> r.apply(null));
     assertThrows(ClassCastException.class, () -> r.apply(new Restart.Option() { }));

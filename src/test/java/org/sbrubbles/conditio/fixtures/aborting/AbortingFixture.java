@@ -10,10 +10,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@SuppressWarnings("unchecked")
 public class AbortingFixture {
   public static final String HANDLE = "HANDLE";
   public static final String SIGNAL = "SIGNAL";
 
+  @SuppressWarnings("SameReturnValue")
   public String signal() {
     try (Scope scope = Scopes.create()) {
       scope.raise(new BasicCondition(""));

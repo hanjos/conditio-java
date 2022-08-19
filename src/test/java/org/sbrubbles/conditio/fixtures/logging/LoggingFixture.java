@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
  * <p>
  * It's a pretty decent usage example, if somewhat distorted by the instrumentation and shunts added for the tests.
  */
+@SuppressWarnings("unchecked")
 public class LoggingFixture extends AbstractFixture {
   private static final Entry SKIP_ENTRY_MARKER = new Entry(null);
 

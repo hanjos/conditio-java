@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("unchecked")
 public class BasicContextTest {
   @Test
   public void signalRemovesTheRestartsAfterwards() {
@@ -246,10 +247,6 @@ public class BasicContextTest {
 
   static void assertOptionsMatch(List<Restart.Option> options, Iterable<Restart<?>> iterable, String message) {
     assertTrue(matches(options, iterable), message);
-  }
-
-  static void assertOptionsDontMatch(List<Restart.Option> options, Iterable<Restart<?>> iterable) {
-    assertFalse(matches(options, iterable));
   }
 
   static void assertOptionsDontMatch(List<Restart.Option> options, Iterable<Restart<?>> iterable, String message) {

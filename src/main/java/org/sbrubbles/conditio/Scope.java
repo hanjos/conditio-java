@@ -135,7 +135,7 @@ public interface Scope extends AutoCloseable {
   @SuppressWarnings("unchecked")
   default void notify(Condition condition, Restart<?>... restarts)
     throws NullPointerException, AbortException {
-    Restart[] args = new Restart[restarts.length + 1];
+    Restart[] args = new Restart<?>[restarts.length + 1];
     args[0] = Restarts.resume();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
 
@@ -238,7 +238,7 @@ final class ScopeImpl implements Scope {
     try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
       scope.set(restarts);
 
-      Handler.Context<? extends Condition> ctx = new HandlerContextImpl(condition, scope);
+      Handler.Context<? extends Condition> ctx = new HandlerContextImpl<>(condition, scope);
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(condition)) {
           continue;

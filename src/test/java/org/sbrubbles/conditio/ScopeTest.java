@@ -9,6 +9,7 @@ import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("unchecked")
 public class ScopeTest {
   @Test
   public void rootHasNullParent() {

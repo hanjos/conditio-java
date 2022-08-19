@@ -135,6 +135,7 @@ class HandlerImpl implements Handler {
    *                      accept subtypes other than {@code S}.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
+  @SuppressWarnings("unchecked")
   <C extends Condition, S extends C> HandlerImpl(Class<S> conditionType, Function<Context<C>, Decision> body) {
     Objects.requireNonNull(conditionType, "conditionType");
     Objects.requireNonNull(body, "body");
@@ -149,7 +150,7 @@ class HandlerImpl implements Handler {
   }
 
   @Override
-  public Decision apply(Context ctx) {
+  public Decision apply(Context<?> ctx) {
     return getBody().apply(ctx);
   }
 
@@ -162,11 +163,11 @@ class HandlerImpl implements Handler {
   }
 }
 
-class HandlerContextImpl implements Handler.Context {
-  private final Condition condition;
+class HandlerContextImpl<C extends Condition> implements Handler.Context<C> {
+  private final C condition;
   private final Scope scope;
 
-  public HandlerContextImpl(Condition condition, Scope scope) {
+  public HandlerContextImpl(C condition, Scope scope) {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(scope, "scope");
 
@@ -191,7 +192,7 @@ class HandlerContextImpl implements Handler.Context {
   }
 
   @Override
-  public Condition getCondition() {
+  public C getCondition() {
     return condition;
   }
 
