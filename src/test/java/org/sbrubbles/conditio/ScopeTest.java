@@ -64,7 +64,7 @@ public class ScopeTest {
     try (Scope a = Scopes.create()) {
       a.handle(BasicCondition.class, ctx -> null);
 
-      assertThrows(NullPointerException.class, () -> a.signal(new BasicCondition("oops"), Policies.error()));
+      assertThrows(NullPointerException.class, () -> a.signal(new BasicCondition("oops"), new Policies<>()));
     }
   }
 }

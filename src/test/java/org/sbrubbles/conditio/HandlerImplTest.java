@@ -3,6 +3,7 @@ package org.sbrubbles.conditio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
+import org.sbrubbles.conditio.policies.Policies;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,12 +32,12 @@ public class HandlerImplTest {
   public void apply() {
     try (Scope scope = Scopes.create()) {
       Condition c = new BasicCondition("OMGWTFBBQ");
-      final Handler.Context<Condition> ctxC = new HandlerContextImpl<>(c, scope);
+      final Handler.Context<Condition> ctxC = new HandlerContextImpl<>(c, new Policies<>(), scope);
 
       assertEquals("OK: OMGWTFBBQ", h.apply(ctxC).get());
 
       Condition f = new BasicCondition("FAIL");
-      final Handler.Context<Condition> ctxF = new HandlerContextImpl<>(f, scope);
+      final Handler.Context<Condition> ctxF = new HandlerContextImpl<>(f, new Policies<>(), scope);
 
       assertEquals("FAIL!", h.apply(ctxF).get());
     }
@@ -46,7 +47,7 @@ public class HandlerImplTest {
   public void getters() {
     try (Scope a = Scopes.create()) {
       Condition c = new BasicCondition("OMGWTFBBQ");
-      final Handler.Context<Condition> ctx = new HandlerContextImpl<>(c, a);
+      final Handler.Context<Condition> ctx = new HandlerContextImpl<>(c, new Policies<>(), a);
 
       assertEquals(c, ctx.getCondition());
       assertEquals(a, ctx.getScope());

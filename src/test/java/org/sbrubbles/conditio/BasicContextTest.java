@@ -9,6 +9,7 @@ import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.Entry;
 import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
 import org.sbrubbles.conditio.handlers.Handlers;
+import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.restarts.Restarts;
 import org.sbrubbles.conditio.restarts.Resume;
@@ -49,7 +50,7 @@ public class BasicContextTest {
         // no restart before signal...
         assertOptionsDontMatch(Collections.singletonList(u), b.getAllRestarts(), "before signal");
 
-        assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), Policies.error(), USE_VALUE));
+        assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), new Policies<Entry>().set(HandlerNotFoundPolicy.error()), USE_VALUE));
 
         // no restart after either...
         assertOptionsDontMatch(Collections.singletonList(u), b.getAllRestarts(), "after signal");
@@ -78,7 +79,7 @@ public class BasicContextTest {
             try (Scope b = Scopes.create()) {
               assertOptionsMatch(Arrays.asList(u, r), b.getAllRestarts(), "inside call");
 
-              return b.signal(new MalformedLogEntry(""), Policies.error()); // the use value comes from call
+              return b.signal(new MalformedLogEntry(""), new Policies<>().set(HandlerNotFoundPolicy.error())); // the use value comes from call
             }
           },
           Restarts.useValue(),
@@ -149,7 +150,7 @@ public class BasicContextTest {
     BasicCondition condition = new BasicCondition("test");
 
     try (Scope a = Scopes.create()) {
-      a.signal(condition, Policies.error());
+      a.signal(condition, new Policies<>().set(HandlerNotFoundPolicy.error()));
 
       fail();
     } catch (HandlerNotFoundException e) {
@@ -160,7 +161,7 @@ public class BasicContextTest {
   @Test
   public void signallingWithNoHandlersAndAnIgnorePolicyNopesOut() {
     try (Scope a = Scopes.create()) {
-      a.signal(new BasicCondition("test"), Policies.ignore());
+      a.signal(new BasicCondition("test"), new Policies<>().set(HandlerNotFoundPolicy.ignore()));
     }
 
     // nothing happens, and the returned result is meaningless, so nothing to assert
@@ -183,7 +184,7 @@ public class BasicContextTest {
 
       try (Scope b = Scopes.create()) {
         b.notify(new BasicCondition("notify"));
-        b.signal(new BasicCondition("signal"), Policies.ignore(), Restarts.resume());
+        b.signal(new BasicCondition("signal"), new Policies<>().set(HandlerNotFoundPolicy.ignore()), Restarts.resume());
       }
     }
 

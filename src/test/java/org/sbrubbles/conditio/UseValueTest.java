@@ -28,7 +28,7 @@ public class UseValueTest {
         Handlers.restart(Restarts.use(result))));
 
       try (Scope b = Scopes.create()) {
-        Object actual = b.signal(new BasicCondition(""), Policies.error(), Restarts.useValue());
+        Object actual = b.signal(new BasicCondition(""), new Policies<>(), Restarts.useValue());
 
         assertEquals(result, actual);
         assertEquals(1, trail.size());

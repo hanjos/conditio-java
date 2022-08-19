@@ -1,6 +1,6 @@
 package org.sbrubbles.conditio;
 
-import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
+import org.sbrubbles.conditio.policies.Policies;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 /**
  * Handles conditions, producing the result to be returned by
- * {@link Scope#signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}.
+ * {@link Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) signal}.
  * <p>
  * A handler can do two things:
  * <ul>
@@ -92,6 +92,13 @@ public interface Handler extends Predicate<Condition>, Function<Handler.Context<
     C getCondition();
 
     /**
+     * The policies in effect for this signal invocation.
+     *
+     * @return the policies in effect for this signal invocation.
+     */
+    Policies<?> getPolicies();
+
+    /**
      * The scope where the signal was emitted.
      *
      * @return the scope where the signal was emitted.
@@ -101,7 +108,7 @@ public interface Handler extends Predicate<Condition>, Function<Handler.Context<
 
   /**
    * How a handler decided to handle a condition. Instances are produced by {@linkplain Context operations}, and
-   * consumed by {@link Scope#signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}.
+   * consumed by {@link Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) signal}.
    */
   class Decision implements Supplier<Object> {
     static final Decision SKIP = new Decision(null);
@@ -165,13 +172,16 @@ class HandlerImpl implements Handler {
 
 class HandlerContextImpl<C extends Condition> implements Handler.Context<C> {
   private final C condition;
+  private final Policies<?> policies;
   private final Scope scope;
 
-  public HandlerContextImpl(C condition, Scope scope) {
+  public HandlerContextImpl(C condition, Policies<?> policies, Scope scope) {
     Objects.requireNonNull(condition, "condition");
+    Objects.requireNonNull(policies, "policies");
     Objects.requireNonNull(scope, "scope");
 
     this.condition = condition;
+    this.policies = policies;
     this.scope = scope;
   }
 
@@ -195,6 +205,9 @@ class HandlerContextImpl<C extends Condition> implements Handler.Context<C> {
   public C getCondition() {
     return condition;
   }
+
+  @Override
+  public Policies<?> getPolicies() { return policies; }
 
   @Override
   public Scope getScope() {

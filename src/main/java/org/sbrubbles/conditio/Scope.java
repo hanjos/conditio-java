@@ -18,7 +18,7 @@ import java.util.function.Supplier;
  * {@link Scopes#create() create}ing a scope without {@link Scope#close() close}ing it will <strong>break</strong>
  * this nesting. Use it only in a {@code try}-with-resources, and you'll be fine :)
  * <p>
- * The core operation is {@link #signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}, which is called when
+ * The core operation is {@link #signal(Condition, Policies, Restart[]) signal}, which is called when
  * lower-level code doesn't know how to handle a {@linkplain Condition condition}. {@code signal} looks
  * for something that can {@linkplain #handle(Class, Function) handle} the given condition in the call stack, and
  * this {@linkplain Handler handler} then chooses {@linkplain Handler.Context what to do}, like
@@ -54,12 +54,13 @@ import java.util.function.Supplier;
 public interface Scope extends AutoCloseable {
   /**
    * Establishes a new {@linkplain Handler handler} in this scope. It is responsible for handling conditions, returning
-   * a result for {@link #signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}.
+   * a result for {@link #signal(Condition, Policies, Restart[]) signal}.
    *
    * @param conditionType the type of conditions handled.
    * @param body          the handler code.
    * @param <C>           a subtype of {@code Condition}.
-   * @param <S>           a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may accept subtypes
+   * @param <S>           a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may accept
+   *                      subtypes
    *                      other than {@code S}.
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
@@ -102,11 +103,11 @@ public interface Scope extends AutoCloseable {
    * <p>
    * This method is a primitive operation. Common use cases can use other methods, with better ergonomics.
    *
-   * @param <T>                   the expected type of the object to be returned.
-   * @param condition             a condition, representing a situation which {@linkplain #handle(Class, Function)
-   *                              higher-level code} will decide how to handle.
-   * @param handlerNotFoundPolicy what to do if no handler is found.
-   * @param restarts              some {@linkplain Restart restarts}, which will be available to the eventual handler.
+   * @param <T>       the expected type of the object to be returned.
+   * @param condition a condition, representing a situation which {@linkplain #handle(Class, Function)
+   *                  higher-level code} will decide how to handle.
+   * @param policies  what to do if no handler is found.
+   * @param restarts  some {@linkplain Restart restarts}, which will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if the policy opts to error out.
@@ -116,11 +117,11 @@ public interface Scope extends AutoCloseable {
    * @see #raise(Condition, Restart[])
    */
   @SuppressWarnings("unchecked")
-  <T> T signal(Condition condition, HandlerNotFoundPolicy<T> handlerNotFoundPolicy, Restart<T>... restarts)
+  <T> T signal(Condition condition, Policies<T> policies, Restart<T>... restarts)
     throws NullPointerException, HandlerNotFoundException, ClassCastException, AbortException;
 
   /**
-   * {@linkplain #signal(Condition, HandlerNotFoundPolicy, Restart[]) Signals} a condition which may go unhandled and
+   * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition which may go unhandled and
    * returns no useful value. This method always provides a {@link org.sbrubbles.conditio.restarts.Resume Resume}
    * restart.
    * <p>
@@ -139,11 +140,11 @@ public interface Scope extends AutoCloseable {
     args[0] = Restarts.resume();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
 
-    signal(condition, Policies.ignore(), args);
+    signal(condition, new Policies<>().set(HandlerNotFoundPolicy.ignore()), args);
   }
 
   /**
-   * {@linkplain #signal(Condition, HandlerNotFoundPolicy, Restart[]) Signals} a condition that must be handled and
+   * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition that must be handled and
    * return a result. This method always provides a {@link org.sbrubbles.conditio.restarts.UseValue UseValue} restart.
    *
    * @param condition a condition that must be handled.
@@ -161,7 +162,7 @@ public interface Scope extends AutoCloseable {
     args[0] = Restarts.useValue();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
 
-    return signal(condition, Policies.error(), args);
+    return signal(condition, new Policies<>(), args);
   }
 
   /**
@@ -230,7 +231,7 @@ final class ScopeImpl implements Scope {
   @SuppressWarnings("unchecked")
   @SafeVarargs
   @Override
-  public final <T> T signal(Condition condition, HandlerNotFoundPolicy<T> handlerNotFoundPolicy, Restart<T>... restarts)
+  public final <T> T signal(Condition condition, Policies<T> policies, Restart<T>... restarts)
     throws HandlerNotFoundException, NullPointerException, ClassCastException {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(restarts, "restarts");
@@ -238,7 +239,7 @@ final class ScopeImpl implements Scope {
     try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
       scope.set(restarts);
 
-      Handler.Context<? extends Condition> ctx = new HandlerContextImpl<>(condition, scope);
+      Handler.Context<? extends Condition> ctx = new HandlerContextImpl<>(condition, policies, scope);
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(condition)) {
           continue;
@@ -254,7 +255,7 @@ final class ScopeImpl implements Scope {
         return (T) result.get();
       }
 
-      return handlerNotFoundPolicy.onHandlerNotFound(condition, scope);
+      return policies.onHandlerNotFound(condition, scope);
     }
   }
 
