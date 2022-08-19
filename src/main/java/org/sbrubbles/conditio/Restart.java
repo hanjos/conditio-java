@@ -6,7 +6,7 @@ import java.util.function.Predicate;
 
 /**
  * Represents a recovery strategy. One uses a recovery strategy by
- * {@linkplain org.sbrubbles.conditio.Handler.Operations#restart(Restart.Option) calling it} from a
+ * {@linkplain Handler.Context#restart(Restart.Option) calling it} from a
  * {@linkplain Handler handler}, which will select which strategy to use with a {@linkplain Restart.Option restart
  * option}.
  * <p>

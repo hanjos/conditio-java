@@ -3,7 +3,7 @@ package org.sbrubbles.conditio;
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 
 import java.util.Objects;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -14,20 +14,22 @@ import java.util.function.Supplier;
  * A handler can do two things:
  * <ul>
  *   <li>check if it can handle a given condition (with {@link #test(Object) test}); and</li>
- *   <li>given a condition and the {@linkplain Operations operations available}, return a {@linkplain Decision decision}
- *       object holding the result (with {@link #apply(Object, Object) apply}).</li>
+ *   <li>given the {@linkplain Context context}, return a {@linkplain Decision decision} object holding the result
+ *   (with {@link #apply(Object) apply}).</li>
  * </ul>
  * <p>
  * Decision objects are unwrapped by {@code signal}, and are expected to be non-{@code null}.
  * <p>
- * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain BiFunction (bi)function}, this
+ * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain Function function}, this
  * interface extends both.
  */
-public interface Handler extends Predicate<Condition>, BiFunction<Condition, Handler.Operations, Handler.Decision> {
+public interface Handler extends Predicate<Condition>, Function<Handler.Context<? extends Condition>, Handler.Decision> {
   /**
-   * The ways a handler can handle a condition.
+   * Holds information about the signalling context, and provides ways for a handler to handle a condition.
+   *
+   * @param <C> the condition type this context holds.
    */
-  interface Operations {
+  interface Context<C extends Condition> {
     /**
      * Invokes a previously set recovery strategy. This method will search for a compatible
      * {@linkplain Restart restart} and run it, returning the result.
@@ -54,7 +56,7 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
      * <pre>
      *   try(Scope a = Scopes.create()) {
      *     // decides to give up on the whole operation
-     *     a.handle(SomeCondition.class, (c, ops) -&gt; ops.abort())
+     *     a.handle(SomeCondition.class, ctx -&gt; ctx.abort())
      *
      *     try(Scope b = Scopes.create()) {
      *       // some code...
@@ -83,15 +85,22 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
     }
 
     /**
-     * Returns the scope backing this instance's operations.
+     * The condition signaled.
      *
-     * @return the scope backing this instance's operations.
+     * @return the condition signaled.
+     */
+    C getCondition();
+
+    /**
+     * The scope where the signal was emitted.
+     *
+     * @return the scope where the signal was emitted.
      */
     Scope getScope();
   }
 
   /**
-   * How a handler decided to handle a condition. Instances are produced by {@linkplain Operations operations}, and
+   * How a handler decided to handle a condition. Instances are produced by {@linkplain Context operations}, and
    * consumed by {@link Scope#signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}.
    */
   class Decision implements Supplier<Object> {
@@ -114,21 +123,24 @@ public interface Handler extends Predicate<Condition>, BiFunction<Condition, Han
 
 class HandlerImpl implements Handler {
   private final Class<? extends Condition> conditionType;
-  private final BiFunction<? extends Condition, Operations, Decision> body;
+  private final Function<Context<? extends Condition>, Decision> body;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
    *
    * @param conditionType the type of {@link Condition} this handler expects.
    * @param body          a function which receives a condition and the available operations, and returns the result.
+   * @param <C>           a subtype of {@code Condition}.
+   * @param <S>           a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may
+   *                      accept subtypes other than {@code S}.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
-  <C extends Condition, S extends C> HandlerImpl(Class<S> conditionType, BiFunction<C, Operations, Decision> body) {
+  <C extends Condition, S extends C> HandlerImpl(Class<S> conditionType, Function<Context<C>, Decision> body) {
     Objects.requireNonNull(conditionType, "conditionType");
     Objects.requireNonNull(body, "body");
 
     this.conditionType = conditionType;
-    this.body = body;
+    this.body = (Function) body;
   }
 
   @Override
@@ -136,27 +148,29 @@ class HandlerImpl implements Handler {
     return getConditionType().isInstance(condition);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Decision apply(Condition c, Operations ops) {
-    return (Decision) ((BiFunction) getBody()).apply(c, ops);
+  public Decision apply(Context ctx) {
+    return getBody().apply(ctx);
   }
 
   public Class<? extends Condition> getConditionType() {
     return conditionType;
   }
 
-  public BiFunction<? extends Condition, Operations, Decision> getBody() {
+  public Function<Context<? extends Condition>, Decision> getBody() {
     return body;
   }
 }
 
-class HandlerOperationsImpl implements Handler.Operations {
+class HandlerContextImpl implements Handler.Context {
+  private final Condition condition;
   private final Scope scope;
 
-  public HandlerOperationsImpl(Scope scope) {
+  public HandlerContextImpl(Condition condition, Scope scope) {
+    Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(scope, "scope");
 
+    this.condition = condition;
     this.scope = scope;
   }
 
@@ -174,6 +188,11 @@ class HandlerOperationsImpl implements Handler.Operations {
   @Override
   public Handler.Decision skip() {
     return Handler.Decision.SKIP;
+  }
+
+  @Override
+  public Condition getCondition() {
+    return condition;
   }
 
   @Override

@@ -18,13 +18,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BasicOperationsTest {
+public class BasicContextTest {
   @Test
   public void signalRemovesTheRestartsAfterwards() {
     final Restart<Entry> USE_VALUE = Restart.on(UseValue.class, r -> (Entry) r.getValue());
@@ -35,11 +34,11 @@ public class BasicOperationsTest {
       // no restart before the handler...
       assertOptionsDontMatch(Collections.singletonList(u), a.getAllRestarts(), "before handle");
 
-      a.handle(MalformedLogEntry.class, (c, ops) -> {
+      a.handle(MalformedLogEntry.class, ctx -> {
         // now there's something!
-        assertOptionsMatch(Collections.singletonList(u), ops.getScope().getAllRestarts(), "inside handle");
+        assertOptionsMatch(Collections.singletonList(u), ctx.getScope().getAllRestarts(), "inside handle");
 
-        return ops.restart(u);
+        return ctx.restart(u);
       });
 
       // no restart after either
@@ -66,10 +65,10 @@ public class BasicOperationsTest {
     try (Scope a = Scopes.create()) {
       assertOptionsDontMatch(Arrays.asList(u, r), a.getAllRestarts(), "before handle");
 
-      a.handle(MalformedLogEntry.class, (c, ops) -> {
-        assertOptionsMatch(Arrays.asList(u, r), ops.getScope().getAllRestarts(), "inside handle");
+      a.handle(MalformedLogEntry.class, ctx -> {
+        assertOptionsMatch(Arrays.asList(u, r), ctx.getScope().getAllRestarts(), "inside handle");
 
-        return ops.restart(u);
+        return ctx.restart(u);
       });
 
       assertEquals(TEST_VALUE,
@@ -122,9 +121,9 @@ public class BasicOperationsTest {
 
     try (Scope a = Scopes.create()) {
       a.handle(PleaseSignalSomethingElse.class,
-        trace(trail, "a", (c, ops) -> {
+        trace(trail, "a", ctx -> {
           try (Scope s = Scopes.create()) {
-            return ops.restart(Restarts.use(s.raise(new BasicCondition(null))));
+            return ctx.restart(Restarts.use(s.raise(new BasicCondition(null))));
           }
         }));
 
@@ -171,14 +170,14 @@ public class BasicOperationsTest {
     List<String> trail = new ArrayList<>();
 
     try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class, (c, ops) -> {
-        trail.add(c.getValue());
+      a.handle(BasicCondition.class, ctx -> {
+        trail.add(ctx.getCondition().getValue());
 
         assertOptionsMatch(
           Collections.singletonList(Restarts.resume()),
-          ops.getScope().getAllRestarts());
+          ctx.getScope().getAllRestarts());
 
-        return ops.skip(); // no handling provided
+        return ctx.skip(); // no handling provided
       });
 
       try (Scope b = Scopes.create()) {
@@ -197,14 +196,14 @@ public class BasicOperationsTest {
     final UseValue<String> u = new UseValue<>(TEST_VALUE);
 
     try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class, (c, ops) -> {
-        trail.add(c.getValue());
+      a.handle(BasicCondition.class, ctx -> {
+        trail.add(ctx.getCondition().getValue());
 
         assertOptionsMatch(
           Collections.singletonList(u),
-          ops.getScope().getAllRestarts());
+          ctx.getScope().getAllRestarts());
 
-        return ops.restart(Restarts.use(TEST_VALUE));
+        return ctx.restart(Restarts.use(TEST_VALUE));
       });
 
       try (Scope b = Scopes.create()) {
@@ -264,11 +263,11 @@ public class BasicOperationsTest {
     );
   }
 
-  static BiFunction<Condition, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Condition, Handler.Operations, Handler.Decision> body) {
-    return (c, ops) -> {
+  static <C extends Condition> Function<Handler.Context<C>, Handler.Decision> trace(List<String> trail, String message, Function<Handler.Context<C>, Handler.Decision> body) {
+    return ctx -> {
       trail.add(message);
 
-      return body.apply(c, ops);
+      return body.apply(ctx);
     };
   }
 }

@@ -5,7 +5,7 @@ import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.restarts.Restarts;
 
 import java.util.*;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -20,9 +20,9 @@ import java.util.function.Supplier;
  * <p>
  * The core operation is {@link #signal(Condition, HandlerNotFoundPolicy, Restart[]) signal}, which is called when
  * lower-level code doesn't know how to handle a {@linkplain Condition condition}. {@code signal} looks
- * for something that can {@linkplain #handle(Class, BiFunction) handle} the given condition in the call stack, and
- * this {@linkplain Handler handler} then chooses {@linkplain Handler.Operations what to do}, like
- * {@linkplain Handler.Operations#abort() aborting} or looking for a recovery strategy (also known as a
+ * for something that can {@linkplain #handle(Class, Function) handle} the given condition in the call stack, and
+ * this {@linkplain Handler handler} then chooses {@linkplain Handler.Context what to do}, like
+ * {@linkplain Handler.Context#abort() aborting} or looking for a recovery strategy (also known as a
  * {@linkplain Restart restart}) and using it to provide a result.
  * <p>
  * In practice, {@code signal} is quite low-level, and works better as a primitive operation.
@@ -38,7 +38,7 @@ import java.util.function.Supplier;
  * try(Scope scope = Scopes.create()) {
  *   // establishing a new handler, which accepts MalformedEntry conditions and
  *   // delegates the work to a RetryWith-compatible restart
- *   scope.handle(MalformedEntry.class, (c, ops) -&gt; ops.restart(new RetryWith("FAIL: " + c.getText())));
+ *   scope.handle(MalformedEntry.class, ctx -&gt; ctx.restart(new RetryWith("FAIL: " + c.getText())));
  *
  *   // ...somewhere deeper in the call stack...
  *   try(Scope scope = Scopes.create()) {
@@ -64,7 +64,7 @@ public interface Scope extends AutoCloseable {
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
-  <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations, Handler.Decision> body);
+  <C extends Condition, S extends C> Scope handle(Class<S> conditionType, Function<Handler.Context<C>, Handler.Decision> body);
 
   /**
    * Evaluates {@code body}, providing additional restarts for it. It's useful for scopes that may not know how to
@@ -103,7 +103,7 @@ public interface Scope extends AutoCloseable {
    * This method is a primitive operation. Common use cases can use other methods, with better ergonomics.
    *
    * @param <T>                   the expected type of the object to be returned.
-   * @param condition             a condition, representing a situation which {@linkplain #handle(Class, BiFunction)
+   * @param condition             a condition, representing a situation which {@linkplain #handle(Class, Function)
    *                              higher-level code} will decide how to handle.
    * @param handlerNotFoundPolicy what to do if no handler is found.
    * @param restarts              some {@linkplain Restart restarts}, which will be available to the eventual handler.
@@ -111,7 +111,7 @@ public interface Scope extends AutoCloseable {
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if the policy opts to error out.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
-   * @throws AbortException           if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
+   * @throws AbortException           if the eventual handler {@linkplain Handler.Context#abort() aborts execution}.
    * @see #notify(Condition, Restart[])
    * @see #raise(Condition, Restart[])
    */
@@ -130,7 +130,7 @@ public interface Scope extends AutoCloseable {
    * @param condition a condition, which here acts as a notice that something happened.
    * @param restarts  some restarts, which, along with {@code Resume}, will be available to the eventual handler.
    * @throws NullPointerException if one of the arguments, or the selected handler's decision is {@code null}.
-   * @throws AbortException       if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
+   * @throws AbortException       if the eventual handler {@linkplain Handler.Context#abort() aborts execution}.
    */
   @SuppressWarnings("unchecked")
   default void notify(Condition condition, Restart<?>... restarts)
@@ -152,7 +152,7 @@ public interface Scope extends AutoCloseable {
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
-   * @throws AbortException           if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
+   * @throws AbortException           if the eventual handler {@linkplain Handler.Context#abort() aborts execution}.
    */
   @SuppressWarnings("unchecked")
   default <T> T raise(Condition condition, Restart<T>... restarts)
@@ -209,7 +209,7 @@ final class ScopeImpl implements Scope {
   }
 
   @Override
-  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<C, Handler.Operations, Handler.Decision> body) {
+  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, Function<Handler.Context<C>, Handler.Decision> body) {
     this.handlers.add(new HandlerImpl(conditionType, body));
 
     return this;
@@ -238,13 +238,13 @@ final class ScopeImpl implements Scope {
     try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
       scope.set(restarts);
 
-      Handler.Operations ops = new HandlerOperationsImpl(scope);
+      Handler.Context<? extends Condition> ctx = new HandlerContextImpl(condition, scope);
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(condition)) {
           continue;
         }
 
-        Handler.Decision result = h.apply(condition, ops);
+        Handler.Decision result = h.apply(ctx);
         if (result == null) {
           throw new NullPointerException("Null decisions are not recognized!");
         } else if (result == Handler.Decision.SKIP) {

@@ -30,17 +30,32 @@ public class HandlerImplTest {
   @Test
   public void apply() {
     try (Scope scope = Scopes.create()) {
-      final Handler.Operations ops = new HandlerOperationsImpl(scope);
-
       Condition c = new BasicCondition("OMGWTFBBQ");
-      assertEquals("OK: OMGWTFBBQ", h.apply(c, ops).get());
+      final Handler.Context ctxC = new HandlerContextImpl(c, scope);
+
+      assertEquals("OK: OMGWTFBBQ", h.apply(ctxC).get());
 
       Condition f = new BasicCondition("FAIL");
-      assertEquals("FAIL!", h.apply(f, ops).get());
+      final Handler.Context ctxF = new HandlerContextImpl(f, scope);
+
+      assertEquals("FAIL!", h.apply(ctxF).get());
     }
   }
 
-  private Handler.Decision body(BasicCondition c, Handler.Operations ops) {
+  @Test
+  public void getters() {
+    try (Scope a = Scopes.create()) {
+      Condition c = new BasicCondition("OMGWTFBBQ");
+      final Handler.Context ctx = new HandlerContextImpl(c, a);
+
+      assertEquals(c, ctx.getCondition());
+      assertEquals(a, ctx.getScope());
+    }
+  }
+
+  private Handler.Decision body(Handler.Context<BasicCondition> ctx) {
+    BasicCondition c = ctx.getCondition();
+
     if (!"FAIL".equals(c.getValue())) {
       return new Handler.Decision("OK: " + c.getValue());
     } else {

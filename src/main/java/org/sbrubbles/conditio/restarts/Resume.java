@@ -12,12 +12,12 @@ import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
  * used, and the handler means only to acknowledge the condition (and maybe do a side effect or two), like
  * <pre>
  *   try(Scope scope = Scopes.create()) {
- *     scope.handle(Progress.class, (c, ops) -&gt; {
+ *     scope.handle(Progress.class, ctx -&gt; {
  *       // do something
- *       showProgressToUser(c.getValue());
+ *       showProgressToUser(ctx.getCondition().getValue());
  *
  *       // condition acknowledged; carry on
- *       return ops.restart(Restarts.resume());
+ *       return ctx.restart(Restarts.resume());
  *     });
  *
  *     // note that result of signal() is ignored and thrown away
