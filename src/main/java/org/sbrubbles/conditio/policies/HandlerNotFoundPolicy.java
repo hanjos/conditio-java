@@ -1,9 +1,6 @@
 package org.sbrubbles.conditio.policies;
 
-import org.sbrubbles.conditio.Condition;
-import org.sbrubbles.conditio.HandlerNotFoundException;
-import org.sbrubbles.conditio.Restart;
-import org.sbrubbles.conditio.Scope;
+import org.sbrubbles.conditio.*;
 
 /**
  * What to do if no handler is found for a given {@linkplain Scope#signal(Condition, Policies, Restart[])
@@ -14,8 +11,10 @@ import org.sbrubbles.conditio.Scope;
  */
 @FunctionalInterface
 public interface HandlerNotFoundPolicy<T> {
-  HandlerNotFoundPolicy ERROR = (c, s) -> { throw new HandlerNotFoundException(c); };
-  HandlerNotFoundPolicy IGNORE = (c, s) -> null;
+  HandlerNotFoundPolicy ERROR = (context) -> {
+    throw new HandlerNotFoundException(context != null ? context.getCondition() : null);
+  };
+  HandlerNotFoundPolicy IGNORE = (context) -> null;
 
   /**
    * A policy which throws a {@link HandlerNotFoundException} when no handlers are found.
@@ -42,9 +41,9 @@ public interface HandlerNotFoundPolicy<T> {
    * <p>
    * Implementations which error out are expected to do so with a {@link HandlerNotFoundException}.
    *
-   * @param scope where the handler search started.
+   * @param context the context of the {@code signal} invocation.
    * @return the value to be returned by {@code signal}.
    * @throws HandlerNotFoundException may be thrown if no handler is found.
    */
-  T onHandlerNotFound(Condition condition, Scope scope) throws HandlerNotFoundException;
+  T onHandlerNotFound(Handler.Context<?> context) throws HandlerNotFoundException;
 }

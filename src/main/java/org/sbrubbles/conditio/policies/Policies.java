@@ -1,9 +1,6 @@
 package org.sbrubbles.conditio.policies;
 
-import org.sbrubbles.conditio.Condition;
-import org.sbrubbles.conditio.HandlerNotFoundException;
-import org.sbrubbles.conditio.Restart;
-import org.sbrubbles.conditio.Scope;
+import org.sbrubbles.conditio.*;
 
 /**
  * A set of policies for a specific {@link Scope#signal(Condition, Policies, Restart[]) signal}
@@ -47,12 +44,12 @@ public class Policies<T> implements HandlerNotFoundPolicy<T>, ReturnTypePolicy<T
    * @throws HandlerNotFoundException if the set policy decides to error out.
    */
   @Override
-  public T onHandlerNotFound(Condition condition, Scope scope) throws HandlerNotFoundException {
+  public T onHandlerNotFound(Handler.Context<?> context) throws HandlerNotFoundException {
     if (handlerNotFoundPolicy != null) {
-      return handlerNotFoundPolicy.onHandlerNotFound(condition, scope);
+      return handlerNotFoundPolicy.onHandlerNotFound(context);
     }
 
-    throw new HandlerNotFoundException(condition);
+    throw new HandlerNotFoundException(context != null ? context.getCondition() : null);
   }
 
   /**

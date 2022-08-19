@@ -7,6 +7,7 @@ import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
 import org.sbrubbles.conditio.handlers.Handlers;
 import org.sbrubbles.conditio.policies.Policies;
+import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.io.BufferedReader;
@@ -44,7 +45,7 @@ public class LoggingFixture extends AbstractFixture {
 
         return scope.signal(
           getConditionProvider().apply(text),
-          new Policies<>(),
+          new Policies<Entry>().set(ReturnTypePolicy.expects(Entry.class)),
           USE_VALUE,
           RETRY_WITH);
       }

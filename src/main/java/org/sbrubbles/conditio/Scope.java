@@ -2,6 +2,7 @@ package org.sbrubbles.conditio;
 
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
+import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 import org.sbrubbles.conditio.restarts.Restarts;
 
 import java.util.*;
@@ -26,7 +27,7 @@ import java.util.function.Supplier;
  * {@linkplain Restart restart}) and using it to provide a result.
  * <p>
  * In practice, {@code signal} is quite low-level, and works better as a primitive operation.
- * {@link #raise(Condition, Restart[]) raise} and {@link #notify(Condition, Restart[]) notify} provide better
+ * {@link #raise(Condition, Class, Restart[]) raise} and {@link #notify(Condition, Restart[]) notify} provide better
  * ergonomics, and should cover most use cases.
  * <p>
  * Restarts only make sense for specific invocations. Therefore, they're set only when a condition is
@@ -114,7 +115,7 @@ public interface Scope extends AutoCloseable {
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
    * @throws AbortException           if the eventual handler {@linkplain Handler.Context#abort() aborts execution}.
    * @see #notify(Condition, Restart[])
-   * @see #raise(Condition, Restart[])
+   * @see #raise(Condition, Class, Restart[])
    */
   @SuppressWarnings("unchecked")
   <T> T signal(Condition condition, Policies<T> policies, Restart<T>... restarts)
@@ -147,8 +148,9 @@ public interface Scope extends AutoCloseable {
    * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition that must be handled and
    * return a result. This method always provides a {@link org.sbrubbles.conditio.restarts.UseValue UseValue} restart.
    *
-   * @param condition a condition that must be handled.
-   * @param restarts  some restarts, which, along with {@code UseValue}, will be available to the eventual handler.
+   * @param condition  a condition that must be handled.
+   * @param returnType
+   * @param restarts   some restarts, which, along with {@code UseValue}, will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
@@ -156,13 +158,13 @@ public interface Scope extends AutoCloseable {
    * @throws AbortException           if the eventual handler {@linkplain Handler.Context#abort() aborts execution}.
    */
   @SuppressWarnings("unchecked")
-  default <T> T raise(Condition condition, Restart<T>... restarts)
+  default <T> T raise(Condition condition, Class<T> returnType, Restart<T>... restarts)
     throws NullPointerException, HandlerNotFoundException, ClassCastException, AbortException {
     Restart<T>[] args = new Restart[restarts.length + 1];
     args[0] = Restarts.useValue();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
 
-    return signal(condition, new Policies<>(), args);
+    return signal(condition, new Policies<T>().set(ReturnTypePolicy.expects(returnType)), args);
   }
 
   /**
@@ -234,6 +236,7 @@ final class ScopeImpl implements Scope {
   public final <T> T signal(Condition condition, Policies<T> policies, Restart<T>... restarts)
     throws HandlerNotFoundException, NullPointerException, ClassCastException {
     Objects.requireNonNull(condition, "condition");
+    Objects.requireNonNull(policies, "policies");
     Objects.requireNonNull(restarts, "restarts");
 
     try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
@@ -252,10 +255,15 @@ final class ScopeImpl implements Scope {
           continue;
         }
 
-        return (T) result.get();
+        Class<T> returnType = policies.getExpectedType();
+        if (returnType == null) {
+          return null;
+        }
+
+        return returnType.cast(result.get());
       }
 
-      return policies.onHandlerNotFound(condition, scope);
+      return policies.onHandlerNotFound(ctx);
     }
   }
 

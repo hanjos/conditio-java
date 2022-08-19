@@ -11,6 +11,7 @@ import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
 import org.sbrubbles.conditio.handlers.Handlers;
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
+import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 import org.sbrubbles.conditio.restarts.Restarts;
 import org.sbrubbles.conditio.restarts.Resume;
 import org.sbrubbles.conditio.restarts.UseValue;
@@ -50,7 +51,13 @@ public class BasicContextTest {
         // no restart before signal...
         assertOptionsDontMatch(Collections.singletonList(u), b.getAllRestarts(), "before signal");
 
-        assertEquals(TEST_VALUE, b.signal(new MalformedLogEntry(""), new Policies<Entry>().set(HandlerNotFoundPolicy.error()), USE_VALUE));
+        assertEquals(
+          TEST_VALUE,
+          b.signal(new MalformedLogEntry(""),
+            new Policies<Entry>()
+              .set(HandlerNotFoundPolicy.error())
+              .set(ReturnTypePolicy.expects(Entry.class)),
+            USE_VALUE));
 
         // no restart after either...
         assertOptionsDontMatch(Collections.singletonList(u), b.getAllRestarts(), "after signal");
@@ -79,7 +86,11 @@ public class BasicContextTest {
             try (Scope b = Scopes.create()) {
               assertOptionsMatch(Arrays.asList(u, r), b.getAllRestarts(), "inside call");
 
-              return b.signal(new MalformedLogEntry(""), new Policies<>().set(HandlerNotFoundPolicy.error())); // the use value comes from call
+              return b.signal(
+                new MalformedLogEntry(""),
+                new Policies<Entry>()
+                  .set(HandlerNotFoundPolicy.error())
+                  .set(ReturnTypePolicy.expects(Entry.class))); // the use value comes from call
             }
           },
           Restarts.useValue(),
@@ -105,7 +116,7 @@ public class BasicContextTest {
           Handlers.skip()));
 
         try (Scope c = Scopes.create()) {
-          String actual = c.raise(condition);
+          String actual = c.raise(condition, String.class);
 
           assertEquals(EXPECTED_RESULT, actual);
           assertLinesMatch(
@@ -125,7 +136,7 @@ public class BasicContextTest {
       a.handle(PleaseSignalSomethingElse.class,
         trace(trail, "a", ctx -> {
           try (Scope s = Scopes.create()) {
-            return ctx.restart(Restarts.use(s.raise(new BasicCondition(null))));
+            return ctx.restart(Restarts.use(s.raise(new BasicCondition(null), ctx.getPolicies().getExpectedType())));
           }
         }));
 
@@ -134,7 +145,7 @@ public class BasicContextTest {
           Handlers.restart(Restarts.use(FIXED_RESULT))));
 
         try (Scope c = Scopes.create()) {
-          Object actual = c.raise(new PleaseSignalSomethingElse());
+          Object actual = c.raise(new PleaseSignalSomethingElse(), Object.class);
 
           assertEquals(FIXED_RESULT, actual);
           assertLinesMatch(
@@ -209,7 +220,7 @@ public class BasicContextTest {
       });
 
       try (Scope b = Scopes.create()) {
-        assertEquals(TEST_VALUE, b.raise(new BasicCondition("raise")));
+        assertEquals(TEST_VALUE, b.raise(new BasicCondition("raise"), String.class));
       }
     }
 
@@ -221,7 +232,7 @@ public class BasicContextTest {
     BasicCondition condition = new BasicCondition("raise");
 
     try (Scope a = Scopes.create()) {
-      a.raise(condition);
+      a.raise(condition, Void.class);
 
       fail();
     } catch (HandlerNotFoundException e) {

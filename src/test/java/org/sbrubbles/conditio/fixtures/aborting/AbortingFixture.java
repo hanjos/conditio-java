@@ -18,7 +18,7 @@ public class AbortingFixture {
   @SuppressWarnings("SameReturnValue")
   public String signal() {
     try (Scope scope = Scopes.create()) {
-      scope.raise(new BasicCondition(""));
+      scope.raise(new BasicCondition(""), Void.class);
 
       return SIGNAL;
     } catch (Exception e) {

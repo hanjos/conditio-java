@@ -33,16 +33,16 @@ public interface ReturnTypePolicy<T> {
 }
 
 class ReturnTypePolicyImpl<T> implements ReturnTypePolicy<T> {
-  private final Class<T> expectedReturnType;
+  private final Class<T> type;
 
-  ReturnTypePolicyImpl(Class<T> expectedReturnType) {
-    Objects.requireNonNull(expectedReturnType, "type");
+  ReturnTypePolicyImpl(Class<T> type) {
+    Objects.requireNonNull(type, "type");
 
-    this.expectedReturnType = expectedReturnType;
+    this.type = type;
   }
 
   @Override
   public Class<T> getExpectedType() {
-    return expectedReturnType;
+    return type;
   }
 }

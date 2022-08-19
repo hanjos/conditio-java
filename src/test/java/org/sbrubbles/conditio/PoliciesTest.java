@@ -20,27 +20,33 @@ public class PoliciesTest {
   @Test
   public void defaultPolicyForHandlerNotFoundIsToErrorOut() {
     try (Scope scope = Scopes.create()) {
-      assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(new BasicCondition(""), scope));
+      Condition c = new BasicCondition("");
+      Handler.Context<Condition> ctx = new HandlerContextImpl<>(c, policies, scope);
+
+      assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(ctx));
     }
   }
 
   @Test
   public void settingHandlerNotFoundPolicy() {
     try (Scope scope = Scopes.create()) {
+      Condition c = new BasicCondition("");
+      Handler.Context<Condition> ctx = new HandlerContextImpl<>(c, policies, scope);
+
       policies.set((HandlerNotFoundPolicy) null);
 
       // we should error out
-      assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(new BasicCondition(""), scope));
+      assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(ctx));
 
       policies.set(HandlerNotFoundPolicy.IGNORE);
 
       // nothing should happen
-      policies.onHandlerNotFound(new BasicCondition(""), scope);
+      policies.onHandlerNotFound(ctx);
 
       policies.set(HandlerNotFoundPolicy.ERROR);
 
       // we should error out
-      assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(new BasicCondition(""), scope));
+      assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(ctx));
     }
   }
 
