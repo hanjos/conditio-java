@@ -16,17 +16,14 @@ import org.sbrubbles.conditio.restarts.Restarts;
 import org.sbrubbles.conditio.restarts.Resume;
 import org.sbrubbles.conditio.restarts.UseValue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings("unchecked")
-public class BasicContextTest {
+public class BasicOperationsTest {
   @Test
   public void signalRemovesTheRestartsAfterwards() {
     final Restart<Entry> USE_VALUE = Restart.on(UseValue.class, r -> (Entry) r.getValue());
@@ -236,6 +233,37 @@ public class BasicContextTest {
     }
   }
 
+  @Test
+  public void signalTakesRestartsAndPoliciesWithCompatibleTypes() {
+    try (Scope scope = Scopes.create()) {
+      scope.handle(BasicCondition.class, Handlers.restart(new BasicRestartOption()));
+
+      final ArrayList<?> expected = new ArrayList<>();
+      final List<?> actual = scope.signal(
+        new BasicCondition(""),
+        new Policies<>(HandlerNotFoundPolicy.ignore(), ReturnTypePolicy.expects(AbstractList.class)),
+        Restart.on(BasicRestartOption.class, args -> expected));
+
+      assertSame(expected, actual);
+    }
+  }
+
+  @Test
+  public void raisesReturnTypeAndRestartsMustMatch() {
+    try (Scope scope = Scopes.create()) {
+      scope.handle(BasicCondition.class, Handlers.restart(new BasicRestartOption()));
+
+      final ArrayList<?> expected = new ArrayList<>();
+      final List<?> actual = scope.raise(
+        new BasicCondition(""),
+        AbstractList.class,
+        Restart.on(BasicRestartOption.class, args -> expected));
+
+      assertSame(expected, actual);
+    }
+  }
+
+  static class BasicRestartOption implements Restart.Option { }
 
   static boolean matches(List<Restart.Option> options, Iterable<Restart<?>> iterable) {
     return options.stream().allMatch(o -> {

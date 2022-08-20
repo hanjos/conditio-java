@@ -118,7 +118,7 @@ public interface Scope extends AutoCloseable {
    * @see #raise(Condition, Class, Restart[])
    */
   @SuppressWarnings("unchecked")
-  <T> T signal(Condition condition, Policies<T> policies, Restart<T>... restarts)
+  <T> T signal(Condition condition, Policies<T> policies, Restart<? extends T>... restarts)
     throws NullPointerException, HandlerNotFoundException, ClassCastException, AbortException;
 
   /**
@@ -149,7 +149,7 @@ public interface Scope extends AutoCloseable {
    * return a result. This method always provides a {@link org.sbrubbles.conditio.restarts.UseValue UseValue} restart.
    *
    * @param condition  a condition that must be handled.
-   * @param returnType
+   * @param returnType the expected type of the result.
    * @param restarts   some restarts, which, along with {@code UseValue}, will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
@@ -158,9 +158,9 @@ public interface Scope extends AutoCloseable {
    * @throws AbortException           if the eventual handler {@linkplain Handler.Context#abort() aborts execution}.
    */
   @SuppressWarnings("unchecked")
-  default <T> T raise(Condition condition, Class<T> returnType, Restart<T>... restarts)
+  default <T> T raise(Condition condition, Class<T> returnType, Restart<? extends T>... restarts)
     throws NullPointerException, HandlerNotFoundException, ClassCastException, AbortException {
-    Restart<T>[] args = new Restart[restarts.length + 1];
+    Restart<? extends T>[] args = new Restart[restarts.length + 1];
     args[0] = Restarts.useValue();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
 
@@ -233,7 +233,7 @@ final class ScopeImpl implements Scope {
   @SuppressWarnings("unchecked")
   @SafeVarargs
   @Override
-  public final <T> T signal(Condition condition, Policies<T> policies, Restart<T>... restarts)
+  public final <T> T signal(Condition condition, Policies<T> policies, Restart<? extends T>... restarts)
     throws HandlerNotFoundException, NullPointerException, ClassCastException {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(policies, "policies");
