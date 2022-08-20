@@ -141,7 +141,7 @@ public interface Scope extends AutoCloseable {
     args[0] = Restarts.resume();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
 
-    signal(condition, new Policies<>().set(HandlerNotFoundPolicy.ignore()), args);
+    signal(condition, new Policies<>(HandlerNotFoundPolicy.ignore(), null), args);
   }
 
   /**
@@ -164,7 +164,7 @@ public interface Scope extends AutoCloseable {
     args[0] = Restarts.useValue();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
 
-    return signal(condition, new Policies<T>().set(ReturnTypePolicy.expects(returnType)), args);
+    return signal(condition, new Policies<>(null, ReturnTypePolicy.expects(returnType)), args);
   }
 
   /**

@@ -45,7 +45,7 @@ public class LoggingFixture extends AbstractFixture {
 
         return scope.signal(
           getConditionProvider().apply(text),
-          new Policies<Entry>().set(ReturnTypePolicy.expects(Entry.class)),
+          new Policies<>(null, ReturnTypePolicy.expects(Entry.class)),
           USE_VALUE,
           RETRY_WITH);
       }

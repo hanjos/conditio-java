@@ -1,24 +1,22 @@
 package org.sbrubbles.conditio;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PoliciesTest {
-  private Policies<?> policies;
-
-  @BeforeEach
-  public void setUp() {
-    policies = new Policies<>();
-  }
-
   @Test
   public void defaultPolicyForHandlerNotFoundIsToErrorOut() {
+    Policies<?> policies = new Policies<>();
+
     try (Scope scope = Scopes.create()) {
       Condition c = new BasicCondition("");
       Handler.Context<Condition> ctx = new HandlerContextImpl<>(c, policies, scope);
@@ -31,40 +29,45 @@ public class PoliciesTest {
   public void settingHandlerNotFoundPolicy() {
     try (Scope scope = Scopes.create()) {
       Condition c = new BasicCondition("");
-      Handler.Context<Condition> ctx = new HandlerContextImpl<>(c, policies, scope);
+      List<String> trail = new ArrayList<>();
 
-      policies.set((HandlerNotFoundPolicy) null);
+      Policies<?> pWithNull = new Policies<>(null, null);
+      assertThrows(HandlerNotFoundException.class, () -> pWithNull.onHandlerNotFound(new HandlerContextImpl<>(c, pWithNull, scope)));
 
-      // we should error out
-      assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(ctx));
+      Policies<?> pWithIgnore = new Policies<>(
+        trace(trail, "ignore", HandlerNotFoundPolicy.ignore()),
+        null);
+      pWithIgnore.onHandlerNotFound(new HandlerContextImpl<>(c, pWithIgnore, scope));
 
-      policies.set(HandlerNotFoundPolicy.IGNORE);
+      Policies<?> pWithError = new Policies<>(
+        trace(trail, "error", HandlerNotFoundPolicy.error()),
+        null);
+      assertThrows(HandlerNotFoundException.class, () -> pWithError.onHandlerNotFound(new HandlerContextImpl<>(c, pWithError, scope)));
 
-      // nothing should happen
-      policies.onHandlerNotFound(ctx);
-
-      policies.set(HandlerNotFoundPolicy.ERROR);
-
-      // we should error out
-      assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(ctx));
+      assertLinesMatch(Arrays.asList("ignore", "error"), trail);
     }
   }
 
   @Test
   public void defaultPolicyForReturnTypeIsToReturnNull() {
+    Policies<?> policies = new Policies<>();
     assertNull(policies.getExpectedType());
   }
 
   @Test
   public void settingExpectedReturnType() {
-    Policies<String> p = new Policies<>();
+    Policies<String> pWithString = new Policies<>(null, ReturnTypePolicy.expects(String.class));
+    assertEquals(String.class, pWithString.getExpectedType());
 
-    p.set(ReturnTypePolicy.expects(String.class));
+    Policies<String> pWithNull = new Policies<>(null, null);
+    assertNull(pWithNull.getExpectedType());
+  }
 
-    assertEquals(String.class, p.getExpectedType());
+  static <T> HandlerNotFoundPolicy<T> trace(List<String> trail, String message, HandlerNotFoundPolicy<T> policy) {
+    return ctx -> {
+      trail.add(message);
 
-    p.set((ReturnTypePolicy<String>) null);
-
-    assertNull(p.getExpectedType());
+      return policy.onHandlerNotFound(ctx);
+    };
   }
 }

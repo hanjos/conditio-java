@@ -9,31 +9,28 @@ import org.sbrubbles.conditio.*;
  * @param <T> the type to be returned by {@code signal}.
  */
 public class Policies<T> implements HandlerNotFoundPolicy<T>, ReturnTypePolicy<T> {
-  private HandlerNotFoundPolicy<T> handlerNotFoundPolicy;
-  private ReturnTypePolicy<T> returnTypePolicy;
+  private final HandlerNotFoundPolicy<T> handlerNotFoundPolicy;
+  private final ReturnTypePolicy<T> returnTypePolicy;
 
   /**
-   * Sets the policy for missing handlers. {@code null} is understood to be the default policy.
-   *
-   * @param policy the new policy. {@code null} is understood to be the default policy.
-   * @return this instance, for method chaining.
+   * Creates a new instance using the default policies.
    */
-  public Policies<T> set(HandlerNotFoundPolicy<T> policy) {
-    handlerNotFoundPolicy = policy;
-
-    return this;
+  public Policies() {
+    this(null, null);
   }
 
   /**
-   * Sets the policy for the expected return type. {@code null} is understood to be the default policy.
+   * Creates a new instance using the given policies. A {@code null} argument represents the default policy for that
+   * case.
    *
-   * @param policy the new policy. {@code null} is understood to be the default policy.
-   * @return this instance, for method chaining.
+   * @param handlerNotFoundPolicy a policy for missing handlers.
+   * @param returnTypePolicy      a policy for the expected return type.
+   * @see #onHandlerNotFound(Handler.Context)
+   * @see #getExpectedType()
    */
-  public Policies<T> set(ReturnTypePolicy<T> policy) {
-    returnTypePolicy = policy;
-
-    return this;
+  public Policies(HandlerNotFoundPolicy<T> handlerNotFoundPolicy, ReturnTypePolicy<T> returnTypePolicy) {
+    this.handlerNotFoundPolicy = handlerNotFoundPolicy;
+    this.returnTypePolicy = returnTypePolicy;
   }
 
   /**

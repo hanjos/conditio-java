@@ -54,9 +54,7 @@ public class BasicContextTest {
         assertEquals(
           TEST_VALUE,
           b.signal(new MalformedLogEntry(""),
-            new Policies<Entry>()
-              .set(HandlerNotFoundPolicy.error())
-              .set(ReturnTypePolicy.expects(Entry.class)),
+            new Policies<>(HandlerNotFoundPolicy.error(), ReturnTypePolicy.expects(Entry.class)),
             USE_VALUE));
 
         // no restart after either...
@@ -88,9 +86,7 @@ public class BasicContextTest {
 
               return b.signal(
                 new MalformedLogEntry(""),
-                new Policies<Entry>()
-                  .set(HandlerNotFoundPolicy.error())
-                  .set(ReturnTypePolicy.expects(Entry.class))); // the use value comes from call
+                new Policies<>(HandlerNotFoundPolicy.error(), ReturnTypePolicy.expects(Entry.class))); // the use value comes from call
             }
           },
           Restarts.useValue(),
@@ -161,7 +157,7 @@ public class BasicContextTest {
     BasicCondition condition = new BasicCondition("test");
 
     try (Scope a = Scopes.create()) {
-      a.signal(condition, new Policies<>().set(HandlerNotFoundPolicy.error()));
+      a.signal(condition, new Policies<>(HandlerNotFoundPolicy.error(), null));
 
       fail();
     } catch (HandlerNotFoundException e) {
@@ -172,7 +168,7 @@ public class BasicContextTest {
   @Test
   public void signallingWithNoHandlersAndAnIgnorePolicyNopesOut() {
     try (Scope a = Scopes.create()) {
-      a.signal(new BasicCondition("test"), new Policies<>().set(HandlerNotFoundPolicy.ignore()));
+      a.signal(new BasicCondition("test"), new Policies<>(HandlerNotFoundPolicy.ignore(), null));
     }
 
     // nothing happens, and the returned result is meaningless, so nothing to assert
@@ -195,7 +191,7 @@ public class BasicContextTest {
 
       try (Scope b = Scopes.create()) {
         b.notify(new BasicCondition("notify"));
-        b.signal(new BasicCondition("signal"), new Policies<>().set(HandlerNotFoundPolicy.ignore()), Restarts.resume());
+        b.signal(new BasicCondition("signal"), new Policies<>(HandlerNotFoundPolicy.ignore(), null), Restarts.resume());
       }
     }
 
