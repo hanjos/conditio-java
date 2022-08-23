@@ -117,7 +117,7 @@ public interface Scope extends AutoCloseable {
    * @see #notify(Condition, Restart[])
    * @see #raise(Condition, Class, Restart[])
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "varargs" })
   <T> T signal(Condition condition, Policies<T> policies, Restart<? extends T>... restarts)
     throws NullPointerException, HandlerNotFoundException, ClassCastException, AbortException;
 
