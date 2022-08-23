@@ -11,11 +11,6 @@ import org.sbrubbles.conditio.*;
  */
 @FunctionalInterface
 public interface HandlerNotFoundPolicy<T> {
-  HandlerNotFoundPolicy ERROR = (context) -> {
-    throw new HandlerNotFoundException(context != null ? context.getCondition() : null);
-  };
-  HandlerNotFoundPolicy IGNORE = (context) -> null;
-
   /**
    * A policy which throws a {@link HandlerNotFoundException} when no handlers are found.
    *
@@ -23,7 +18,7 @@ public interface HandlerNotFoundPolicy<T> {
    */
   @SuppressWarnings("unchecked")
   static <T> HandlerNotFoundPolicy<T> error() {
-    return ERROR;
+    return HandlerNotFoundPolicyImpl.ERROR;
   }
 
   /**
@@ -32,9 +27,7 @@ public interface HandlerNotFoundPolicy<T> {
    * @return a policy to do nothing if no handlers are found.
    */
   @SuppressWarnings("unchecked")
-  static <T> HandlerNotFoundPolicy<T> ignore() {
-    return IGNORE;
-  }
+  static <T> HandlerNotFoundPolicy<T> ignore() { return HandlerNotFoundPolicyImpl.IGNORE; }
 
   /**
    * Called when no handler is found.
@@ -46,4 +39,12 @@ public interface HandlerNotFoundPolicy<T> {
    * @throws HandlerNotFoundException may be thrown if no handler is found.
    */
   T onHandlerNotFound(Handler.Context<?> context) throws HandlerNotFoundException;
+}
+
+class HandlerNotFoundPolicyImpl {
+  static final HandlerNotFoundPolicy ERROR = (context) -> {
+    throw new HandlerNotFoundException(context != null ? context.getCondition() : null);
+  };
+
+  static final HandlerNotFoundPolicy IGNORE = (context) -> null;
 }
