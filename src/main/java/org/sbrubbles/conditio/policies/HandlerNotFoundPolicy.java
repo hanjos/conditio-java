@@ -17,7 +17,7 @@ public interface HandlerNotFoundPolicy<T> {
    * @return a policy which errors out when no handler is found.
    */
   @SuppressWarnings("unchecked")
-  static <T> HandlerNotFoundPolicy<T> error() {
+  static <R> HandlerNotFoundPolicy<R> error() {
     return HandlerNotFoundPolicyImpl.ERROR;
   }
 
@@ -27,7 +27,7 @@ public interface HandlerNotFoundPolicy<T> {
    * @return a policy to do nothing if no handlers are found.
    */
   @SuppressWarnings("unchecked")
-  static <T> HandlerNotFoundPolicy<T> ignore() { return HandlerNotFoundPolicyImpl.IGNORE; }
+  static <R> HandlerNotFoundPolicy<R> ignore() { return HandlerNotFoundPolicyImpl.IGNORE; }
 
   /**
    * Called when no handler is found.

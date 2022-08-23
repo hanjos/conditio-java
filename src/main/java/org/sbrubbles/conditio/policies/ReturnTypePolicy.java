@@ -36,10 +36,10 @@ public interface ReturnTypePolicy<T> {
   }
 
   /**
-   * A policy to expect values compatible with the given type {@code T}.
+   * A policy to expect values compatible with the given type.
    *
    * @param type the expected return type.
-   * @return a policy to expect values compatible with the given type {@code T}.
+   * @return a policy to expect values compatible with the given type.
    */
   static <R> ReturnTypePolicy<R> expects(Class<R> type) {
     return new ReturnTypePolicyImpl<>(type);

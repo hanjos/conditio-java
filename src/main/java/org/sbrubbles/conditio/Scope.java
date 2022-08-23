@@ -10,8 +10,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * A scope is a <a
- * href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">resource</a>
+ * A <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">resource</a>
  * which hosts this library's main machinery. They can be nested, creating a stack of scopes; the machinery is able to
  * navigate this stack and search for the relevant objects.
  * <p>
@@ -107,7 +106,7 @@ public interface Scope extends AutoCloseable {
    * @param <T>       the expected type of the object to be returned.
    * @param condition a condition, representing a situation which {@linkplain #handle(Class, Function)
    *                  higher-level code} will decide how to handle.
-   * @param policies  what to do if no handler is found.
+   * @param policies  how to handle certain cases, like no compatible handlers or the expected return type.
    * @param restarts  some {@linkplain Restart restarts}, which will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
    * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
@@ -122,9 +121,10 @@ public interface Scope extends AutoCloseable {
     throws NullPointerException, HandlerNotFoundException, ClassCastException, AbortException;
 
   /**
-   * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition which may go unhandled and
-   * returns no useful value. This method always provides a {@link org.sbrubbles.conditio.restarts.Resume Resume}
-   * restart.
+   * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition which
+   * {@linkplain HandlerNotFoundPolicy#ignore() may go unhandled} and
+   * {@linkplain ReturnTypePolicy#ignore() returns no useful value}.
+   * This method always provides a {@link org.sbrubbles.conditio.restarts.Resume Resume} restart.
    * <p>
    * This method is a way to provide hints or notifications to higher-level code, which can be safely resumed and
    * maybe trigger some useful side effects.
@@ -133,6 +133,9 @@ public interface Scope extends AutoCloseable {
    * @param restarts  some restarts, which, along with {@code Resume}, will be available to the eventual handler.
    * @throws NullPointerException if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws AbortException       if the eventual handler {@linkplain Handler.Context#abort() aborts execution}.
+   * @see org.sbrubbles.conditio.restarts.Resume Resume
+   * @see HandlerNotFoundPolicy#ignore()
+   * @see ReturnTypePolicy#ignore()
    */
   @SuppressWarnings("unchecked")
   default void notify(Condition condition, Restart<?>... restarts)
@@ -147,8 +150,10 @@ public interface Scope extends AutoCloseable {
   }
 
   /**
-   * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition that must be handled and
-   * return a result. This method always provides a {@link org.sbrubbles.conditio.restarts.UseValue UseValue} restart.
+   * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition that 
+   * {@linkplain HandlerNotFoundPolicy#error() must be handled} and 
+   * {@linkplain ReturnTypePolicy#expects(Class) return a result}. This method always provides a 
+   * {@link org.sbrubbles.conditio.restarts.UseValue UseValue} restart.
    *
    * @param condition  a condition that must be handled.
    * @param returnType the expected type of the result.
@@ -158,6 +163,9 @@ public interface Scope extends AutoCloseable {
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
    * @throws AbortException           if the eventual handler {@linkplain Handler.Context#abort() aborts execution}.
+   * @see org.sbrubbles.conditio.restarts.UseValue UseValue
+   * @see HandlerNotFoundPolicy#error()
+   * @see ReturnTypePolicy#expects(Class)
    */
   @SuppressWarnings("unchecked")
   default <T> T raise(Condition condition, Class<T> returnType, Restart<? extends T>... restarts)
