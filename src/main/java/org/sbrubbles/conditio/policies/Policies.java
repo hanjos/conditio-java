@@ -51,9 +51,9 @@ public class Policies<T> implements HandlerNotFoundPolicy<T>, ReturnTypePolicy<T
 
   /**
    * Applies the set policy for {@link ReturnTypePolicy expected return type}. The default policy is to return
-   * {@code null}, which indicates that there is no expected return.
+   * {@code null}, which indicates that any returned value will be ignored.
    *
-   * @return whatever the set policy returns. {@code null} means that there is no expected type.
+   * @return whatever the set policy returns. {@code null} means that there is no expected return.
    */
   @Override
   public Class<T> getExpectedType() {

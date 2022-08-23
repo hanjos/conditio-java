@@ -20,7 +20,7 @@ import org.sbrubbles.conditio.Scope;
  *     });
  *
  *     // note that result of signal() is ignored and thrown away
- *     scope.signal(new Progress(0.6), Policies.ignore(), Restarts.resume());
+ *     scope.signal(new Progress(0.6), new Policies&lt;&gt;(), Restarts.resume());
  *
  *     // ...
  *   }
