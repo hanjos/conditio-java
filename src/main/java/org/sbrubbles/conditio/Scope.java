@@ -260,10 +260,8 @@ final class ScopeImpl implements Scope {
           continue;
         }
 
-        Handler.Decision result = h.apply(ctx);
-        if (result == null) {
-          throw new NullPointerException("Null decisions are not recognized!");
-        } else if (result == Handler.Decision.SKIP) {
+        Handler.Decision result = Objects.requireNonNull(h.apply(ctx), "Decisions cannot be null!");
+        if (result == Handler.Decision.SKIP) {
           continue;
         }
 
