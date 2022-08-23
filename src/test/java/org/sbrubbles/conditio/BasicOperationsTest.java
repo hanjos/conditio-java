@@ -158,7 +158,7 @@ public class BasicOperationsTest {
 
       fail();
     } catch (HandlerNotFoundException e) {
-      assertEquals(condition, e.getCondition());
+      assertEquals(condition, e.getContext().getCondition());
     }
   }
 
@@ -229,7 +229,7 @@ public class BasicOperationsTest {
 
       fail();
     } catch (HandlerNotFoundException e) {
-      assertEquals(condition, e.getCondition());
+      assertEquals(condition, e.getContext().getCondition());
     }
   }
 

@@ -43,7 +43,7 @@ public interface HandlerNotFoundPolicy<T> {
 
 class HandlerNotFoundPolicyImpl {
   static final HandlerNotFoundPolicy ERROR = (context) -> {
-    throw new HandlerNotFoundException(context != null ? context.getCondition() : null);
+    throw new HandlerNotFoundException(context);
   };
 
   static final HandlerNotFoundPolicy IGNORE = (context) -> null;

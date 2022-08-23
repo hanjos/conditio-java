@@ -83,7 +83,7 @@ public class LoggingTest {
       fixture.logAnalyzer(BAD_LOG);
       fail();
     } catch (HandlerNotFoundException e) {
-      assertEquals(expectedCondition, e.getCondition());
+      assertEquals(expectedCondition, e.getContext().getCondition());
 
       assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
       assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
@@ -102,7 +102,7 @@ public class LoggingTest {
       fixture.logAnalyzer(BAD_LOG);
       fail();
     } catch (HandlerNotFoundException e) {
-      assertEquals(expectedCondition, e.getCondition());
+      assertEquals(expectedCondition, e.getContext().getCondition());
 
       assertLinesMatch(Collections.emptyList(), fixture.getHandlerTrace());
       assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
