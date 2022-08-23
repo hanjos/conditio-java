@@ -154,7 +154,7 @@ public class BasicOperationsTest {
     BasicCondition condition = new BasicCondition("test");
 
     try (Scope a = Scopes.create()) {
-      a.signal(condition, new Policies<>(HandlerNotFoundPolicy.error(), null));
+      a.signal(condition, new Policies<>(HandlerNotFoundPolicy.error(), ReturnTypePolicy.ignore()));
 
       fail();
     } catch (HandlerNotFoundException e) {
@@ -165,7 +165,7 @@ public class BasicOperationsTest {
   @Test
   public void signallingWithNoHandlersAndAnIgnorePolicyNopesOut() {
     try (Scope a = Scopes.create()) {
-      a.signal(new BasicCondition("test"), new Policies<>(HandlerNotFoundPolicy.ignore(), null));
+      a.signal(new BasicCondition("test"), new Policies<>(HandlerNotFoundPolicy.ignore(), ReturnTypePolicy.ignore()));
     }
 
     // nothing happens, and the returned result is meaningless, so nothing to assert
@@ -188,7 +188,7 @@ public class BasicOperationsTest {
 
       try (Scope b = Scopes.create()) {
         b.notify(new BasicCondition("notify"));
-        b.signal(new BasicCondition("signal"), new Policies<>(HandlerNotFoundPolicy.ignore(), null), Restarts.resume());
+        b.signal(new BasicCondition("signal"), new Policies<>(HandlerNotFoundPolicy.ignore(), ReturnTypePolicy.ignore()), Restarts.resume());
       }
     }
 
