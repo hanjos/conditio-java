@@ -23,7 +23,7 @@ import java.util.function.Supplier;
  * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain Function function}, this
  * interface extends both.
  */
-public interface Handler extends Predicate<Condition>, Function<Handler.Context<? extends Condition>, Handler.Decision> {
+public interface Handler extends Predicate<Handler.Context<? extends Condition>>, Function<Handler.Context<? extends Condition>, Handler.Decision> {
   /**
    * Holds information about the signalling context, and provides ways for a handler to handle a condition.
    *
@@ -131,31 +131,31 @@ public interface Handler extends Predicate<Condition>, Function<Handler.Context<
 }
 
 class HandlerImpl implements Handler {
-  private final Class<? extends Condition> conditionType;
+  private final Predicate<Handler.Context<? extends Condition>> predicate;
   private final Function<Context<? extends Condition>, Decision> body;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
    *
-   * @param conditionType the type of {@link Condition} this handler expects.
-   * @param body          a function which receives a condition and the available operations, and returns the result.
-   * @param <C>           a subtype of {@code Condition}.
-   * @param <S>           a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may
-   *                      accept subtypes other than {@code S}.
+   * @param predicate the type of {@link Condition} this handler expects.
+   * @param body      a function which receives a condition and the available operations, and returns the result.
+   * @param <C>       a subtype of {@code Condition}.
+   * @param <S>       a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may
+   *                  accept subtypes other than {@code S}.
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
   @SuppressWarnings("unchecked")
-  <C extends Condition, S extends C> HandlerImpl(Class<S> conditionType, Function<Context<C>, Decision> body) {
-    Objects.requireNonNull(conditionType, "conditionType");
+  <C extends Condition, S extends C> HandlerImpl(Predicate<Handler.Context<S>> predicate, Function<Context<C>, Decision> body) {
+    Objects.requireNonNull(predicate, "conditionType");
     Objects.requireNonNull(body, "body");
 
-    this.conditionType = conditionType;
+    this.predicate = (Predicate) predicate;
     this.body = (Function) body;
   }
 
   @Override
-  public boolean test(Condition condition) {
-    return getConditionType().isInstance(condition);
+  public boolean test(Handler.Context<? extends Condition> context) {
+    return getPredicate().test(context);
   }
 
   @Override
@@ -163,8 +163,8 @@ class HandlerImpl implements Handler {
     return getBody().apply(ctx);
   }
 
-  public Class<? extends Condition> getConditionType() {
-    return conditionType;
+  public Predicate<Handler.Context<? extends Condition>> getPredicate() {
+    return predicate;
   }
 
   public Function<Context<? extends Condition>, Decision> getBody() {

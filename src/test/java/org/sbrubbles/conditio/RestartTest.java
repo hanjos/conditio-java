@@ -6,7 +6,7 @@ import org.sbrubbles.conditio.restarts.UseValue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class RestartImplTest {
+public class RestartTest {
   private Restart<String> rA;
   private Restart<String> rB;
 

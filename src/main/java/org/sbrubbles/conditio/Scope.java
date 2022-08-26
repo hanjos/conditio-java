@@ -1,5 +1,6 @@
 package org.sbrubbles.conditio;
 
+import org.sbrubbles.conditio.handlers.Contexts;
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.policies.ReturnTypePolicy;
@@ -225,7 +226,7 @@ final class ScopeImpl implements Scope {
 
   @Override
   public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, Function<Handler.Context<C>, Handler.Decision> body) {
-    this.handlers.add(new HandlerImpl(conditionType, body));
+    this.handlers.add(new HandlerImpl(Contexts.conditionType(conditionType), body));
 
     return this;
   }
@@ -255,7 +256,7 @@ final class ScopeImpl implements Scope {
 
       Handler.Context<? extends Condition> ctx = new HandlerContextImpl<>(condition, policies, scope);
       for (Handler h : scope.getAllHandlers()) {
-        if (!h.test(condition)) {
+        if (!h.test(ctx)) {
           continue;
         }
 
