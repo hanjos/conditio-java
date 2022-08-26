@@ -55,7 +55,8 @@ public interface ReturnTypePolicy<T> {
 }
 
 class ReturnTypePolicyImpl<T> implements ReturnTypePolicy<T> {
-  static final ReturnTypePolicyImpl IGNORE = new ReturnTypePolicyImpl(null);
+  @SuppressWarnings("rawtypes")
+  static final ReturnTypePolicyImpl IGNORE = new ReturnTypePolicyImpl<>(null);
 
   private final Class<T> type;
 

@@ -137,7 +137,7 @@ public interface Scope extends AutoCloseable {
    * @see HandlerNotFoundPolicy#ignore()
    * @see ReturnTypePolicy#ignore()
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   default void notify(Condition condition, Restart<?>... restarts)
     throws NullPointerException, AbortException {
     Restart[] args = new Restart<?>[restarts.length + 1];
@@ -243,9 +243,8 @@ final class ScopeImpl implements Scope {
   }
 
   @SuppressWarnings("unchecked")
-  @SafeVarargs
   @Override
-  public final <T> T signal(Condition condition, Policies<T> policies, Restart<? extends T>... restarts)
+  public <T> T signal(Condition condition, Policies<T> policies, Restart<? extends T>... restarts)
     throws HandlerNotFoundException, NullPointerException, ClassCastException {
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(policies, "policies");

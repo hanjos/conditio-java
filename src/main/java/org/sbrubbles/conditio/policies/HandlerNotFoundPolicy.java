@@ -42,9 +42,11 @@ public interface HandlerNotFoundPolicy<T> {
 }
 
 class HandlerNotFoundPolicyImpl {
+  @SuppressWarnings("rawtypes")
   static final HandlerNotFoundPolicy ERROR = (context) -> {
     throw new HandlerNotFoundException(context);
   };
 
+  @SuppressWarnings("rawtypes")
   static final HandlerNotFoundPolicy IGNORE = (context) -> null;
 }

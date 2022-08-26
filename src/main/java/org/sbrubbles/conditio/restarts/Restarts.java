@@ -11,6 +11,7 @@ import org.sbrubbles.conditio.Scope;
 public final class Restarts {
   private Restarts() { }
 
+  @SuppressWarnings("rawtypes")
   private static final Resume RESUME = new Resume<>();
 
   /**

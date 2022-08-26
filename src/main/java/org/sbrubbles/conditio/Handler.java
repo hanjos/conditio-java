@@ -46,7 +46,9 @@ public interface Handler extends Predicate<Condition>, Function<Handler.Context<
      *
      * @return an object representing the decision to skip.
      */
-    Decision skip();
+    default Decision skip() {
+      return Handler.Decision.SKIP;
+    }
 
     /**
      * Aborts execution and unwinds the stack. There should be a {@code catch} clause at the desired
@@ -194,11 +196,6 @@ class HandlerContextImpl<C extends Condition> implements Handler.Context<C> {
     }
 
     throw new RestartNotFoundException(option);
-  }
-
-  @Override
-  public Handler.Decision skip() {
-    return Handler.Decision.SKIP;
   }
 
   @Override
