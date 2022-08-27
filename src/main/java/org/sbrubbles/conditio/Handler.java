@@ -4,7 +4,6 @@ import org.sbrubbles.conditio.policies.Policies;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -16,15 +15,69 @@ import java.util.function.Supplier;
  * <p>
  * A handler can do two things:
  * <ul>
- *   <li>check if it can handle a given condition (with {@link #test(Object) test}); and</li>
- *   <li>given the {@linkplain Context context} and the available {@linkplain Operations operations}, return a
+ *   <li>check if it can handle a given {@linkplain Context signalling context} (with {@link #test(Object) test}); and</li>
+ *   <li>given the context and the {@linkplain Operations available operations}, return a
  *       decision object (with {@link #apply(Object, Object) apply}).</li>
  * </ul>
  * <p>
- * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain Function function}, this
+ * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain BiFunction (bi)function}, this
  * interface extends both.
+ *
+ * @see Context
+ * @see Operations
+ * @see Decision
  */
 public interface Handler extends Predicate<Handler.Context<? extends Condition>>, BiFunction<Handler.Context<? extends Condition>, Handler.Operations, Handler.Decision> {
+  /**
+   * Holds data about a specific {@code signal} invocation, including the condition.
+   *
+   * @param <C> the condition type this context holds.
+   */
+  class Context<C extends Condition> {
+    private final C condition;
+    private final Policies<?> policies;
+    private final Scope scope;
+
+    /**
+     * Creates a new instance.
+     *
+     * @param condition the condition signalled.
+     * @param policies  the policies in effect.
+     * @param scope     the scope where the condition was signalled.
+     * @throws NullPointerException if one or more arguments are null.
+     */
+    public Context(C condition, Policies<?> policies, Scope scope) {
+      this.condition = Objects.requireNonNull(condition, "condition");
+      this.policies = Objects.requireNonNull(policies, "policies");
+      this.scope = Objects.requireNonNull(scope, "scope");
+    }
+
+    /**
+     * The condition signalled.
+     *
+     * @return the condition signalled.
+     */
+    public C getCondition() {
+      return condition;
+    }
+
+    /**
+     * The policies in effect for this signal invocation.
+     *
+     * @return the policies in effect for this signal invocation.
+     */
+    public Policies<?> getPolicies() { return policies; }
+
+    /**
+     * The scope where the condition was emitted.
+     *
+     * @return the scope where the condition was emitted.
+     */
+    public Scope getScope() {
+      return scope;
+    }
+  }
+
   /**
    * The ways a handler can handle a condition.
    */
@@ -87,34 +140,6 @@ public interface Handler extends Predicate<Handler.Context<? extends Condition>>
   }
 
   /**
-   * Holds information about the signalling context.
-   *
-   * @param <C> the condition type this context holds.
-   */
-  interface Context<C extends Condition> {
-    /**
-     * The condition signaled.
-     *
-     * @return the condition signaled.
-     */
-    C getCondition();
-
-    /**
-     * The policies in effect for this signal invocation.
-     *
-     * @return the policies in effect for this signal invocation.
-     */
-    Policies<?> getPolicies();
-
-    /**
-     * The scope where the signal was emitted.
-     *
-     * @return the scope where the signal was emitted.
-     */
-    Scope getScope();
-  }
-
-  /**
    * How a handler decided to handle a condition. Instances are produced by {@linkplain Context operations}, and
    * consumed by {@link Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) signal}.
    */
@@ -127,7 +152,7 @@ public interface Handler extends Predicate<Handler.Context<? extends Condition>>
     Decision(Object result) { this.result = result; }
 
     /**
-     * Returns the value produced.
+     * The value produced.
      *
      * @return the value produced.
      */
@@ -175,31 +200,6 @@ class HandlerImpl implements Handler {
 
   public BiFunction<Context<? extends Condition>, Operations, Decision> getBody() {
     return body;
-  }
-}
-
-class HandlerContextImpl<C extends Condition> implements Handler.Context<C> {
-  private final C condition;
-  private final Policies<?> policies;
-  private final Scope scope;
-
-  public HandlerContextImpl(C condition, Policies<?> policies, Scope scope) {
-    this.condition = Objects.requireNonNull(condition, "condition");
-    this.policies = Objects.requireNonNull(policies, "policies");
-    this.scope = Objects.requireNonNull(scope, "scope");
-  }
-
-  @Override
-  public C getCondition() {
-    return condition;
-  }
-
-  @Override
-  public Policies<?> getPolicies() { return policies; }
-
-  @Override
-  public Scope getScope() {
-    return scope;
   }
 }
 

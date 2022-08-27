@@ -19,7 +19,7 @@ public class PoliciesTest {
 
     try (Scope scope = Scopes.create()) {
       Condition c = new BasicCondition("");
-      Handler.Context<Condition> ctx = new HandlerContextImpl<>(c, policies, scope);
+      Handler.Context<Condition> ctx = new Handler.Context<>(c, policies, scope);
 
       assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(ctx));
     }
@@ -34,12 +34,12 @@ public class PoliciesTest {
       Policies<?> pWithIgnore = new Policies<>(
         trace(trail, "ignore", HandlerNotFoundPolicy.ignore()),
         ReturnTypePolicy.ignore());
-      pWithIgnore.onHandlerNotFound(new HandlerContextImpl<>(c, pWithIgnore, scope));
+      pWithIgnore.onHandlerNotFound(new Handler.Context<>(c, pWithIgnore, scope));
 
       Policies<?> pWithError = new Policies<>(
         trace(trail, "error", HandlerNotFoundPolicy.error()),
         ReturnTypePolicy.ignore());
-      assertThrows(HandlerNotFoundException.class, () -> pWithError.onHandlerNotFound(new HandlerContextImpl<>(c, pWithError, scope)));
+      assertThrows(HandlerNotFoundException.class, () -> pWithError.onHandlerNotFound(new Handler.Context<>(c, pWithError, scope)));
 
       assertLinesMatch(Arrays.asList("ignore", "error"), trail);
     }

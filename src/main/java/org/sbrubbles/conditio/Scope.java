@@ -254,7 +254,7 @@ final class ScopeImpl implements Scope {
     try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
       scope.set(restarts);
 
-      Handler.Context<? extends Condition> ctx = new HandlerContextImpl<>(condition, policies, scope);
+      Handler.Context<? extends Condition> ctx = new Handler.Context<>(condition, policies, scope);
       Handler.Operations ops = new HandlerOperationsImpl(scope);
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(ctx)) {
