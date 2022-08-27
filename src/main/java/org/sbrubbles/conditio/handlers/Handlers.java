@@ -4,7 +4,7 @@ import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Handler;
 import org.sbrubbles.conditio.Restart;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 /**
  * Some utility methods for handlers.
@@ -20,8 +20,8 @@ public final class Handlers {
    * @param option the restart option used to select a restart.
    * @return a handler body that invokes the restart matching the given option.
    */
-  public static <C extends Condition> Function<Handler.Context<C>, Handler.Decision> restart(Restart.Option option) {
-    return ctx -> ctx.restart(option);
+  public static <C extends Condition> BiFunction<Handler.Context<C>, Handler.Operations, Handler.Decision> restart(Restart.Option option) {
+    return (ctx, ops) -> ops.restart(option);
   }
 
   /**
@@ -29,8 +29,8 @@ public final class Handlers {
    *
    * @return a handler body that skips handling.
    */
-  public static <C extends Condition> Function<Handler.Context<C>, Handler.Decision> skip() {
-    return Handler.Context::skip;
+  public static <C extends Condition> BiFunction<Handler.Context<C>, Handler.Operations, Handler.Decision> skip() {
+    return (ctx, ops) -> ops.skip();
   }
 
   /**
@@ -38,7 +38,7 @@ public final class Handlers {
    *
    * @return a handler body that aborts execution.
    */
-  public static <C extends Condition> Function<Handler.Context<C>, Handler.Decision> abort() {
-    return Handler.Context::abort;
+  public static <C extends Condition> BiFunction<Handler.Context<C>, Handler.Operations, Handler.Decision> abort() {
+    return (ctx, ops) -> ops.abort();
   }
 }

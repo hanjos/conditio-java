@@ -51,8 +51,9 @@ public class HandlerTest {
       final Handler.Context<Condition> ctx = (condition != null) ?
         new HandlerContextImpl<>(condition, new Policies<>(), scope) :
         null;
+      final Handler.Operations ops = new HandlerOperationsImpl(scope);
 
-      assertEquals(expected, h.apply(ctx).get());
+      assertEquals(expected, h.apply(ctx, ops).get());
     }
   }
 
@@ -67,7 +68,7 @@ public class HandlerTest {
     }
   }
 
-  private Handler.Decision body(Handler.Context<BasicCondition> ctx) {
+  private Handler.Decision body(Handler.Context<BasicCondition> ctx, Handler.Operations ops) {
     if (ctx == null) {
       return new Handler.Decision(null);
     }

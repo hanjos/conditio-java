@@ -7,6 +7,7 @@ import org.sbrubbles.conditio.Restart;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class AbstractFixture {
@@ -18,12 +19,12 @@ public class AbstractFixture {
     restartTrace = new ArrayList<>();
   }
 
-  public <C extends Condition> Function<Handler.Context<C>, Handler.Decision> traceHandler(
-    final String prefix, final Function<Handler.Context<C>, Handler.Decision> body) {
-    return ctx -> {
+  public <C extends Condition> BiFunction<Handler.Context<C>, Handler.Operations, Handler.Decision> traceHandler(
+    final String prefix, final BiFunction<Handler.Context<C>, Handler.Operations, Handler.Decision> body) {
+    return (ctx, ops) -> {
       handlerTrace.add(prefix + ": " + ctx.getCondition().getClass().getSimpleName());
 
-      return body.apply(ctx);
+      return body.apply(ctx, ops);
     };
   }
 

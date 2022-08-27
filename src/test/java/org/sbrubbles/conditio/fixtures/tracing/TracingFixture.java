@@ -19,10 +19,10 @@ public class TracingFixture extends AbstractFixture {
 
   public void resume() {
     try (Scope scope = Scopes.create()) {
-      scope.handle(WorkDone.class, traceHandler("run", ctx -> {
+      scope.handle(WorkDone.class, traceHandler("run", (ctx, ops) -> {
         increaseWorkDone(ctx.getCondition().getAmount());
 
-        return ctx.restart(Restarts.resume());
+        return ops.restart(Restarts.resume());
       }));
 
       while (getWorkDone() < getMaxWork()) {

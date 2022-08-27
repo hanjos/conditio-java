@@ -3,33 +3,32 @@ package org.sbrubbles.conditio;
 import org.sbrubbles.conditio.policies.Policies;
 
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
  * Handles conditions, producing the result to be returned by
- * {@link Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) signal}.
+ * {@link Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) signal}. A handler does so by
+ * returning a {@linkplain Decision decision} object holding the result. These decision objects are unwrapped by
+ * {@code signal}, and are expected to be non-{@code null}.
  * <p>
  * A handler can do two things:
  * <ul>
  *   <li>check if it can handle a given condition (with {@link #test(Object) test}); and</li>
- *   <li>given the {@linkplain Context context}, return a {@linkplain Decision decision} object holding the result
- *   (with {@link #apply(Object) apply}).</li>
+ *   <li>given the {@linkplain Context context} and the available {@linkplain Operations operations}, return a
+ *       decision object (with {@link #apply(Object, Object) apply}).</li>
  * </ul>
- * <p>
- * Decision objects are unwrapped by {@code signal}, and are expected to be non-{@code null}.
  * <p>
  * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain Function function}, this
  * interface extends both.
  */
-public interface Handler extends Predicate<Handler.Context<? extends Condition>>, Function<Handler.Context<? extends Condition>, Handler.Decision> {
+public interface Handler extends Predicate<Handler.Context<? extends Condition>>, BiFunction<Handler.Context<? extends Condition>, Handler.Operations, Handler.Decision> {
   /**
-   * Holds information about the signalling context, and provides ways for a handler to handle a condition.
-   *
-   * @param <C> the condition type this context holds.
+   * The ways a handler can handle a condition.
    */
-  interface Context<C extends Condition> {
+  interface Operations {
     /**
      * Invokes a previously set recovery strategy. This method will search for a compatible
      * {@linkplain Restart restart} and run it, returning the result.
@@ -85,7 +84,14 @@ public interface Handler extends Predicate<Handler.Context<? extends Condition>>
     default Decision abort() throws AbortException {
       throw new AbortException();
     }
+  }
 
+  /**
+   * Holds information about the signalling context.
+   *
+   * @param <C> the condition type this context holds.
+   */
+  interface Context<C extends Condition> {
     /**
      * The condition signaled.
      *
@@ -132,7 +138,7 @@ public interface Handler extends Predicate<Handler.Context<? extends Condition>>
 
 class HandlerImpl implements Handler {
   private final Predicate<Handler.Context<? extends Condition>> predicate;
-  private final Function<Context<? extends Condition>, Decision> body;
+  private final BiFunction<Context<? extends Condition>, Operations, Decision> body;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
@@ -145,12 +151,12 @@ class HandlerImpl implements Handler {
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
   @SuppressWarnings("unchecked")
-  <C extends Condition, S extends C> HandlerImpl(Predicate<Handler.Context<S>> predicate, Function<Context<C>, Decision> body) {
+  <C extends Condition, S extends C> HandlerImpl(Predicate<Handler.Context<S>> predicate, BiFunction<Context<C>, Operations, Decision> body) {
     Objects.requireNonNull(predicate, "conditionType");
     Objects.requireNonNull(body, "body");
 
     this.predicate = (Predicate) predicate;
-    this.body = (Function) body;
+    this.body = (BiFunction) body;
   }
 
   @Override
@@ -159,15 +165,15 @@ class HandlerImpl implements Handler {
   }
 
   @Override
-  public Decision apply(Context<?> ctx) {
-    return getBody().apply(ctx);
+  public Decision apply(Context<?> ctx, Operations ops) {
+    return getBody().apply(ctx, ops);
   }
 
   public Predicate<Handler.Context<? extends Condition>> getPredicate() {
     return predicate;
   }
 
-  public Function<Context<? extends Condition>, Decision> getBody() {
+  public BiFunction<Context<? extends Condition>, Operations, Decision> getBody() {
     return body;
   }
 }
@@ -178,13 +184,30 @@ class HandlerContextImpl<C extends Condition> implements Handler.Context<C> {
   private final Scope scope;
 
   public HandlerContextImpl(C condition, Policies<?> policies, Scope scope) {
-    Objects.requireNonNull(condition, "condition");
-    Objects.requireNonNull(policies, "policies");
-    Objects.requireNonNull(scope, "scope");
+    this.condition = Objects.requireNonNull(condition, "condition");
+    this.policies = Objects.requireNonNull(policies, "policies");
+    this.scope = Objects.requireNonNull(scope, "scope");
+  }
 
-    this.condition = condition;
-    this.policies = policies;
-    this.scope = scope;
+  @Override
+  public C getCondition() {
+    return condition;
+  }
+
+  @Override
+  public Policies<?> getPolicies() { return policies; }
+
+  @Override
+  public Scope getScope() {
+    return scope;
+  }
+}
+
+class HandlerOperationsImpl implements Handler.Operations {
+  private final Scope scope;
+
+  public HandlerOperationsImpl(Scope scope) {
+    this.scope = Objects.requireNonNull(scope, "scope");
   }
 
   @Override
@@ -198,15 +221,6 @@ class HandlerContextImpl<C extends Condition> implements Handler.Context<C> {
     throw new RestartNotFoundException(option);
   }
 
-  @Override
-  public C getCondition() {
-    return condition;
-  }
-
-  @Override
-  public Policies<?> getPolicies() { return policies; }
-
-  @Override
   public Scope getScope() {
     return scope;
   }

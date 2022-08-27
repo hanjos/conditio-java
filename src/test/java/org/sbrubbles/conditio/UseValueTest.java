@@ -12,7 +12,7 @@ import org.sbrubbles.conditio.restarts.Restarts;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,11 +39,11 @@ public class UseValueTest {
     }
   }
 
-  static <C extends Condition> Function<Handler.Context<C>, Handler.Decision> trace(List<String> trail, String message, Function<Handler.Context<C>, Handler.Decision> body) {
-    return ctx -> {
+  static <C extends Condition> BiFunction<Handler.Context<C>, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Handler.Context<C>, Handler.Operations, Handler.Decision> body) {
+    return (ctx, ops) -> {
       trail.add(message);
 
-      return body.apply(ctx);
+      return body.apply(ctx, ops);
     };
   }
 

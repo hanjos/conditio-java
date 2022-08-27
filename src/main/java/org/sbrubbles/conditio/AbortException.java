@@ -5,7 +5,7 @@ package org.sbrubbles.conditio;
  * {@link Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) signal}
  * processing and unwind the stack until captured.
  *
- * @see Handler.Context#abort()
+ * @see Handler.Operations#abort()
  */
 public class AbortException extends RuntimeException {
   /**
