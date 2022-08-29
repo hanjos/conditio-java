@@ -1,6 +1,7 @@
 package org.sbrubbles.conditio.fixtures;
 
 import org.sbrubbles.conditio.Condition;
+import org.sbrubbles.conditio.Context;
 import org.sbrubbles.conditio.Handler;
 import org.sbrubbles.conditio.Restart;
 
@@ -19,8 +20,8 @@ public class AbstractFixture {
     restartTrace = new ArrayList<>();
   }
 
-  public <C extends Condition> BiFunction<Handler.Context<C>, Handler.Operations, Handler.Decision> traceHandler(
-    final String prefix, final BiFunction<Handler.Context<C>, Handler.Operations, Handler.Decision> body) {
+  public <C extends Condition> BiFunction<Context<C>, Handler.Operations, Handler.Decision> traceHandler(
+    final String prefix, final BiFunction<Context<C>, Handler.Operations, Handler.Decision> body) {
     return (ctx, ops) -> {
       handlerTrace.add(prefix + ": " + ctx.getCondition().getClass().getSimpleName());
 

@@ -8,17 +8,17 @@ import org.sbrubbles.conditio.policies.Policies;
  * {@linkplain Handler.Operations#skip() skip} instead.
  *
  * @see Handler
- * @see Handler.Context
+ * @see Context
  */
 public class HandlerNotFoundException extends RuntimeException {
-  private final Handler.Context<?> context;
+  private final Context<?> context;
 
   /**
    * Creates a new instance.
    *
    * @param context the {@link Scope#signal(Condition, Policies, Restart[]) signal} context that found no handler.
    */
-  public HandlerNotFoundException(Handler.Context<?> context) {
+  public HandlerNotFoundException(Context<?> context) {
     super("No handler found for " + context);
 
     this.context = context;
@@ -29,7 +29,7 @@ public class HandlerNotFoundException extends RuntimeException {
    *
    * @return the context that could not be handled.
    */
-  public Handler.Context<?> getContext() {
+  public Context<?> getContext() {
     return context;
   }
 }

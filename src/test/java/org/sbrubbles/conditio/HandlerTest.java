@@ -36,8 +36,8 @@ public class HandlerTest {
   @MethodSource("testProvider")
   public void test(Condition condition, boolean expected) {
     try (Scope scope = Scopes.create()) {
-      final Handler.Context<Condition> ctx = (condition != null) ?
-        new Handler.Context<>(condition, new Policies<>(), scope) :
+      final Context<Condition> ctx = (condition != null) ?
+        new Context<>(condition, new Policies<>(), scope) :
         null;
 
       assertEquals(expected, h.test(ctx));
@@ -48,8 +48,8 @@ public class HandlerTest {
   @MethodSource("applyProvider")
   public void apply(Condition condition, String expected) {
     try (Scope scope = Scopes.create()) {
-      final Handler.Context<Condition> ctx = (condition != null) ?
-        new Handler.Context<>(condition, new Policies<>(), scope) :
+      final Context<Condition> ctx = (condition != null) ?
+        new Context<>(condition, new Policies<>(), scope) :
         null;
       final Handler.Operations ops = new HandlerOperationsImpl(scope);
 
@@ -61,14 +61,14 @@ public class HandlerTest {
   public void getters() {
     try (Scope a = Scopes.create()) {
       Condition c = new BasicCondition("OMGWTFBBQ");
-      final Handler.Context<Condition> ctx = new Handler.Context<>(c, new Policies<>(), a);
+      final Context<Condition> ctx = new Context<>(c, new Policies<>(), a);
 
       assertEquals(c, ctx.getCondition());
       assertEquals(a, ctx.getScope());
     }
   }
 
-  private Handler.Decision body(Handler.Context<BasicCondition> ctx, Handler.Operations ops) {
+  private Handler.Decision body(Context<BasicCondition> ctx, Handler.Operations ops) {
     if (ctx == null) {
       return new Handler.Decision(null);
     }

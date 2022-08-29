@@ -1,7 +1,5 @@
 package org.sbrubbles.conditio;
 
-import org.sbrubbles.conditio.policies.Policies;
-
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -27,57 +25,7 @@ import java.util.function.Supplier;
  * @see Operations
  * @see Decision
  */
-public interface Handler extends Predicate<Handler.Context<? extends Condition>>, BiFunction<Handler.Context<? extends Condition>, Handler.Operations, Handler.Decision> {
-  /**
-   * Holds data about a specific {@code signal} invocation, including the condition.
-   *
-   * @param <C> the condition type this context holds.
-   */
-  class Context<C extends Condition> {
-    private final C condition;
-    private final Policies<?> policies;
-    private final Scope scope;
-
-    /**
-     * Creates a new instance.
-     *
-     * @param condition the condition signalled.
-     * @param policies  the policies in effect.
-     * @param scope     the scope where the condition was signalled.
-     * @throws NullPointerException if one or more arguments are null.
-     */
-    public Context(C condition, Policies<?> policies, Scope scope) {
-      this.condition = Objects.requireNonNull(condition, "condition");
-      this.policies = Objects.requireNonNull(policies, "policies");
-      this.scope = Objects.requireNonNull(scope, "scope");
-    }
-
-    /**
-     * The condition signalled.
-     *
-     * @return the condition signalled.
-     */
-    public C getCondition() {
-      return condition;
-    }
-
-    /**
-     * The policies in effect for this signal invocation.
-     *
-     * @return the policies in effect for this signal invocation.
-     */
-    public Policies<?> getPolicies() { return policies; }
-
-    /**
-     * The scope where the condition was emitted.
-     *
-     * @return the scope where the condition was emitted.
-     */
-    public Scope getScope() {
-      return scope;
-    }
-  }
-
+public interface Handler extends Predicate<Context<? extends Condition>>, BiFunction<Context<? extends Condition>, Handler.Operations, Handler.Decision> {
   /**
    * The ways a handler can handle a condition.
    */
@@ -162,7 +110,7 @@ public interface Handler extends Predicate<Handler.Context<? extends Condition>>
 }
 
 class HandlerImpl implements Handler {
-  private final Predicate<Handler.Context<? extends Condition>> predicate;
+  private final Predicate<Context<? extends Condition>> predicate;
   private final BiFunction<Context<? extends Condition>, Operations, Decision> body;
 
   /**
@@ -176,7 +124,7 @@ class HandlerImpl implements Handler {
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
   @SuppressWarnings("unchecked")
-  <C extends Condition, S extends C> HandlerImpl(Predicate<Handler.Context<S>> predicate, BiFunction<Context<C>, Operations, Decision> body) {
+  <C extends Condition, S extends C> HandlerImpl(Predicate<Context<S>> predicate, BiFunction<Context<C>, Operations, Decision> body) {
     Objects.requireNonNull(predicate, "conditionType");
     Objects.requireNonNull(body, "body");
 
@@ -185,7 +133,7 @@ class HandlerImpl implements Handler {
   }
 
   @Override
-  public boolean test(Handler.Context<? extends Condition> context) {
+  public boolean test(Context<? extends Condition> context) {
     return getPredicate().test(context);
   }
 
@@ -194,7 +142,7 @@ class HandlerImpl implements Handler {
     return getBody().apply(ctx, ops);
   }
 
-  public Predicate<Handler.Context<? extends Condition>> getPredicate() {
+  public Predicate<Context<? extends Condition>> getPredicate() {
     return predicate;
   }
 

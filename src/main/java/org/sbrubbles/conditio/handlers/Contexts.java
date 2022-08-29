@@ -1,7 +1,7 @@
 package org.sbrubbles.conditio.handlers;
 
 import org.sbrubbles.conditio.Condition;
-import org.sbrubbles.conditio.Handler;
+import org.sbrubbles.conditio.Context;
 
 import java.util.function.Predicate;
 
@@ -19,7 +19,7 @@ public class Contexts {
    * @param type the expected type for the condition.
    * @return a predicate which checks if contexts have conditions compatible with the given type.
    */
-  public static <C extends Condition> Predicate<Handler.Context<C>> conditionType(final Class<? extends Condition> type) {
+  public static <C extends Condition> Predicate<Context<C>> conditionType(final Class<? extends Condition> type) {
     return ctx -> ctx != null && type != null && type.isInstance(ctx.getCondition());
   }
 }

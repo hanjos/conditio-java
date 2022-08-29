@@ -22,7 +22,7 @@ import java.util.function.Supplier;
  * The core operation is {@link #signal(Condition, Policies, Restart[]) signal}, which is called when
  * lower-level code doesn't know how to handle a {@linkplain Condition condition}. {@code signal} looks
  * for something that can {@linkplain #handle(Class, BiFunction) handle} the given condition in the call stack, and
- * this {@linkplain Handler handler} then chooses {@linkplain Handler.Context what to do}, like
+ * this {@linkplain Handler handler} then chooses {@linkplain Context what to do}, like
  * {@linkplain Handler.Operations#abort() aborting} or looking for a recovery strategy (also known as a
  * {@linkplain Restart restart}) and using it to provide a result.
  * <p>
@@ -66,7 +66,7 @@ public interface Scope extends AutoCloseable {
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
-  <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Handler.Context<C>, Handler.Operations, Handler.Decision> body);
+  <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Context<C>, Handler.Operations, Handler.Decision> body);
 
   /**
    * Evaluates {@code body}, providing additional restarts for it. It's useful for scopes that may not know how to
@@ -225,7 +225,7 @@ final class ScopeImpl implements Scope {
   }
 
   @Override
-  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Handler.Context<C>, Handler.Operations, Handler.Decision> body) {
+  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Context<C>, Handler.Operations, Handler.Decision> body) {
     this.handlers.add(new HandlerImpl(Contexts.conditionType(conditionType), body));
 
     return this;
@@ -254,7 +254,7 @@ final class ScopeImpl implements Scope {
     try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
       scope.set(restarts);
 
-      Handler.Context<? extends Condition> ctx = new Handler.Context<>(condition, policies, scope);
+      Context<? extends Condition> ctx = new Context<>(condition, policies, scope);
       Handler.Operations ops = new HandlerOperationsImpl(scope);
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(ctx)) {
