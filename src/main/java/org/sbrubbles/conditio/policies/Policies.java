@@ -35,7 +35,7 @@ public class Policies<T> implements HandlerNotFoundPolicy<T>, ReturnTypePolicy<T
    * @param handlerNotFoundPolicy a policy for missing handlers.
    * @param returnTypePolicy      a policy for the expected return type.
    * @throws NullPointerException if one or both arguments is null.
-   * @see #onHandlerNotFound(Context)
+   * @see #onHandlerNotFound(Signal)
    * @see #getExpectedType()
    */
   public Policies(HandlerNotFoundPolicy<T> handlerNotFoundPolicy, ReturnTypePolicy<T> returnTypePolicy) {
@@ -51,8 +51,8 @@ public class Policies<T> implements HandlerNotFoundPolicy<T>, ReturnTypePolicy<T
    * @see HandlerNotFoundPolicy#error()
    */
   @Override
-  public T onHandlerNotFound(Context<?> context) throws HandlerNotFoundException {
-    return handlerNotFoundPolicy.onHandlerNotFound(context);
+  public T onHandlerNotFound(Signal<?> signal) throws HandlerNotFoundException {
+    return handlerNotFoundPolicy.onHandlerNotFound(signal);
   }
 
   /**

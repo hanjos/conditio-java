@@ -35,9 +35,9 @@ public class BasicOperationsTest {
       // no restart before the handler...
       assertOptionsDontMatch(Collections.singletonList(u), a.getAllRestarts(), "before handle");
 
-      a.handle(MalformedLogEntry.class, (ctx, ops) -> {
+      a.handle(MalformedLogEntry.class, (s, ops) -> {
         // now there's something!
-        assertOptionsMatch(Collections.singletonList(u), ctx.getScope().getAllRestarts(), "inside handle");
+        assertOptionsMatch(Collections.singletonList(u), s.getScope().getAllRestarts(), "inside handle");
 
         return ops.restart(u);
       });
@@ -70,8 +70,8 @@ public class BasicOperationsTest {
     try (Scope a = Scopes.create()) {
       assertOptionsDontMatch(Arrays.asList(u, r), a.getAllRestarts(), "before handle");
 
-      a.handle(MalformedLogEntry.class, (ctx, ops) -> {
-        assertOptionsMatch(Arrays.asList(u, r), ctx.getScope().getAllRestarts(), "inside handle");
+      a.handle(MalformedLogEntry.class, (s, ops) -> {
+        assertOptionsMatch(Arrays.asList(u, r), s.getScope().getAllRestarts(), "inside handle");
 
         return ops.restart(u);
       });
@@ -128,9 +128,9 @@ public class BasicOperationsTest {
 
     try (Scope a = Scopes.create()) {
       a.handle(PleaseSignalSomethingElse.class,
-        trace(trail, "a", (ctx, ops) -> {
-          try (Scope s = Scopes.create()) {
-            return ops.restart(Restarts.use(s.raise(new BasicCondition(null), ctx.getPolicies().getExpectedType())));
+        trace(trail, "a", (s, ops) -> {
+          try (Scope scope = Scopes.create()) {
+            return ops.restart(Restarts.use(scope.raise(new BasicCondition(null), s.getPolicies().getExpectedType())));
           }
         }));
 
@@ -177,12 +177,12 @@ public class BasicOperationsTest {
     List<String> trail = new ArrayList<>();
 
     try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class, (ctx, ops) -> {
-        trail.add(ctx.getCondition().getValue());
+      a.handle(BasicCondition.class, (s, ops) -> {
+        trail.add(s.getCondition().getValue());
 
         assertOptionsMatch(
           Collections.singletonList(Restarts.resume()),
-          ctx.getScope().getAllRestarts());
+          s.getScope().getAllRestarts());
 
         return ops.skip(); // no handling provided
       });
@@ -203,12 +203,12 @@ public class BasicOperationsTest {
     final UseValue<String> u = new UseValue<>(TEST_VALUE);
 
     try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class, (ctx, ops) -> {
-        trail.add(ctx.getCondition().getValue());
+      a.handle(BasicCondition.class, (s, ops) -> {
+        trail.add(s.getCondition().getValue());
 
         assertOptionsMatch(
           Collections.singletonList(u),
-          ctx.getScope().getAllRestarts());
+          s.getScope().getAllRestarts());
 
         return ops.restart(Restarts.use(TEST_VALUE));
       });
@@ -297,11 +297,11 @@ public class BasicOperationsTest {
     );
   }
 
-  static <C extends Condition> BiFunction<Context<C>, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Context<C>, Handler.Operations, Handler.Decision> body) {
-    return (ctx, ops) -> {
+  static <C extends Condition> BiFunction<Signal<C>, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
+    return (s, ops) -> {
       trail.add(message);
 
-      return body.apply(ctx, ops);
+      return body.apply(s, ops);
     };
   }
 }

@@ -1,6 +1,6 @@
 package org.sbrubbles.conditio;
 
-import org.sbrubbles.conditio.handlers.Contexts;
+import org.sbrubbles.conditio.handlers.Signals;
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.policies.ReturnTypePolicy;
@@ -22,7 +22,7 @@ import java.util.function.Supplier;
  * The core operation is {@link #signal(Condition, Policies, Restart[]) signal}, which is called when
  * lower-level code doesn't know how to handle a {@linkplain Condition condition}. {@code signal} looks
  * for something that can {@linkplain #handle(Class, BiFunction) handle} the given condition in the call stack, and
- * this {@linkplain Handler handler} then chooses {@linkplain Context what to do}, like
+ * this {@linkplain Handler handler} then chooses {@linkplain Signal what to do}, like
  * {@linkplain Handler.Operations#abort() aborting} or looking for a recovery strategy (also known as a
  * {@linkplain Restart restart}) and using it to provide a result.
  * <p>
@@ -39,7 +39,7 @@ import java.util.function.Supplier;
  * try(Scope scope = Scopes.create()) {
  *   // establishing a new handler, which accepts MalformedEntry conditions and
  *   // delegates the work to a RetryWith-compatible restart
- *   scope.handle(MalformedEntry.class, (ctx, ops) -&gt; ctx.restart(new RetryWith("FAIL: " + ctx.getCondition().getText())));
+ *   scope.handle(MalformedEntry.class, (s, ops) -&gt; ops.restart(new RetryWith("FAIL: " + s.getCondition().getText())));
  *
  *   // ...somewhere deeper in the call stack...
  *   try(Scope scope = Scopes.create()) {
@@ -66,7 +66,7 @@ public interface Scope extends AutoCloseable {
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are {@code null}.
    */
-  <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Context<C>, Handler.Operations, Handler.Decision> body);
+  <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body);
 
   /**
    * Evaluates {@code body}, providing additional restarts for it. It's useful for scopes that may not know how to
@@ -225,8 +225,8 @@ final class ScopeImpl implements Scope {
   }
 
   @Override
-  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Context<C>, Handler.Operations, Handler.Decision> body) {
-    this.handlers.add(new HandlerImpl(Contexts.conditionType(conditionType), body));
+  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
+    this.handlers.add(new HandlerImpl(Signals.conditionType(conditionType), body));
 
     return this;
   }
@@ -254,14 +254,14 @@ final class ScopeImpl implements Scope {
     try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
       scope.set(restarts);
 
-      Context<? extends Condition> ctx = new Context<>(condition, policies, scope);
+      Signal<? extends Condition> s = new Signal<>(condition, policies, scope);
       Handler.Operations ops = new HandlerOperationsImpl(scope);
       for (Handler h : scope.getAllHandlers()) {
-        if (!h.test(ctx)) {
+        if (!h.test(s)) {
           continue;
         }
 
-        Handler.Decision result = Objects.requireNonNull(h.apply(ctx, ops), "Decisions cannot be null!");
+        Handler.Decision result = Objects.requireNonNull(h.apply(s, ops), "Decisions cannot be null!");
         if (result == Handler.Decision.SKIP) {
           continue;
         }
@@ -269,7 +269,7 @@ final class ScopeImpl implements Scope {
         return policies.cast(result.get());
       }
 
-      return policies.onHandlerNotFound(ctx);
+      return policies.onHandlerNotFound(s);
     }
   }
 

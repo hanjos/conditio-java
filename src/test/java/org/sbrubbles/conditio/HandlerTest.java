@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.sbrubbles.conditio.handlers.Contexts.conditionType;
+import static org.sbrubbles.conditio.handlers.Signals.conditionType;
 
 public class HandlerTest {
   private Handler h;
@@ -36,11 +36,11 @@ public class HandlerTest {
   @MethodSource("testProvider")
   public void test(Condition condition, boolean expected) {
     try (Scope scope = Scopes.create()) {
-      final Context<Condition> ctx = (condition != null) ?
-        new Context<>(condition, new Policies<>(), scope) :
+      final Signal<Condition> s = (condition != null) ?
+        new Signal<>(condition, new Policies<>(), scope) :
         null;
 
-      assertEquals(expected, h.test(ctx));
+      assertEquals(expected, h.test(s));
     }
   }
 
@@ -48,12 +48,12 @@ public class HandlerTest {
   @MethodSource("applyProvider")
   public void apply(Condition condition, String expected) {
     try (Scope scope = Scopes.create()) {
-      final Context<Condition> ctx = (condition != null) ?
-        new Context<>(condition, new Policies<>(), scope) :
+      final Signal<Condition> s = (condition != null) ?
+        new Signal<>(condition, new Policies<>(), scope) :
         null;
       final Handler.Operations ops = new HandlerOperationsImpl(scope);
 
-      assertEquals(expected, h.apply(ctx, ops).get());
+      assertEquals(expected, h.apply(s, ops).get());
     }
   }
 
@@ -61,19 +61,19 @@ public class HandlerTest {
   public void getters() {
     try (Scope a = Scopes.create()) {
       Condition c = new BasicCondition("OMGWTFBBQ");
-      final Context<Condition> ctx = new Context<>(c, new Policies<>(), a);
+      final Signal<Condition> s = new Signal<>(c, new Policies<>(), a);
 
-      assertEquals(c, ctx.getCondition());
-      assertEquals(a, ctx.getScope());
+      assertEquals(c, s.getCondition());
+      assertEquals(a, s.getScope());
     }
   }
 
-  private Handler.Decision body(Context<BasicCondition> ctx, Handler.Operations ops) {
-    if (ctx == null) {
+  private Handler.Decision body(Signal<BasicCondition> s, Handler.Operations ops) {
+    if (s == null) {
       return new Handler.Decision(null);
     }
 
-    BasicCondition c = ctx.getCondition();
+    BasicCondition c = s.getCondition();
 
     if (!"FAIL".equals(c.getValue())) {
       return new Handler.Decision("OK: " + c.getValue());

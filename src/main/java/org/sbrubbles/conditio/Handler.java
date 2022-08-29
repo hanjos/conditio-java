@@ -13,19 +13,19 @@ import java.util.function.Supplier;
  * <p>
  * A handler can do two things:
  * <ul>
- *   <li>check if it can handle a given {@linkplain Context signalling context} (with {@link #test(Object) test}); and</li>
- *   <li>given the context and the {@linkplain Operations available operations}, return a
+ *   <li>check if it can handle a given {@linkplain Signal signal} (with {@link #test(Object) test}); and</li>
+ *   <li>given the signal and the {@linkplain Operations available operations}, return a
  *       decision object (with {@link #apply(Object, Object) apply}).</li>
  * </ul>
  * <p>
  * Since a handler works both as a {@linkplain Predicate predicate} and as a {@linkplain BiFunction (bi)function}, this
  * interface extends both.
  *
- * @see Context
+ * @see Signal
  * @see Operations
  * @see Decision
  */
-public interface Handler extends Predicate<Context<? extends Condition>>, BiFunction<Context<? extends Condition>, Handler.Operations, Handler.Decision> {
+public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunction<Signal<? extends Condition>, Handler.Operations, Handler.Decision> {
   /**
    * The ways a handler can handle a condition.
    */
@@ -58,7 +58,7 @@ public interface Handler extends Predicate<Context<? extends Condition>>, BiFunc
      * <pre>
      *   try(Scope a = Scopes.create()) {
      *     // decides to give up on the whole operation
-     *     a.handle(SomeCondition.class, ctx -&gt; ctx.abort())
+     *     a.handle(SomeCondition.class, (s, ops) -&gt; ops.abort())
      *
      *     try(Scope b = Scopes.create()) {
      *       // some code...
@@ -88,7 +88,7 @@ public interface Handler extends Predicate<Context<? extends Condition>>, BiFunc
   }
 
   /**
-   * How a handler decided to handle a condition. Instances are produced by {@linkplain Context operations}, and
+   * How a handler decided to handle a condition. Instances are produced by {@linkplain Signal operations}, and
    * consumed by {@link Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) signal}.
    */
   class Decision implements Supplier<Object> {
@@ -110,8 +110,8 @@ public interface Handler extends Predicate<Context<? extends Condition>>, BiFunc
 }
 
 class HandlerImpl implements Handler {
-  private final Predicate<Context<? extends Condition>> predicate;
-  private final BiFunction<Context<? extends Condition>, Operations, Decision> body;
+  private final Predicate<Signal<? extends Condition>> predicate;
+  private final BiFunction<Signal<? extends Condition>, Operations, Decision> body;
 
   /**
    * Creates a new instance, ensuring statically that the given parameters are type-compatible.
@@ -124,7 +124,7 @@ class HandlerImpl implements Handler {
    * @throws NullPointerException if any of the arguments are {@code null}.
    */
   @SuppressWarnings("unchecked")
-  <C extends Condition, S extends C> HandlerImpl(Predicate<Context<S>> predicate, BiFunction<Context<C>, Operations, Decision> body) {
+  <C extends Condition, S extends C> HandlerImpl(Predicate<Signal<S>> predicate, BiFunction<Signal<C>, Operations, Decision> body) {
     Objects.requireNonNull(predicate, "conditionType");
     Objects.requireNonNull(body, "body");
 
@@ -133,20 +133,20 @@ class HandlerImpl implements Handler {
   }
 
   @Override
-  public boolean test(Context<? extends Condition> context) {
-    return getPredicate().test(context);
+  public boolean test(Signal<? extends Condition> signal) {
+    return getPredicate().test(signal);
   }
 
   @Override
-  public Decision apply(Context<?> ctx, Operations ops) {
-    return getBody().apply(ctx, ops);
+  public Decision apply(Signal<?> s, Operations ops) {
+    return getBody().apply(s, ops);
   }
 
-  public Predicate<Context<? extends Condition>> getPredicate() {
+  public Predicate<Signal<? extends Condition>> getPredicate() {
     return predicate;
   }
 
-  public BiFunction<Context<? extends Condition>, Operations, Decision> getBody() {
+  public BiFunction<Signal<? extends Condition>, Operations, Decision> getBody() {
     return body;
   }
 }

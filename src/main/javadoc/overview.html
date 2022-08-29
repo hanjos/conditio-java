@@ -9,7 +9,7 @@ A simple condition system for Java, without dynamic variables or reflection wiza
   Exception systems divide responsibilities in two parts:
   <em>signalling</em> the exception (like <code>throw</code>), and <em>handling</em> it (like <code>try/catch</code>),
   unwinding the call stack until a handler is found. The problem is, by the time the error reaches the right handler,
-  the context that signalled the exception is mostly gone. This limits the recovery options available.
+  the signal that signalled the exception is mostly gone. This limits the recovery options available.
 <p>
   A condition system, like the one in Common Lisp, provides a more general solution by splitting responsibilities
   in <em>three</em> parts: <em>signalling</em> the condition, <em>handling</em> it, and <em>restarting</em> execution.

@@ -1,7 +1,7 @@
 package org.sbrubbles.conditio.fixtures.warning;
 
-import org.sbrubbles.conditio.Context;
 import org.sbrubbles.conditio.HandlerNotFoundException;
+import org.sbrubbles.conditio.Signal;
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 
 import java.io.PrintStream;
@@ -18,8 +18,8 @@ public class WarningPolicy implements HandlerNotFoundPolicy<Void> {
   }
 
   @Override
-  public Void onHandlerNotFound(Context<?> context) throws HandlerNotFoundException {
-    this.output.println("[WARN] " + context.getCondition());
+  public Void onHandlerNotFound(Signal<?> signal) throws HandlerNotFoundException {
+    this.output.println("[WARN] " + signal.getCondition());
     return null;
   }
 }

@@ -34,19 +34,19 @@ public interface HandlerNotFoundPolicy<T> {
    * <p>
    * Implementations which error out are expected to do so with a {@link HandlerNotFoundException}.
    *
-   * @param context the context of the {@code signal} invocation.
+   * @param signal the signal of the {@code signal} invocation.
    * @return the value to be returned by {@code signal}.
    * @throws HandlerNotFoundException may be thrown if no handler is found.
    */
-  T onHandlerNotFound(Context<?> context) throws HandlerNotFoundException;
+  T onHandlerNotFound(Signal<?> signal) throws HandlerNotFoundException;
 }
 
 class HandlerNotFoundPolicyImpl {
   @SuppressWarnings("rawtypes")
-  static final HandlerNotFoundPolicy ERROR = (context) -> {
-    throw new HandlerNotFoundException(context);
+  static final HandlerNotFoundPolicy ERROR = signal -> {
+    throw new HandlerNotFoundException(signal);
   };
 
   @SuppressWarnings("rawtypes")
-  static final HandlerNotFoundPolicy IGNORE = (context) -> null;
+  static final HandlerNotFoundPolicy IGNORE = signal -> null;
 }

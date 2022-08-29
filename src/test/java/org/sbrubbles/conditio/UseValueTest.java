@@ -39,11 +39,11 @@ public class UseValueTest {
     }
   }
 
-  static <C extends Condition> BiFunction<Context<C>, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Context<C>, Handler.Operations, Handler.Decision> body) {
-    return (ctx, ops) -> {
+  static <C extends Condition> BiFunction<Signal<C>, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
+    return (s, ops) -> {
       trail.add(message);
 
-      return body.apply(ctx, ops);
+      return body.apply(s, ops);
     };
   }
 

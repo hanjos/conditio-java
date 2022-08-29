@@ -7,9 +7,9 @@ import java.util.Objects;
 /**
  * Holds data about a specific {@code signal} invocation, including the condition.
  *
- * @param <C> the condition type this context holds.
+ * @param <C> the condition type this signal holds.
  */
-public class Context<C extends Condition> {
+public class Signal<C extends Condition> {
   private final C condition;
   private final Policies<?> policies;
   private final Scope scope;
@@ -22,7 +22,7 @@ public class Context<C extends Condition> {
    * @param scope     the scope where the condition was signalled.
    * @throws NullPointerException if one or more arguments are null.
    */
-  public Context(C condition, Policies<?> policies, Scope scope) {
+  public Signal(C condition, Policies<?> policies, Scope scope) {
     this.condition = Objects.requireNonNull(condition, "condition");
     this.policies = Objects.requireNonNull(policies, "policies");
     this.scope = Objects.requireNonNull(scope, "scope");

@@ -11,12 +11,12 @@ import org.sbrubbles.conditio.Scope;
  * used, and the handler means only to acknowledge the condition (and maybe do a side effect or two), like
  * <pre>
  *   try(Scope scope = Scopes.create()) {
- *     scope.handle(Progress.class, ctx -&gt; {
+ *     scope.handle(Progress.class, (s, ops) -&gt; {
  *       // do something
- *       showProgressToUser(ctx.getCondition().getValue());
+ *       showProgressToUser(s.getCondition().getValue());
  *
  *       // condition acknowledged; carry on
- *       return ctx.restart(Restarts.resume());
+ *       return ops.restart(Restarts.resume());
  *     });
  *
  *     // note that result of signal() is ignored and thrown away

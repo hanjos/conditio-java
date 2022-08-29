@@ -19,9 +19,9 @@ public class PoliciesTest {
 
     try (Scope scope = Scopes.create()) {
       Condition c = new BasicCondition("");
-      Context<Condition> ctx = new Context<>(c, policies, scope);
+      Signal<Condition> s = new Signal<>(c, policies, scope);
 
-      assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(ctx));
+      assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(s));
     }
   }
 
@@ -34,12 +34,12 @@ public class PoliciesTest {
       Policies<?> pWithIgnore = new Policies<>(
         trace(trail, "ignore", HandlerNotFoundPolicy.ignore()),
         ReturnTypePolicy.ignore());
-      pWithIgnore.onHandlerNotFound(new Context<>(c, pWithIgnore, scope));
+      pWithIgnore.onHandlerNotFound(new Signal<>(c, pWithIgnore, scope));
 
       Policies<?> pWithError = new Policies<>(
         trace(trail, "error", HandlerNotFoundPolicy.error()),
         ReturnTypePolicy.ignore());
-      assertThrows(HandlerNotFoundException.class, () -> pWithError.onHandlerNotFound(new Context<>(c, pWithError, scope)));
+      assertThrows(HandlerNotFoundException.class, () -> pWithError.onHandlerNotFound(new Signal<>(c, pWithError, scope)));
 
       assertLinesMatch(Arrays.asList("ignore", "error"), trail);
     }
@@ -58,10 +58,10 @@ public class PoliciesTest {
   }
 
   static <T> HandlerNotFoundPolicy<T> trace(List<String> trail, String message, HandlerNotFoundPolicy<T> policy) {
-    return ctx -> {
+    return s -> {
       trail.add(message);
 
-      return policy.onHandlerNotFound(ctx);
+      return policy.onHandlerNotFound(s);
     };
   }
 }
