@@ -3,6 +3,7 @@ package org.sbrubbles.conditio.handlers;
 import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Signal;
 
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
@@ -16,10 +17,13 @@ public class Signals {
   /**
    * Creates a predicate which checks if a signal holds a condition compatible with the given type.
    *
-   * @param type the expected type for the condition.
+   * @param type the expected type for the condition. May not be null.
    * @return a predicate which checks if signals have conditions compatible with the given type.
+   * @throws NullPointerException if the given type is null.
    */
   public static <C extends Condition> Predicate<Signal<C>> conditionType(final Class<? extends Condition> type) {
-    return s -> s != null && type != null && type.isInstance(s.getCondition());
+    Objects.requireNonNull(type, "type");
+
+    return s -> s != null && type.isInstance(s.getCondition());
   }
 }
