@@ -109,48 +109,6 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
   }
 }
 
-class HandlerImpl implements Handler {
-  private final Predicate<Signal<? extends Condition>> predicate;
-  private final BiFunction<Signal<? extends Condition>, Operations, Decision> body;
-
-  /**
-   * Creates a new instance, ensuring statically that the given parameters are type-compatible.
-   *
-   * @param predicate the type of {@link Condition} this handler expects.
-   * @param body      a function which receives a condition and the available operations, and returns the result.
-   * @param <C>       a subtype of {@code Condition}.
-   * @param <S>       a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may
-   *                  accept subtypes other than {@code S}.
-   * @throws NullPointerException if any of the arguments are {@code null}.
-   */
-  @SuppressWarnings("unchecked")
-  <C extends Condition, S extends C> HandlerImpl(Predicate<Signal<S>> predicate, BiFunction<Signal<C>, Operations, Decision> body) {
-    Objects.requireNonNull(predicate, "conditionType");
-    Objects.requireNonNull(body, "body");
-
-    this.predicate = (Predicate) predicate;
-    this.body = (BiFunction) body;
-  }
-
-  @Override
-  public boolean test(Signal<? extends Condition> signal) {
-    return getPredicate().test(signal);
-  }
-
-  @Override
-  public Decision apply(Signal<?> s, Operations ops) {
-    return getBody().apply(s, ops);
-  }
-
-  public Predicate<Signal<? extends Condition>> getPredicate() {
-    return predicate;
-  }
-
-  public BiFunction<Signal<? extends Condition>, Operations, Decision> getBody() {
-    return body;
-  }
-}
-
 class HandlerOperationsImpl implements Handler.Operations {
   private final Scope scope;
 

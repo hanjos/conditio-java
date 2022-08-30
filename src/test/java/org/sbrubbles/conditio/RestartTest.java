@@ -2,6 +2,7 @@ package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.sbrubbles.conditio.restarts.Restarts;
 import org.sbrubbles.conditio.restarts.UseValue;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,19 +13,19 @@ public class RestartTest {
 
   @BeforeEach
   public void setUp() {
-    rA = new RestartImpl<>(A.class, this::body);
-    rB = new RestartImpl<>(B.class, this::body);
+    rA = Restarts.on(A.class, this::body);
+    rB = Restarts.on(B.class, this::body);
   }
 
   @Test
   public void nullParametersAreNotAllowed() {
 
     assertThrows(NullPointerException.class,
-      () -> new RestartImpl<>(null, this::body), "missing optionType");
+      () -> Restarts.on(null, this::body), "missing optionType");
     assertThrows(NullPointerException.class,
-      () -> new RestartImpl<>(A.class, null), "missing body");
+      () -> Restarts.on(A.class, null), "missing body");
     assertThrows(NullPointerException.class,
-      () -> new RestartImpl<>(null, null), "missing both");
+      () -> Restarts.on(null, null), "missing both");
   }
 
   @Test

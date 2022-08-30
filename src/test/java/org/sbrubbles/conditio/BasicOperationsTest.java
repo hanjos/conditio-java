@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BasicOperationsTest {
   @Test
   public void signalRemovesTheRestartsAfterwards() {
-    final Restart<Entry> USE_VALUE = Restart.on(UseValue.class, r -> (Entry) r.getValue());
+    final Restart<Entry> USE_VALUE = Restarts.on(UseValue.class, r -> (Entry) r.getValue());
     final Entry TEST_VALUE = new Entry("test");
     final Restart.Option u = new UseValue<>(TEST_VALUE);
 
@@ -243,7 +243,7 @@ public class BasicOperationsTest {
       final List<?> actual = scope.signal(
         new BasicCondition(""),
         new Policies<>(HandlerNotFoundPolicy.ignore(), ReturnTypePolicy.expects(AbstractList.class)),
-        Restart.on(BasicRestartOption.class, args -> expected));
+        Restarts.on(BasicRestartOption.class, args -> expected));
 
       assertSame(expected, actual);
     }
@@ -258,7 +258,7 @@ public class BasicOperationsTest {
       final List<?> actual = scope.raise(
         new BasicCondition(""),
         AbstractList.class,
-        Restart.on(BasicRestartOption.class, args -> expected));
+        Restarts.on(BasicRestartOption.class, args -> expected));
 
       assertSame(expected, actual);
     }

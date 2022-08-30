@@ -1,5 +1,6 @@
 package org.sbrubbles.conditio;
 
+import org.sbrubbles.conditio.handlers.Handlers;
 import org.sbrubbles.conditio.handlers.Signals;
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
@@ -45,7 +46,7 @@ import java.util.function.Supplier;
  *   try(Scope scope = Scopes.create()) {
  *     // signals a condition, sets a restart, and waits for the result
  *     Entry entry = scope.raise(new MalformedEntry("NOOOOOOOO"),
- *                      Restart.on(RetryWith.class, r -&gt; func(r.getValue())));
+ *                      Restarts.on(RetryWith.class, r -&gt; func(r.getValue())));
  *
  *     // carry on...
  *   }
@@ -54,8 +55,8 @@ import java.util.function.Supplier;
  */
 public interface Scope extends AutoCloseable {
   /**
-   * Establishes a new {@linkplain Handler handler} in this scope. It is responsible for handling conditions, returning
-   * a result for {@link #signal(Condition, Policies, Restart[]) signal}.
+   * Establishes a new {@linkplain Handler handler} in this scope, which matches on any conditions compatible with the
+   * given type, and runs the given body to produce a result.
    *
    * @param conditionType the type of conditions handled.
    * @param body          the handler code.
@@ -64,9 +65,21 @@ public interface Scope extends AutoCloseable {
    *                      subtypes
    *                      other than {@code S}.
    * @return this instance, for method chaining.
-   * @throws NullPointerException if one or both parameters are {@code null}.
+   * @throws NullPointerException if one or both parameters are null.
+   * @see #handle(Handler)
    */
-  <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body);
+  default <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
+    return handle(Handlers.on(Signals.conditionType(conditionType), body));
+  }
+
+  /**
+   * Establishes a new {@linkplain Handler handler} in this scope.
+   *
+   * @param handler the given handler.
+   * @return this instance, for method chaining.
+   * @throws NullPointerException if the given handler is null.
+   */
+  Scope handle(Handler handler);
 
   /**
    * Evaluates {@code body}, providing additional restarts for it. It's useful for scopes that may not know how to
@@ -75,7 +88,7 @@ public interface Scope extends AutoCloseable {
    * <p>
    * Usage example:
    * <pre>
-   * final Restart SKIP_ENTRY = Restart.on(SkipEntry.class, r -&gt; SKIP_ENTRY_MARKER);
+   * final Restart SKIP_ENTRY = Restarts.on(SkipEntry.class, r -&gt; SKIP_ENTRY_MARKER);
    *
    * for (String line : lines) {
    *   // parseLogEntry may signal a condition. This code doesn't handle it,
@@ -225,8 +238,8 @@ final class ScopeImpl implements Scope {
   }
 
   @Override
-  public <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
-    this.handlers.add(new HandlerImpl(Signals.conditionType(conditionType), body));
+  public Scope handle(Handler handler) {
+    this.handlers.add(Objects.requireNonNull(handler, "handler"));
 
     return this;
   }

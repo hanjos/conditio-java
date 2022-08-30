@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
+import org.sbrubbles.conditio.handlers.Handlers;
 import org.sbrubbles.conditio.policies.Policies;
 
 import java.util.stream.Stream;
@@ -22,14 +23,14 @@ public class HandlerTest {
 
   @BeforeEach
   public void setUp() {
-    h = new HandlerImpl(conditionType(BasicCondition.class), this::body);
+    h = Handlers.on(conditionType(BasicCondition.class), this::body);
   }
 
   @Test
   public void nullParametersAreNotAllowed() {
-    assertThrows(NullPointerException.class, () -> new HandlerImpl(null, this::body), "missing conditionType");
-    assertThrows(NullPointerException.class, () -> new HandlerImpl(conditionType(BasicCondition.class), null), "missing body");
-    assertThrows(NullPointerException.class, () -> new HandlerImpl(null, null), "missing both");
+    assertThrows(NullPointerException.class, () -> Handlers.on(null, this::body), "missing conditionType");
+    assertThrows(NullPointerException.class, () -> Handlers.on(conditionType(BasicCondition.class), null), "missing body");
+    assertThrows(NullPointerException.class, () -> Handlers.on(null, null), "missing both");
   }
 
   @ParameterizedTest
@@ -54,17 +55,6 @@ public class HandlerTest {
       final Handler.Operations ops = new HandlerOperationsImpl(scope);
 
       assertEquals(expected, h.apply(s, ops).get());
-    }
-  }
-
-  @Test
-  public void getters() {
-    try (Scope a = Scopes.create()) {
-      Condition c = new BasicCondition("OMGWTFBBQ");
-      final Signal<Condition> s = new Signal<>(c, new Policies<>(), a);
-
-      assertEquals(c, s.getCondition());
-      assertEquals(a, s.getScope());
     }
   }
 

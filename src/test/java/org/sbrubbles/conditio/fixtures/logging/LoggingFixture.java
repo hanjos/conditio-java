@@ -9,6 +9,7 @@ import org.sbrubbles.conditio.handlers.Handlers;
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.policies.ReturnTypePolicy;
+import org.sbrubbles.conditio.restarts.Restarts;
 import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.io.BufferedReader;
@@ -39,9 +40,9 @@ public class LoggingFixture extends AbstractFixture {
         return new Entry(text);
       } else {
         // useful for tracing
-        final Restart<Entry> USE_VALUE = Restart.on(UseValue.class,
+        final Restart<Entry> USE_VALUE = Restarts.on(UseValue.class,
           traceRestart("UseValue", UseValue<Entry>::getValue));
-        final Restart<Entry> RETRY_WITH = Restart.on(RetryWith.class,
+        final Restart<Entry> RETRY_WITH = Restarts.on(RetryWith.class,
           traceRestart("RetryWith", r -> parseLogEntry(r.getText())));
 
         return scope.signal(
@@ -64,7 +65,7 @@ public class LoggingFixture extends AbstractFixture {
       List<Entry> entries = new ArrayList<>();
 
       // skips malformed entries by returning a predefined "Entry", which can be checked and skipped
-      final Restart<?> SKIP_ENTRY = Restart.on(SkipEntry.class,
+      final Restart<?> SKIP_ENTRY = Restarts.on(SkipEntry.class,
         traceRestart("SkipEntry", r -> SKIP_ENTRY_MARKER));
 
       for (String line : lines) {
