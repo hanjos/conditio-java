@@ -1,4 +1,4 @@
 /**
- * Provides some helpers for handler creation and management.
+ * Provides some utilities for handlers.
  */
 package org.sbrubbles.conditio.handlers;
