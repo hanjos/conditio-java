@@ -1,9 +1,9 @@
 # 0.6
 
-* Instead of just a condition, a handler now takes a `Handler.Context`, which holds data about the signal (like the condition and the scope from where it came), and a `Handler.Operations`, which provides only the available operations.
+* Instead of just a condition, a handler now takes a `Signal`, which holds data about the signal (like the condition and the scope from where it came), and a `Handler.Operations`, which provides only the available operations.
 * `ReturnTypePolicy` indicates the type `signal` expects to return.
 * `Policies` is now an object which implements all `*Policy` interfaces, with ways to inject specific policies (via constructor).
-* `HandlerNotFoundException` now takes a `Handler.Context`, not a `Condition`.
+* `HandlerNotFoundException` now takes a `Signal`, not a `Condition`.
 
 # 0.5
 
