@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
-import org.sbrubbles.conditio.handlers.Signals;
 import org.sbrubbles.conditio.policies.Policies;
 
 import java.util.function.Predicate;

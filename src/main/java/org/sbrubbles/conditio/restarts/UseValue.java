@@ -1,6 +1,7 @@
 package org.sbrubbles.conditio.restarts;
 
 import org.sbrubbles.conditio.Restart;
+import org.sbrubbles.conditio.Restarts;
 
 /**
  * A restart option holding the value to be returned.

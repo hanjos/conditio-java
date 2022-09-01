@@ -1,13 +1,13 @@
-package org.sbrubbles.conditio.restarts;
+package org.sbrubbles.conditio;
 
-import org.sbrubbles.conditio.Restart;
-import org.sbrubbles.conditio.Scope;
+import org.sbrubbles.conditio.restarts.Resume;
+import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Some general use restarts and restart options, ready for consumption.
+ * Some utilities for restarts and restart options.
  * <p>
  * This class acts as a namespace, and isn't meant to be inherited or instantiated.
  */

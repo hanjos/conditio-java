@@ -1,10 +1,10 @@
 package org.sbrubbles.conditio.fixtures.aborting;
 
 import org.sbrubbles.conditio.AbortException;
+import org.sbrubbles.conditio.Handlers;
 import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.handlers.Handlers;
 
 import java.util.ArrayList;
 import java.util.Collections;

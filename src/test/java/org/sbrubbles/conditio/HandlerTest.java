@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
-import org.sbrubbles.conditio.handlers.Handlers;
 import org.sbrubbles.conditio.policies.Policies;
 
 import java.util.stream.Stream;
@@ -16,7 +15,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.sbrubbles.conditio.handlers.Signals.conditionType;
+import static org.sbrubbles.conditio.Signals.conditionType;
 
 public class HandlerTest {
   private Handler h;

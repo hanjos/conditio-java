@@ -1,9 +1,9 @@
 package org.sbrubbles.conditio.fixtures.tracing;
 
+import org.sbrubbles.conditio.Restarts;
 import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
-import org.sbrubbles.conditio.restarts.Restarts;
 
 import java.util.ArrayList;
 import java.util.List;

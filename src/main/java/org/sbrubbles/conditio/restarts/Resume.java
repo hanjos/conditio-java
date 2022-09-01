@@ -2,6 +2,7 @@ package org.sbrubbles.conditio.restarts;
 
 import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Restart;
+import org.sbrubbles.conditio.Restarts;
 import org.sbrubbles.conditio.Scope;
 
 /**

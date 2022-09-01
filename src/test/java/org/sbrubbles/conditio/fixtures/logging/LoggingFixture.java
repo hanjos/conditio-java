@@ -1,15 +1,10 @@
 package org.sbrubbles.conditio.fixtures.logging;
 
-import org.sbrubbles.conditio.Condition;
-import org.sbrubbles.conditio.Restart;
-import org.sbrubbles.conditio.Scope;
-import org.sbrubbles.conditio.Scopes;
+import org.sbrubbles.conditio.*;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
-import org.sbrubbles.conditio.handlers.Handlers;
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.policies.ReturnTypePolicy;
-import org.sbrubbles.conditio.restarts.Restarts;
 import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.io.BufferedReader;

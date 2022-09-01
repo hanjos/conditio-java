@@ -1,7 +1,4 @@
-package org.sbrubbles.conditio.handlers;
-
-import org.sbrubbles.conditio.Condition;
-import org.sbrubbles.conditio.Signal;
+package org.sbrubbles.conditio;
 
 import java.util.Objects;
 import java.util.function.Predicate;

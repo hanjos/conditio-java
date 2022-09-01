@@ -8,11 +8,9 @@ import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.Entry;
 import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
-import org.sbrubbles.conditio.handlers.Handlers;
 import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.policies.ReturnTypePolicy;
-import org.sbrubbles.conditio.restarts.Restarts;
 import org.sbrubbles.conditio.restarts.Resume;
 import org.sbrubbles.conditio.restarts.UseValue;
 
