@@ -18,7 +18,7 @@ public class Signals {
    * @return a predicate which checks if signals have conditions compatible with the given type.
    * @throws NullPointerException if the given type is null.
    */
-  public static <C extends Condition> Predicate<Signal<C>> conditionType(final Class<? extends Condition> type) {
+  public static <C extends Condition> Predicate<Signal<C, ?>> conditionType(final Class<? extends Condition> type) {
     Objects.requireNonNull(type, "type");
 
     return s -> s != null && type.isInstance(s.getCondition());

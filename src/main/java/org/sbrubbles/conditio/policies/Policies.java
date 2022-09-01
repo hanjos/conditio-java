@@ -51,7 +51,7 @@ public class Policies<T> implements HandlerNotFoundPolicy<T>, ReturnTypePolicy<T
    * @see HandlerNotFoundPolicy#error()
    */
   @Override
-  public T onHandlerNotFound(Signal<?> signal) throws HandlerNotFoundException {
+  public T onHandlerNotFound(Signal<?, ?> signal) throws HandlerNotFoundException {
     return handlerNotFoundPolicy.onHandlerNotFound(signal);
   }
 

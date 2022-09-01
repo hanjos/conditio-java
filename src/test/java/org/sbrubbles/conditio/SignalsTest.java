@@ -20,8 +20,8 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 public class SignalsTest {
   @ParameterizedTest
   @MethodSource("conditionTypeProvider")
-  public <C extends Condition> void conditionType(boolean expected, Class<C> conditionType, Signal<C> input) {
-    Predicate<Signal<C>> predicate = Signals.conditionType(conditionType);
+  public <C extends Condition> void conditionType(boolean expected, Class<C> conditionType, Signal<C, ?> input) {
+    Predicate<Signal<C, ?>> predicate = Signals.conditionType(conditionType);
 
     assertEquals(expected, predicate.test(input));
   }
@@ -40,7 +40,7 @@ public class SignalsTest {
     );
   }
 
-  static <C extends Condition> Signal<C> withCondition(C condition) {
+  static <C extends Condition> Signal<C, ?> withCondition(C condition) {
     // XXX not best practice, but for these tests, should be good enough
     try (Scope scope = Scopes.create()) {
       return new Signal<>(condition, new Policies<>(), scope);

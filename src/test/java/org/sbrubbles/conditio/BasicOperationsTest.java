@@ -295,7 +295,7 @@ public class BasicOperationsTest {
     );
   }
 
-  static <C extends Condition> BiFunction<Signal<C>, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
+  static <C extends Condition> BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body) {
     return (s, ops) -> {
       trail.add(message);
 

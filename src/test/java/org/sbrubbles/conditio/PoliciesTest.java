@@ -19,7 +19,7 @@ public class PoliciesTest {
 
     try (Scope scope = Scopes.create()) {
       Condition c = new BasicCondition("");
-      Signal<Condition> s = new Signal<>(c, policies, scope);
+      Signal<Condition, ?> s = new Signal<>(c, policies, scope);
 
       assertThrows(HandlerNotFoundException.class, () -> policies.onHandlerNotFound(s));
     }

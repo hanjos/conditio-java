@@ -65,7 +65,7 @@ public interface Scope extends AutoCloseable {
    * @throws NullPointerException if one or both parameters are null.
    * @see #handle(Handler)
    */
-  default <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
+  default <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body) {
     return handle(Handlers.on(Signals.conditionType(conditionType), body));
   }
 
@@ -264,7 +264,7 @@ final class ScopeImpl implements Scope {
     try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
       scope.set(restarts);
 
-      Signal<? extends Condition> s = new Signal<>(condition, policies, scope);
+      Signal<? extends Condition, T> s = new Signal<>(condition, policies, scope);
       Handler.Operations ops = new HandlerOperationsImpl(scope);
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(s)) {

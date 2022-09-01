@@ -11,14 +11,14 @@ import org.sbrubbles.conditio.policies.Policies;
  * @see Signal
  */
 public class HandlerNotFoundException extends RuntimeException {
-  private final Signal<?> signal;
+  private final Signal<?, ?> signal;
 
   /**
    * Creates a new instance.
    *
    * @param signal the {@link Scope#signal(Condition, Policies, Restart[]) signal} signal that found no handler.
    */
-  public HandlerNotFoundException(Signal<?> signal) {
+  public HandlerNotFoundException(Signal<?, ?> signal) {
     super("No handler found for " + signal);
 
     this.signal = signal;
@@ -29,7 +29,7 @@ public class HandlerNotFoundException extends RuntimeException {
    *
    * @return the signal that could not be handled.
    */
-  public Signal<?> getContext() {
+  public Signal<?, ?> getContext() {
     return signal;
   }
 }

@@ -24,7 +24,7 @@ public final class Handlers {
    *                  accept subtypes other than {@code S}.
    * @throws NullPointerException if any of the arguments are null.
    */
-  public static <C extends Condition, S extends C> Handler on(Predicate<Signal<S>> predicate, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
+  public static <C extends Condition, S extends C> Handler on(Predicate<Signal<S, ?>> predicate, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body) {
     return new HandlerImpl(predicate, body);
   }
 
@@ -34,7 +34,7 @@ public final class Handlers {
    * @param option the restart option used to select a restart.
    * @return a handler body that invokes the restart matching the given option.
    */
-  public static <C extends Condition> BiFunction<Signal<C>, Handler.Operations, Handler.Decision> restart(Restart.Option option) {
+  public static <C extends Condition> BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> restart(Restart.Option option) {
     return (s, ops) -> ops.restart(option);
   }
 
@@ -43,7 +43,7 @@ public final class Handlers {
    *
    * @return a handler body that skips handling.
    */
-  public static <C extends Condition> BiFunction<Signal<C>, Handler.Operations, Handler.Decision> skip() {
+  public static <C extends Condition> BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> skip() {
     return (s, ops) -> ops.skip();
   }
 
@@ -52,36 +52,36 @@ public final class Handlers {
    *
    * @return a handler body that aborts execution.
    */
-  public static <C extends Condition> BiFunction<Signal<C>, Handler.Operations, Handler.Decision> abort() {
+  public static <C extends Condition> BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> abort() {
     return (s, ops) -> ops.abort();
   }
 }
 
 class HandlerImpl implements Handler {
-  private final Predicate<Signal<? extends Condition>> predicate;
-  private final BiFunction<Signal<? extends Condition>, Operations, Decision> body;
+  private final Predicate<Signal<? extends Condition, ?>> predicate;
+  private final BiFunction<Signal<? extends Condition, ?>, Operations, Decision> body;
 
   @SuppressWarnings("unchecked")
-  <C extends Condition, S extends C> HandlerImpl(Predicate<Signal<S>> predicate, BiFunction<Signal<C>, Operations, Decision> body) {
+  <C extends Condition, S extends C> HandlerImpl(Predicate<Signal<S, ?>> predicate, BiFunction<Signal<C, ?>, Operations, Decision> body) {
     this.predicate = (Predicate) Objects.requireNonNull(predicate, "conditionType");
     this.body = (BiFunction) Objects.requireNonNull(body, "body");
   }
 
   @Override
-  public boolean test(Signal<? extends Condition> signal) {
+  public boolean test(Signal<? extends Condition, ?> signal) {
     return getPredicate().test(signal);
   }
 
   @Override
-  public Decision apply(Signal<?> s, Operations ops) {
+  public Decision apply(Signal<?, ?> s, Operations ops) {
     return getBody().apply(s, ops);
   }
 
-  public Predicate<Signal<? extends Condition>> getPredicate() {
+  public Predicate<Signal<? extends Condition, ?>> getPredicate() {
     return predicate;
   }
 
-  public BiFunction<Signal<? extends Condition>, Operations, Decision> getBody() {
+  public BiFunction<Signal<? extends Condition, ?>, Operations, Decision> getBody() {
     return body;
   }
 }
