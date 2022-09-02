@@ -63,9 +63,11 @@ public interface Scope extends AutoCloseable {
    *                      other than {@code S}.
    * @return this instance, for method chaining.
    * @throws NullPointerException if one or both parameters are null.
+   * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see #handle(Handler)
    */
-  default <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body) {
+  default <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body)
+    throws NullPointerException, UnsupportedOperationException {
     return handle(Handlers.on(Signals.conditionType(conditionType), body));
   }
 
@@ -74,9 +76,10 @@ public interface Scope extends AutoCloseable {
    *
    * @param handler the given handler.
    * @return this instance, for method chaining.
-   * @throws NullPointerException if the given handler is null.
+   * @throws NullPointerException          if the given handler is null.
+   * @throws UnsupportedOperationException if this method is called on a closed scope.
    */
-  Scope handle(Handler handler);
+  Scope handle(Handler handler) throws NullPointerException, UnsupportedOperationException;
 
   /**
    * Evaluates {@code body}, providing additional restarts for it. It's useful for scopes that may not know how to
@@ -103,8 +106,9 @@ public interface Scope extends AutoCloseable {
    * @param <T> the type returned by {@code body}.
    * @return the result of calling {@code body}.
    * @throws NullPointerException if at least one parameter is {@code null}.
+   * @throws UnsupportedOperationException if this method is called on a closed scope.
    */
-  <T> T call(Supplier<T> body, Restart<?>... restarts);
+  <T> T call(Supplier<T> body, Restart<?>... restarts) throws NullPointerException, UnsupportedOperationException;
 
   /**
    * Signals a situation which the currently running code doesn't know how to deal with. This method will
@@ -124,12 +128,13 @@ public interface Scope extends AutoCloseable {
    * @throws HandlerNotFoundException if the policy opts to error out.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
    * @throws AbortException           if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
+   * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see #notify(Condition, Restart[])
    * @see #raise(Condition, Class, Restart[])
    */
   @SuppressWarnings({ "unchecked", "varargs" })
   <T> T signal(Condition condition, Policies<T> policies, Restart<? extends T>... restarts)
-    throws NullPointerException, HandlerNotFoundException, ClassCastException, AbortException;
+    throws NullPointerException, UnsupportedOperationException, HandlerNotFoundException, ClassCastException, AbortException;
 
   /**
    * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition which
@@ -144,13 +149,14 @@ public interface Scope extends AutoCloseable {
    * @param restarts  some restarts, which, along with {@code Resume}, will be available to the eventual handler.
    * @throws NullPointerException if one of the arguments, or the selected handler's decision is {@code null}.
    * @throws AbortException       if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
+   * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see org.sbrubbles.conditio.restarts.Resume Resume
    * @see HandlerNotFoundPolicy#ignore()
    * @see ReturnTypePolicy#ignore()
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   default void notify(Condition condition, Restart<?>... restarts)
-    throws NullPointerException, AbortException {
+    throws NullPointerException, UnsupportedOperationException, AbortException {
     Restart[] args = new Restart<?>[restarts.length + 1];
     args[0] = Restarts.resume();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
@@ -174,13 +180,14 @@ public interface Scope extends AutoCloseable {
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
    * @throws AbortException           if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
+   * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see org.sbrubbles.conditio.restarts.UseValue UseValue
    * @see HandlerNotFoundPolicy#error()
    * @see ReturnTypePolicy#expects(Class)
    */
   @SuppressWarnings("unchecked")
   default <T> T raise(Condition condition, Class<T> returnType, Restart<? extends T>... restarts)
-    throws NullPointerException, HandlerNotFoundException, ClassCastException, AbortException {
+    throws NullPointerException, UnsupportedOperationException, HandlerNotFoundException, ClassCastException, AbortException {
     Restart<? extends T>[] args = new Restart[restarts.length + 1];
     args[0] = Restarts.useValue();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
@@ -194,40 +201,43 @@ public interface Scope extends AutoCloseable {
    * An object to iterate over all reachable handlers in the call stack, starting from this instance to the root scope.
    *
    * @return an iterable to get all reachable handlers in the call stack.
+   * @throws UnsupportedOperationException if this method is called on a closed scope.
    */
-  Iterable<Handler> getAllHandlers();
+  Iterable<Handler> getAllHandlers() throws UnsupportedOperationException;
 
   /**
    * An object to iterate over all reachable restarts in the call stack, starting from this instance to the root scope.
    *
    * @return an iterable to get all reachable restarts in the call stack.
+   * @throws UnsupportedOperationException if this method is called on a closed scope.
    */
-  Iterable<Restart<?>> getAllRestarts();
+  Iterable<Restart<?>> getAllRestarts() throws UnsupportedOperationException;
 
   /**
    * The {@link Scope} instance wrapping this one. May be {@code null} if this is the topmost {@code Scope}.
    *
    * @return the {@link Scope} instance wrapping this one, or {@code null} if this is a root scope.
+   * @throws UnsupportedOperationException if this method is called on a closed scope.
    */
-  Scope getParent();
+  Scope getParent() throws UnsupportedOperationException;
 
   /**
-   * Updates the scope nesting when execution leaves the {@code try} block. Subtypes which override this should still
-   * call this method to preserve the proper nesting.
+   * Updates the scope nesting when execution leaves the {@code try} block, and marks this scope as closed. Any calls
+   * to the other methods in a closed scope should fail with an UnsupportedOperationException.
    */
   @Override
-  default void close() {
-    Scopes.retire();
-  }
+  void close();
 }
 
 final class ScopeImpl implements Scope {
+  private boolean closed;
   private final Scope parent;
 
   private final List<Handler> handlers;
   private final List<Restart<?>> restarts;
 
   ScopeImpl(Scope parent) {
+    this.closed = false;
     this.parent = parent;
 
     this.handlers = new ArrayList<>();
@@ -236,6 +246,8 @@ final class ScopeImpl implements Scope {
 
   @Override
   public Scope handle(Handler handler) {
+    ensureOpen();
+
     this.handlers.add(Objects.requireNonNull(handler, "handler"));
 
     return this;
@@ -243,6 +255,8 @@ final class ScopeImpl implements Scope {
 
   @Override
   public <T> T call(Supplier<T> body, Restart<?>... restarts) {
+    ensureOpen();
+
     Objects.requireNonNull(body, "body");
     Objects.requireNonNull(restarts, "restarts");
 
@@ -255,8 +269,9 @@ final class ScopeImpl implements Scope {
 
   @SuppressWarnings("unchecked")
   @Override
-  public <T> T signal(Condition condition, Policies<T> policies, Restart<? extends T>... restarts)
-    throws HandlerNotFoundException, NullPointerException, ClassCastException {
+  public <T> T signal(Condition condition, Policies<T> policies, Restart<? extends T>... restarts) {
+    ensureOpen();
+
     Objects.requireNonNull(condition, "condition");
     Objects.requireNonNull(policies, "policies");
     Objects.requireNonNull(restarts, "restarts");
@@ -287,9 +302,12 @@ final class ScopeImpl implements Scope {
    * Sets the given restarts in this scope.
    *
    * @param restarts some restarts to set.
-   * @throws NullPointerException if any of the given restarts is {@code null}.
+   * @throws NullPointerException          if any of the given restarts is null.
+   * @throws UnsupportedOperationException if this method is called on a closed scope.
    */
-  public void set(Restart<?>... restarts) {
+  public void set(Restart<?>... restarts) throws NullPointerException, UnsupportedOperationException {
+    ensureOpen();
+
     for (Restart<?> r : restarts) {
       this.restarts.add(Objects.requireNonNull(r));
     }
@@ -297,6 +315,8 @@ final class ScopeImpl implements Scope {
 
   @Override
   public Iterable<Handler> getAllHandlers() {
+    ensureOpen();
+
     return () -> new FullSearchIterator<Handler>(this) {
       @Override
       Iterator<Handler> getNextIteratorFrom(ScopeImpl scope) {
@@ -307,6 +327,8 @@ final class ScopeImpl implements Scope {
 
   @Override
   public Iterable<Restart<?>> getAllRestarts() {
+    ensureOpen();
+
     return () -> new FullSearchIterator<Restart<?>>(this) {
       @Override
       Iterator<Restart<?>> getNextIteratorFrom(ScopeImpl scope) {
@@ -317,7 +339,28 @@ final class ScopeImpl implements Scope {
 
   @Override
   public Scope getParent() {
+    ensureOpen();
+
     return parent;
+  }
+
+  @Override
+  public void close() {
+    if (closed) {
+      return;
+    }
+
+    Scopes.retire();
+    closed = true;
+  }
+
+  /**
+   * Checks if this scope is open, and errors out if not.
+   */
+  private void ensureOpen() {
+    if (closed) {
+      throw new UnsupportedOperationException("Scope closed");
+    }
   }
 }
 

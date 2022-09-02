@@ -262,6 +262,30 @@ public class BasicOperationsTest {
     }
   }
 
+  @Test
+  public void aClosedScopeDoesntWork() {
+    Scope shouldFail = Scopes.create();
+    shouldFail.close();
+
+    assertThrows(UnsupportedOperationException.class, () -> shouldFail.getParent());
+    assertThrows(UnsupportedOperationException.class, () -> shouldFail.getAllHandlers());
+    assertThrows(UnsupportedOperationException.class, () -> shouldFail.getAllRestarts());
+
+    final Class<Condition> conditionType = Condition.class;
+    final BiFunction<Signal<Condition, ?>, Handler.Operations, Handler.Decision> body = Handlers.abort();
+    final Handler h = Handlers.on(Signals.conditionType(conditionType), body);
+
+    assertThrows(UnsupportedOperationException.class, () -> shouldFail.handle(h));
+    assertThrows(UnsupportedOperationException.class, () -> shouldFail.handle(conditionType, body));
+
+    final Condition condition = new BasicCondition("");
+
+    assertThrows(UnsupportedOperationException.class, () -> shouldFail.notify(condition));
+    assertThrows(UnsupportedOperationException.class, () -> shouldFail.call(() -> ""));
+    assertThrows(UnsupportedOperationException.class, () -> shouldFail.raise(condition, Object.class));
+    assertThrows(UnsupportedOperationException.class, () -> shouldFail.signal(condition, new Policies<>()));
+  }
+
   static class BasicRestartOption implements Restart.Option { }
 
   static boolean matches(List<Restart.Option> options, Iterable<Restart<?>> iterable) {
