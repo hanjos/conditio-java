@@ -8,7 +8,7 @@ import java.util.function.Predicate;
  * <p>
  * This class acts as a namespace, and isn't meant to be inherited or instantiated.
  */
-public class Signals {
+public final class Signals {
   private Signals() { }
 
   /**

@@ -11,7 +11,7 @@ package org.sbrubbles.conditio;
 public final class Scopes {
   private static Scope current;
 
-  private Scopes() { /**/ }
+  private Scopes() { }
 
   /**
    * Creates and returns a new instance, nested in the (now former) current scope.
