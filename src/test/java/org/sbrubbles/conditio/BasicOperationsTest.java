@@ -1,6 +1,7 @@
 package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
@@ -267,23 +268,23 @@ public class BasicOperationsTest {
     Scope shouldFail = Scopes.create();
     shouldFail.close();
 
-    assertThrows(UnsupportedOperationException.class, () -> shouldFail.getParent());
-    assertThrows(UnsupportedOperationException.class, () -> shouldFail.getAllHandlers());
-    assertThrows(UnsupportedOperationException.class, () -> shouldFail.getAllRestarts());
+    assertUnsupported(() -> shouldFail.getParent());
+    assertUnsupported(() -> shouldFail.getAllHandlers());
+    assertUnsupported(() -> shouldFail.getAllRestarts());
 
     final Class<Condition> conditionType = Condition.class;
     final BiFunction<Signal<Condition, ?>, Handler.Operations, Handler.Decision> body = Handlers.abort();
     final Handler h = Handlers.on(Signals.conditionType(conditionType), body);
 
-    assertThrows(UnsupportedOperationException.class, () -> shouldFail.handle(h));
-    assertThrows(UnsupportedOperationException.class, () -> shouldFail.handle(conditionType, body));
+    assertUnsupported(() -> shouldFail.handle(h));
+    assertUnsupported(() -> shouldFail.handle(conditionType, body));
 
     final Condition condition = new BasicCondition("");
 
-    assertThrows(UnsupportedOperationException.class, () -> shouldFail.notify(condition));
-    assertThrows(UnsupportedOperationException.class, () -> shouldFail.call(() -> ""));
-    assertThrows(UnsupportedOperationException.class, () -> shouldFail.raise(condition, Object.class));
-    assertThrows(UnsupportedOperationException.class, () -> shouldFail.signal(condition, new Policies<>()));
+    assertUnsupported(() -> shouldFail.notify(condition));
+    assertUnsupported(() -> shouldFail.call(() -> ""));
+    assertUnsupported(() -> shouldFail.raise(condition, Object.class));
+    assertUnsupported(() -> shouldFail.signal(condition, new Policies<>()));
   }
 
   static class BasicRestartOption implements Restart.Option { }
@@ -310,6 +311,10 @@ public class BasicOperationsTest {
 
   static void assertOptionsDontMatch(List<Restart.Option> options, Iterable<Restart<?>> iterable, String message) {
     assertFalse(matches(options, iterable), message);
+  }
+
+  static void assertUnsupported(Executable body) {
+    assertThrows(UnsupportedOperationException.class, body);
   }
 
   static Stream<Function<String, Condition>> skipHandlingProvider() {
