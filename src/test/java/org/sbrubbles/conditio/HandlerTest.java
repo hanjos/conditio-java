@@ -51,7 +51,7 @@ public class HandlerTest {
       final Signal<Condition, ?> s = (condition != null) ?
         new Signal<>(condition, new Policies<>(), scope) :
         null;
-      final Handler.Operations ops = new HandlerOperationsImpl(scope);
+      final Handler.Operations ops = new Handler.Operations(scope);
 
       assertEquals(expected, h.apply(s, ops).get());
     }

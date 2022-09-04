@@ -1,5 +1,7 @@
 package org.sbrubbles.conditio;
 
+import org.sbrubbles.conditio.policies.Policies;
+
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -27,9 +29,16 @@ import java.util.function.Supplier;
  */
 public interface Handler extends Predicate<Signal<? extends Condition, ?>>, BiFunction<Signal<? extends Condition, ?>, Handler.Operations, Handler.Decision> {
   /**
-   * The ways a handler can handle a condition.
+   * The ways a handler can handle a condition. Instances are created by
+   * {@link Scope#signal(Condition, Policies, Restart[]) signal} to feed the handlers.
    */
-  interface Operations {
+  class Operations {
+    private final Scope scope;
+
+    Operations(Scope scope) {
+      this.scope = Objects.requireNonNull(scope, "scope");
+    }
+
     /**
      * Invokes a previously set recovery strategy. This method will search for a compatible
      * {@linkplain Restart restart} and run it, returning the result.
@@ -38,7 +47,15 @@ public interface Handler extends Predicate<Signal<? extends Condition, ?>>, BiFu
      * @return (a decision representing) the result of the selected restart's execution.
      * @throws RestartNotFoundException if no restart compatible with {@code option} could be found.
      */
-    Decision restart(Restart.Option option) throws RestartNotFoundException;
+    public Handler.Decision restart(Restart.Option option) throws RestartNotFoundException {
+      for (Restart<?> r : getScope().getAllRestarts()) {
+        if (r.test(option)) {
+          return new Handler.Decision(r.apply(option));
+        }
+      }
+
+      throw new RestartNotFoundException(option);
+    }
 
     /**
      * When a handler opts to not handle a particular condition. By calling this, other handlers, bound later in the
@@ -46,7 +63,7 @@ public interface Handler extends Predicate<Signal<? extends Condition, ?>>, BiFu
      *
      * @return an object representing the decision to skip.
      */
-    default Decision skip() {
+    public Decision skip() {
       return Handler.Decision.SKIP;
     }
 
@@ -82,8 +99,12 @@ public interface Handler extends Predicate<Signal<? extends Condition, ?>>, BiFu
      * @return nothing, since this method always throws.
      * @throws AbortException to interrupt execution and unwind the stack.
      */
-    default Decision abort() throws AbortException {
+    public Decision abort() throws AbortException {
       throw new AbortException();
+    }
+
+    Scope getScope() {
+      return scope;
     }
   }
 
@@ -106,28 +127,5 @@ public interface Handler extends Predicate<Signal<? extends Condition, ?>>, BiFu
      */
     @Override
     public Object get() { return result; }
-  }
-}
-
-class HandlerOperationsImpl implements Handler.Operations {
-  private final Scope scope;
-
-  public HandlerOperationsImpl(Scope scope) {
-    this.scope = Objects.requireNonNull(scope, "scope");
-  }
-
-  @Override
-  public Handler.Decision restart(Restart.Option option) throws RestartNotFoundException {
-    for (Restart<?> r : getScope().getAllRestarts()) {
-      if (r.test(option)) {
-        return new Handler.Decision(r.apply(option));
-      }
-    }
-
-    throw new RestartNotFoundException(option);
-  }
-
-  public Scope getScope() {
-    return scope;
   }
 }

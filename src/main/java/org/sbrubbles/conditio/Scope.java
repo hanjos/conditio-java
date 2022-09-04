@@ -280,7 +280,7 @@ final class ScopeImpl implements Scope {
       scope.set(restarts);
 
       Signal<? extends Condition, T> s = new Signal<>(condition, policies, scope);
-      Handler.Operations ops = new HandlerOperationsImpl(scope);
+      Handler.Operations ops = new Handler.Operations(scope);
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(s)) {
           continue;
