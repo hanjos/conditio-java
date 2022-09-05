@@ -23,4 +23,17 @@ public final class Signals {
 
     return s -> s != null && type.isInstance(s.getCondition());
   }
+
+  /**
+   * Creates a predicate which checks if a signal expects a result compatible with the given type.
+   *
+   * @param type the expected type for the result. May not be null.
+   * @return a predicate which checks if signals expects results compatible with the given type.
+   * @throws NullPointerException if the given type is null.
+   */
+  public static <C extends Condition> Predicate<Signal<C, ?>> returnType(final Class<?> type) {
+    Objects.requireNonNull(type, "type");
+
+    return s -> s != null && type.isAssignableFrom(s.getPolicies().getExpectedType());
+  }
 }

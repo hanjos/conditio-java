@@ -8,7 +8,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
+import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
+import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -20,15 +22,30 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 public class SignalsTest {
   @ParameterizedTest
   @MethodSource("conditionTypeProvider")
-  public <C extends Condition> void conditionType(boolean expected, Class<C> conditionType, Signal<C, ?> input) {
-    Predicate<Signal<C, ?>> predicate = Signals.conditionType(conditionType);
+  @SuppressWarnings("unchecked")
+  public void conditionType(boolean expected, Class<? extends Condition> conditionType, Signal<?, ?> input) {
+    Predicate<Signal<Condition, ?>> predicate = Signals.conditionType(conditionType);
 
-    assertEquals(expected, predicate.test(input));
+    assertEquals(expected, predicate.test((Signal) input));
   }
 
   @Test
   public void conditionTypeOnNull() {
     assertThrows(NullPointerException.class, () -> Signals.conditionType(null));
+  }
+
+  @ParameterizedTest
+  @MethodSource("returnTypeProvider")
+  @SuppressWarnings("unchecked")
+  public void returnType(boolean expected, Class<?> returnType, Signal<?, ?> input) {
+    Predicate<Signal<Condition, ?>> predicate = Signals.returnType(returnType);
+
+    assertEquals(expected, predicate.test((Signal) input));
+  }
+
+  @Test
+  public void returnTypeOnNull() {
+    assertThrows(NullPointerException.class, () -> Signals.returnType(null));
   }
 
   static Stream<Arguments> conditionTypeProvider() {
@@ -40,10 +57,32 @@ public class SignalsTest {
     );
   }
 
+  static Stream<Arguments> returnTypeProvider() {
+    return Stream.of(
+      arguments(true, String.class, withReturnType(String.class)),
+      arguments(true, Object.class, withReturnType(String.class)),
+      arguments(false, String.class, withReturnType(Object.class)),
+      arguments(false, String.class, null)
+    );
+  }
+
   static <C extends Condition> Signal<C, ?> withCondition(C condition) {
+    return with(condition, Object.class);
+  }
+
+  static Signal<Condition, ?> withReturnType(Class<?> returnType) {
+    return with(new BasicCondition(""), returnType);
+  }
+
+  static <C extends Condition> Signal<C, ?> with(C condition, Class<?> returnType) {
     // XXX not best practice, but for these tests, should be good enough
     try (Scope scope = Scopes.create()) {
-      return new Signal<>(condition, new Policies<>(), scope);
+      Policies<?> policies = new Policies<>(
+        HandlerNotFoundPolicy.error(),
+        ReturnTypePolicy.expects(returnType)
+      );
+
+      return new Signal<>(condition, policies, scope);
     }
   }
 }

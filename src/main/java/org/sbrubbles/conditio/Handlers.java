@@ -20,11 +20,11 @@ public final class Handlers {
    * @param body      a (bi)function which receives a {@linkplain Signal signal} and the available operations, and
    *                  returns the result.
    * @param <C>       a subtype of {@code Condition}.
-   * @param <S>       a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may
-   *                  accept subtypes other than {@code S}.
+   * @param <SubC>    a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may
+   *                  accept subtypes other than {@code SubC}.
    * @throws NullPointerException if any of the arguments are null.
    */
-  public static <C extends Condition, S extends C> Handler on(Predicate<Signal<S, ?>> predicate, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body) {
+  public static <C extends Condition, SubC extends C> Handler on(Predicate<Signal<SubC, ?>> predicate, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body) {
     return new HandlerImpl(predicate, body);
   }
 
@@ -62,7 +62,7 @@ class HandlerImpl implements Handler {
   private final BiFunction<Signal<? extends Condition, ?>, Operations, Decision> body;
 
   @SuppressWarnings("unchecked")
-  <C extends Condition, S extends C> HandlerImpl(Predicate<Signal<S, ?>> predicate, BiFunction<Signal<C, ?>, Operations, Decision> body) {
+  <C extends Condition, SubC extends C> HandlerImpl(Predicate<Signal<SubC, ?>> predicate, BiFunction<Signal<C, ?>, Operations, Decision> body) {
     this.predicate = (Predicate) Objects.requireNonNull(predicate, "conditionType");
     this.body = (BiFunction) Objects.requireNonNull(body, "body");
   }

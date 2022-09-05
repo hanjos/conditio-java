@@ -66,7 +66,7 @@ public interface Scope extends AutoCloseable {
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see #handle(Handler)
    */
-  default <C extends Condition, S extends C> Scope handle(Class<S> conditionType, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body)
+  default <C extends Condition, SubC extends C> Scope handle(Class<SubC> conditionType, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body)
     throws NullPointerException, UnsupportedOperationException {
     return handle(Handlers.on(Signals.conditionType(conditionType), body));
   }
