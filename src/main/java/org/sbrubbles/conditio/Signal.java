@@ -9,9 +9,9 @@ import java.util.Objects;
  *
  * @param <C> the condition type this signal holds.
  */
-public class Signal<C extends Condition, R> {
+public class Signal<C extends Condition> {
   private final C condition;
-  private final Policies<R> policies;
+  private final Policies<?> policies;
   private final Scope scope;
 
   /**
@@ -22,7 +22,7 @@ public class Signal<C extends Condition, R> {
    * @param scope     the scope where the condition was signalled.
    * @throws NullPointerException if one or more arguments are null.
    */
-  public Signal(C condition, Policies<R> policies, Scope scope) {
+  public Signal(C condition, Policies<?> policies, Scope scope) {
     this.condition = Objects.requireNonNull(condition, "condition");
     this.policies = Objects.requireNonNull(policies, "policies");
     this.scope = Objects.requireNonNull(scope, "scope");
@@ -42,7 +42,7 @@ public class Signal<C extends Condition, R> {
    *
    * @return the policies in effect for this signal invocation.
    */
-  public Policies<R> getPolicies() { return policies; }
+  public Policies<?> getPolicies() { return policies; }
 
   /**
    * The scope where the condition was emitted.

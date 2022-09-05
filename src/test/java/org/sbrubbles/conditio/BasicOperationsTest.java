@@ -273,7 +273,7 @@ public class BasicOperationsTest {
     assertUnsupported(() -> shouldFail.getAllRestarts());
 
     final Class<Condition> conditionType = Condition.class;
-    final BiFunction<Signal<Condition, ?>, Handler.Operations, Handler.Decision> body = Handlers.abort();
+    final BiFunction<Signal<Condition>, Handler.Operations, Handler.Decision> body = Handlers.abort();
     final Handler h = Handlers.on(Signals.conditionType(conditionType), body);
 
     assertUnsupported(() -> shouldFail.handle(h));
@@ -324,7 +324,7 @@ public class BasicOperationsTest {
     );
   }
 
-  static <C extends Condition> BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body) {
+  static <C extends Condition> BiFunction<Signal<C>, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
     return (s, ops) -> {
       trail.add(message);
 

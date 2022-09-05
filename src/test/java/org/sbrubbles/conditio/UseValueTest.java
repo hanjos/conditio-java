@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-@SuppressWarnings("unchecked")
 public class UseValueTest {
   @ParameterizedTest
   @MethodSource("valuesProvider")
@@ -37,7 +36,7 @@ public class UseValueTest {
     }
   }
 
-  static <C extends Condition> BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body) {
+  static <C extends Condition> BiFunction<Signal<C>, Handler.Operations, Handler.Decision> trace(List<String> trail, String message, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
     return (s, ops) -> {
       trail.add(message);
 

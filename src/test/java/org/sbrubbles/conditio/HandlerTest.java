@@ -36,7 +36,7 @@ public class HandlerTest {
   @MethodSource("testProvider")
   public void test(Condition condition, boolean expected) {
     try (Scope scope = Scopes.create()) {
-      final Signal<Condition, ?> s = (condition != null) ?
+      final Signal<Condition> s = (condition != null) ?
         new Signal<>(condition, new Policies<>(), scope) :
         null;
 
@@ -48,7 +48,7 @@ public class HandlerTest {
   @MethodSource("applyProvider")
   public void apply(Condition condition, String expected) {
     try (Scope scope = Scopes.create()) {
-      final Signal<Condition, ?> s = (condition != null) ?
+      final Signal<Condition> s = (condition != null) ?
         new Signal<>(condition, new Policies<>(), scope) :
         null;
       final Handler.Operations ops = new Handler.Operations(scope);
@@ -57,7 +57,7 @@ public class HandlerTest {
     }
   }
 
-  private Handler.Decision body(Signal<BasicCondition, ?> s, Handler.Operations ops) {
+  private Handler.Decision body(Signal<BasicCondition> s, Handler.Operations ops) {
     if (s == null) {
       return new Handler.Decision(null);
     }

@@ -58,15 +58,15 @@ public interface Scope extends AutoCloseable {
    * @param conditionType the type of conditions handled.
    * @param body          the handler code.
    * @param <C>           a subtype of {@code Condition}.
-   * @param <S>           a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may accept
+   * @param <SubC>        a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may accept
    *                      subtypes
    *                      other than {@code S}.
    * @return this instance, for method chaining.
-   * @throws NullPointerException if one or both parameters are null.
+   * @throws NullPointerException          if one or both parameters are null.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see #handle(Handler)
    */
-  default <C extends Condition, SubC extends C> Scope handle(Class<SubC> conditionType, BiFunction<Signal<C, ?>, Handler.Operations, Handler.Decision> body)
+  default <C extends Condition, SubC extends C> Scope handle(Class<SubC> conditionType, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body)
     throws NullPointerException, UnsupportedOperationException {
     return handle(Handlers.on(Signals.conditionType(conditionType), body));
   }
@@ -279,7 +279,7 @@ final class ScopeImpl implements Scope {
     try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
       scope.set(restarts);
 
-      Signal<? extends Condition, T> s = new Signal<>(condition, policies, scope);
+      Signal<? extends Condition> s = new Signal<>(condition, policies, scope);
       Handler.Operations ops = new Handler.Operations(scope);
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(s)) {

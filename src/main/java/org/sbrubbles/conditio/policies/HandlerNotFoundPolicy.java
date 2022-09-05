@@ -38,7 +38,7 @@ public interface HandlerNotFoundPolicy<T> {
    * @return the value to be returned by {@code signal}.
    * @throws HandlerNotFoundException may be thrown if no handler is found.
    */
-  T onHandlerNotFound(Signal<?, ?> signal) throws HandlerNotFoundException;
+  T onHandlerNotFound(Signal<?> signal) throws HandlerNotFoundException;
 }
 
 class HandlerNotFoundPolicyImpl {

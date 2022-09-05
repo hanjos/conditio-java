@@ -18,7 +18,7 @@ public class WarningPolicy implements HandlerNotFoundPolicy<Void> {
   }
 
   @Override
-  public Void onHandlerNotFound(Signal<?, ?> signal) throws HandlerNotFoundException {
+  public Void onHandlerNotFound(Signal<?> signal) throws HandlerNotFoundException {
     this.output.println("[WARN] " + signal.getCondition());
     return null;
   }

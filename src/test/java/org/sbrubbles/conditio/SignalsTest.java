@@ -23,8 +23,8 @@ public class SignalsTest {
   @ParameterizedTest
   @MethodSource("conditionTypeProvider")
   @SuppressWarnings("unchecked")
-  public void conditionType(boolean expected, Class<? extends Condition> conditionType, Signal<?, ?> input) {
-    Predicate<Signal<Condition, ?>> predicate = Signals.conditionType(conditionType);
+  public void conditionType(boolean expected, Class<? extends Condition> conditionType, Signal<?> input) {
+    Predicate<Signal<Condition>> predicate = Signals.conditionType(conditionType);
 
     assertEquals(expected, predicate.test((Signal) input));
   }
@@ -37,8 +37,8 @@ public class SignalsTest {
   @ParameterizedTest
   @MethodSource("returnTypeProvider")
   @SuppressWarnings("unchecked")
-  public void returnType(boolean expected, Class<?> returnType, Signal<?, ?> input) {
-    Predicate<Signal<Condition, ?>> predicate = Signals.returnType(returnType);
+  public void returnType(boolean expected, Class<?> returnType, Signal<?> input) {
+    Predicate<Signal<Condition>> predicate = Signals.returnType(returnType);
 
     assertEquals(expected, predicate.test((Signal) input));
   }
@@ -66,15 +66,15 @@ public class SignalsTest {
     );
   }
 
-  static <C extends Condition> Signal<C, ?> withCondition(C condition) {
+  static <C extends Condition> Signal<C> withCondition(C condition) {
     return with(condition, Object.class);
   }
 
-  static Signal<Condition, ?> withReturnType(Class<?> returnType) {
+  static Signal<Condition> withReturnType(Class<?> returnType) {
     return with(new BasicCondition(""), returnType);
   }
 
-  static <C extends Condition> Signal<C, ?> with(C condition, Class<?> returnType) {
+  static <C extends Condition> Signal<C> with(C condition, Class<?> returnType) {
     // XXX not best practice, but for these tests, should be good enough
     try (Scope scope = Scopes.create()) {
       Policies<?> policies = new Policies<>(

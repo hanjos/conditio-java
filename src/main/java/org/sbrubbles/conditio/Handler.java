@@ -27,7 +27,7 @@ import java.util.function.Supplier;
  * @see Operations
  * @see Decision
  */
-public interface Handler extends Predicate<Signal<? extends Condition, ?>>, BiFunction<Signal<? extends Condition, ?>, Handler.Operations, Handler.Decision> {
+public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunction<Signal<? extends Condition>, Handler.Operations, Handler.Decision> {
   /**
    * The ways a handler can handle a condition. Instances are created by
    * {@link Scope#signal(Condition, Policies, Restart[]) signal} to feed the handlers.
