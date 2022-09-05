@@ -2,7 +2,7 @@ package org.sbrubbles.conditio.fixtures.warning;
 
 import org.sbrubbles.conditio.Condition;
 
-public class IntWarning extends Condition {
+public class IntWarning implements Condition {
   private final int number;
 
   public IntWarning(int number) {

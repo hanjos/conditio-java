@@ -6,6 +6,7 @@
 * `Policies` is now an object which implements all `*Policy` interfaces.
 * `HandlerNotFoundException` now takes a `Signal`, not a `Condition`.
 * `Handler.Operations` became a class.
+* `Condition` became an interface (again).
 
 # 0.5.0
 

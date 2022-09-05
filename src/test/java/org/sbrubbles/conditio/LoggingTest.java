@@ -275,5 +275,5 @@ public class LoggingTest {
     }
   }
 
-  static class UnknownEntryCondition extends Condition { }
+  static class UnknownEntryCondition implements Condition { }
 }

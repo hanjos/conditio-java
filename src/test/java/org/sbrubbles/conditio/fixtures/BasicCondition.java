@@ -4,7 +4,7 @@ import org.sbrubbles.conditio.Condition;
 
 import java.util.Objects;
 
-public class BasicCondition extends Condition {
+public class BasicCondition implements Condition {
   private final String value;
 
   public BasicCondition(String value) {

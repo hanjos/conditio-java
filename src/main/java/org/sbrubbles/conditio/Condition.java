@@ -6,8 +6,8 @@ package org.sbrubbles.conditio;
  * {@linkplain Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) signalled},
  * which is how lower-level code communicates what happened.
  * <p>
- * This class is the superclass of all conditions in this library.
+ * This class is the supertype of all conditions.
  *
  * @see Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[])
  */
-public class Condition { }
+public interface Condition { }
