@@ -38,9 +38,9 @@ public class Signal<C extends Condition> {
   }
 
   /**
-   * The policies in effect for this signal invocation.
+   * The policies in effect.
    *
-   * @return the policies in effect for this signal invocation.
+   * @return the policies in effect.
    */
   public Policies<?> getPolicies() { return policies; }
 

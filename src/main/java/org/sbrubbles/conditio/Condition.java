@@ -7,7 +7,5 @@ package org.sbrubbles.conditio;
  * which is how lower-level code communicates what happened.
  * <p>
  * This class is the supertype of all conditions.
- *
- * @see Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[])
  */
 public interface Condition { }

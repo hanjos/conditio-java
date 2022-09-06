@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Some utilities for restarts and restart options.
+ * Utilities for restarts and restart options.
  * <p>
  * This class acts as a namespace, and isn't meant to be inherited or instantiated.
  */

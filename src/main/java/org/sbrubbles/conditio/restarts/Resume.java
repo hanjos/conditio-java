@@ -33,6 +33,7 @@ import org.sbrubbles.conditio.Scope;
  *
  * @param <R> unused, since any result is meant to be ignored.
  * @see Restarts
+ * @see Scope#notify(Condition, Restart[])
  */
 public class Resume<R> implements Restart.Option, Restart<R> {
   /**
@@ -79,10 +80,10 @@ public class Resume<R> implements Restart.Option, Restart<R> {
   }
 
   /**
-   * Some constant number.
+   * A hash code.
    */
   @Override
   public int hashCode() {
-    return -1;
+    return -1337;
   }
 }

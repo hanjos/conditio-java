@@ -54,7 +54,7 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
     public Handler.Decision restart(Restart.Option option) throws RestartNotFoundException {
       ensureOpen();
 
-      for (Restart<?> r : getScope().getAllRestarts()) {
+      for (Restart<?> r : scope.getAllRestarts()) {
         if (r.test(option)) {
           return new Handler.Decision(r.apply(option));
         }
@@ -115,16 +115,16 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
       throw new AbortException();
     }
 
+    /**
+     * Marks this instance as closed.
+     */
     @Override
     public void close() {
       this.closed = true;
     }
 
-    Scope getScope() {
-      return scope;
-    }
-
-    void ensureOpen() throws UnsupportedOperationException {
+    /** Errors out if this resource is closed. */
+    private void ensureOpen() throws UnsupportedOperationException {
       if (closed) {
         throw new UnsupportedOperationException("Operations closed.");
       }
