@@ -34,8 +34,8 @@ public interface HandlerNotFoundPolicy<T> {
    * <p>
    * Implementations which error out are expected to do so with a {@link HandlerNotFoundException}.
    *
-   * @param signal the signal of the {@code signal} invocation.
-   * @return the value to be returned by {@code signal}.
+   * @param signal the signal that could not be handled.
+   * @return the value the implementation deems to return.
    * @throws HandlerNotFoundException may be thrown if no handler is found.
    */
   T onHandlerNotFound(Signal<?> signal) throws HandlerNotFoundException;

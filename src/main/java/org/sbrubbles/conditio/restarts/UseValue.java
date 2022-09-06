@@ -1,5 +1,6 @@
 package org.sbrubbles.conditio.restarts;
 
+import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Restarts;
 
@@ -8,6 +9,7 @@ import org.sbrubbles.conditio.Restarts;
  *
  * @param <R> the type of the value to return.
  * @see Restarts
+ * @see org.sbrubbles.conditio.Scope#raise(Condition, Class, Restart[])
  */
 public class UseValue<R> implements Restart.Option {
   private final R value;
@@ -22,7 +24,7 @@ public class UseValue<R> implements Restart.Option {
   }
 
   /**
-   * Returns the value to be returned in {@code signal}.
+   * The value to be returned in {@code signal}.
    *
    * @return the value to be returned in {@code signal}.
    */

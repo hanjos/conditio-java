@@ -1,7 +1,5 @@
 package org.sbrubbles.conditio;
 
-import org.sbrubbles.conditio.policies.Policies;
-
 /**
  * Thrown when no working handler for a given condition was found. This may happen either when no available handler
  * could {@linkplain Handler#test(Object) handle} the condition, or when the ones that could opted to
@@ -16,7 +14,7 @@ public class HandlerNotFoundException extends RuntimeException {
   /**
    * Creates a new instance.
    *
-   * @param signal the {@link Scope#signal(Condition, Policies, Restart[]) signal} signal that found no handler.
+   * @param signal the signal that could not be handled.
    */
   public HandlerNotFoundException(Signal<?> signal) {
     super("No handler found for " + signal);

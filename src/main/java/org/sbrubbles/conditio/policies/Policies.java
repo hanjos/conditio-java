@@ -15,7 +15,7 @@ public class Policies<T> implements HandlerNotFoundPolicy<T>, ReturnTypePolicy<T
   private final ReturnTypePolicy<T> returnTypePolicy;
 
   /**
-   * Creates a new instance using the default policies:
+   * Creates a new instance using the default policies. These are:
    *
    * <ul>
    *   <li>{@linkplain HandlerNotFoundPolicy#error() error out} on missing handlers; and</li>
@@ -48,7 +48,6 @@ public class Policies<T> implements HandlerNotFoundPolicy<T>, ReturnTypePolicy<T
    *
    * @return whatever the set policy returns.
    * @throws HandlerNotFoundException if the set policy decides to error out.
-   * @see HandlerNotFoundPolicy#error()
    */
   @Override
   public T onHandlerNotFound(Signal<?> signal) throws HandlerNotFoundException {
@@ -58,8 +57,7 @@ public class Policies<T> implements HandlerNotFoundPolicy<T>, ReturnTypePolicy<T
   /**
    * Applies the set policy for {@linkplain ReturnTypePolicy expected return type}.
    *
-   * @return whatever the set policy returns. null means that there is no expected return.
-   * @see ReturnTypePolicy#ignore()
+   * @return whatever the set policy returns. A null means that there is no expected return.
    */
   @Override
   public Class<T> getExpectedType() {

@@ -10,29 +10,35 @@ import java.util.function.Supplier;
 
 /**
  * A <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">resource</a>
- * which hosts this library's main machinery. They can be nested, creating a stack of scopes; the machinery is able to
+ * which hosts this library's main machinery. Scopes can be nested, creating a stack; the machinery is able to
  * navigate this stack and search for the relevant objects.
- * <p>
+ *
+ * <h3>Resource management</h3>
  * To ensure proper nesting, scopes have controlled {@linkplain Scopes creation and closing}. As a consequence,
  * {@link Scopes#create() create}ing a scope without {@link Scope#close() close}ing it will <strong>break</strong>
  * this nesting. Use it only in a {@code try}-with-resources, and you'll be fine :)
  * <p>
+ * {@linkplain #close() Closing} a closed scope has no effect. Any other methods should fail with an
+ * {@link UnsupportedOperationException} when called on a closed scope.
+ *
+ * <h3>Core operations</h3>
  * The core operation is {@link #signal(Condition, Policies, Restart[]) signal}, which is called when
  * lower-level code doesn't know how to handle a {@linkplain Condition condition}. {@code signal} looks
- * for something that can {@linkplain #handle(Class, BiFunction) handle} the given condition in the call stack, and
+ * for something that can {@linkplain #handle(Class, BiFunction) handle} the given condition in the scope stack, and
  * this {@linkplain Handler handler} then chooses {@linkplain Signal what to do}, like
  * {@linkplain Handler.Operations#abort() aborting} or looking for a recovery strategy (also known as a
  * {@linkplain Restart restart}) and using it to provide a result.
- * <p>
- * In practice, {@code signal} is quite low-level, and works better as a primitive operation.
- * {@link #raise(Condition, Class, Restart[]) raise} and {@link #notify(Condition, Restart[]) notify} provide better
- * ergonomics, and should cover most use cases.
  * <p>
  * Restarts only make sense for specific invocations. Therefore, they're set only when a condition is
  * {@code signal}led, or when code calling a {@code signal}ling method wraps that call with
  * {@link #call(Supplier, Restart...) call} to provide more restarts.
  * <p>
- * Usage should look something like this:
+ * In practice, {@code signal} is quite low-level, and works better as a primitive operation.
+ * {@link #raise(Condition, Class, Restart[]) raise} and {@link #notify(Condition, Restart[]) notify} provide better
+ * ergonomics, and should cover most use cases.
+ *
+ * <h3>Usage</h3>
+ * Common usage should look something like this:
  * <pre>
  * try(Scope scope = Scopes.create()) {
  *   // establishing a new handler, which accepts MalformedEntry conditions and
@@ -59,8 +65,7 @@ public interface Scope extends AutoCloseable {
    * @param body          the handler code.
    * @param <C>           a subtype of {@code Condition}.
    * @param <SubC>        a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may accept
-   *                      subtypes
-   *                      other than {@code S}.
+   *                      subtypes other than {@code SubC}.
    * @return this instance, for method chaining.
    * @throws NullPointerException          if one or both parameters are null.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
@@ -223,8 +228,7 @@ public interface Scope extends AutoCloseable {
   Scope getParent() throws UnsupportedOperationException;
 
   /**
-   * Updates the scope nesting when execution leaves the {@code try} block, and marks this scope as closed. Any calls
-   * to the other methods in a closed scope should fail with an UnsupportedOperationException.
+   * Updates the scope nesting when execution leaves the {@code try} block, and marks this scope as closed.
    */
   @Override
   void close();
@@ -357,7 +361,7 @@ final class ScopeImpl implements Scope {
   }
 
   /**
-   * Checks if this scope is open, and errors out if not.
+   * Errors out if this resource is closed.
    */
   private void ensureOpen() {
     if (closed) {

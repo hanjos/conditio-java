@@ -5,7 +5,7 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 /**
- * Some utility methods for handlers.
+ * Utilities for handlers.
  * <p>
  * This class acts as a namespace, and isn't meant to be inherited or instantiated.
  */
@@ -21,6 +21,7 @@ public final class Handlers {
    *                  returns the result.
    * @param <C>       a subtype of {@code Condition}.
    * @param <SubC>    a subtype of {@code C}.
+   * @return a new handler, using a default implementation.
    * @throws NullPointerException if any of the arguments are null.
    */
   public static <C extends Condition, SubC extends C> Handler on(Predicate<Signal<SubC>> predicate, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
