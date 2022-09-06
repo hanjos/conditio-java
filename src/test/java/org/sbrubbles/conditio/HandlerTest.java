@@ -10,6 +10,7 @@ import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
 import org.sbrubbles.conditio.policies.Policies;
 
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,14 +48,25 @@ public class HandlerTest {
   @ParameterizedTest
   @MethodSource("applyProvider")
   public void apply(Condition condition, String expected) {
-    try (Scope scope = Scopes.create()) {
+    try (Scope scope = Scopes.create();
+         Handler.Operations ops = new Handler.Operations(scope)) {
       final Signal<Condition> s = (condition != null) ?
         new Signal<>(condition, new Policies<>(), scope) :
         null;
-      final Handler.Operations ops = new Handler.Operations(scope);
 
       assertEquals(expected, h.apply(s, ops).get());
     }
+  }
+
+  @ParameterizedTest
+  @MethodSource("closedOperationsProvider")
+  public void aClosedOperationsDoesntWork(final Consumer<Handler.Operations> consumer) {
+    Scope scope = Scopes.create();
+    Handler.Operations ops = new Handler.Operations(scope);
+    ops.close();
+    scope.close();
+
+    assertThrows(UnsupportedOperationException.class, () -> consumer.accept(ops));
   }
 
   private Handler.Decision body(Signal<BasicCondition> s, Handler.Operations ops) {
@@ -86,6 +98,14 @@ public class HandlerTest {
       arguments(new BasicCondition("FAIL"), "FAIL!"),
       arguments(new BasicCondition(null), "OK: null"),
       arguments(null, null)
+    );
+  }
+
+  static Stream<Consumer<Handler.Operations>> closedOperationsProvider() {
+    return Stream.of(
+      ops -> ops.restart(Restarts.resume()),
+      ops -> ops.skip(),
+      ops -> ops.abort()
     );
   }
 }

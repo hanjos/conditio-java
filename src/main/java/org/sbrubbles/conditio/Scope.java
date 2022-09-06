@@ -277,11 +277,12 @@ final class ScopeImpl implements Scope {
     Objects.requireNonNull(policies, "policies");
     Objects.requireNonNull(restarts, "restarts");
 
-    try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
+    try (ScopeImpl scope = (ScopeImpl) Scopes.create();
+         Handler.Operations ops = new Handler.Operations(scope)) {
       scope.set(restarts);
 
       Signal<? extends Condition> s = new Signal<>(condition, policies, scope);
-      Handler.Operations ops = new Handler.Operations(scope);
+
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(s)) {
           continue;

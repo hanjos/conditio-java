@@ -1,7 +1,6 @@
 package org.sbrubbles.conditio;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
@@ -17,6 +16,7 @@ import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -158,7 +158,7 @@ public class BasicOperationsTest {
 
       fail();
     } catch (HandlerNotFoundException e) {
-      assertEquals(condition, e.getContext().getCondition());
+      assertEquals(condition, e.getSignal().getCondition());
     }
   }
 
@@ -229,7 +229,7 @@ public class BasicOperationsTest {
 
       fail();
     } catch (HandlerNotFoundException e) {
-      assertEquals(condition, e.getContext().getCondition());
+      assertEquals(condition, e.getSignal().getCondition());
     }
   }
 
@@ -263,28 +263,13 @@ public class BasicOperationsTest {
     }
   }
 
-  @Test
-  public void aClosedScopeDoesntWork() {
+  @ParameterizedTest
+  @MethodSource("closedScopeProvider")
+  public void aClosedScopeDoesntWork(Consumer<Scope> consumer) {
     Scope shouldFail = Scopes.create();
     shouldFail.close();
 
-    assertUnsupported(() -> shouldFail.getParent());
-    assertUnsupported(() -> shouldFail.getAllHandlers());
-    assertUnsupported(() -> shouldFail.getAllRestarts());
-
-    final Class<Condition> conditionType = Condition.class;
-    final BiFunction<Signal<Condition>, Handler.Operations, Handler.Decision> body = Handlers.abort();
-    final Handler h = Handlers.on(Signals.conditionType(conditionType), body);
-
-    assertUnsupported(() -> shouldFail.handle(h));
-    assertUnsupported(() -> shouldFail.handle(conditionType, body));
-
-    final Condition condition = new BasicCondition("");
-
-    assertUnsupported(() -> shouldFail.notify(condition));
-    assertUnsupported(() -> shouldFail.call(() -> ""));
-    assertUnsupported(() -> shouldFail.raise(condition, Object.class));
-    assertUnsupported(() -> shouldFail.signal(condition, new Policies<>()));
+    assertThrows(UnsupportedOperationException.class, () -> consumer.accept(shouldFail));
   }
 
   static class BasicRestartOption implements Restart.Option { }
@@ -313,14 +298,24 @@ public class BasicOperationsTest {
     assertFalse(matches(options, iterable), message);
   }
 
-  static void assertUnsupported(Executable body) {
-    assertThrows(UnsupportedOperationException.class, body);
-  }
-
   static Stream<Function<String, Condition>> skipHandlingProvider() {
     return Stream.of(
       BasicCondition::new,
       SonOfBasicCondition::new
+    );
+  }
+
+  static Stream<Consumer<Scope>> closedScopeProvider() {
+    return Stream.of(
+      scope -> scope.getParent(),
+      scope -> scope.getAllRestarts(),
+      scope -> scope.getAllHandlers(),
+      scope -> scope.handle(Handlers.on(Signals.conditionType(BasicCondition.class), Handlers.abort())),
+      scope -> scope.handle(BasicCondition.class, Handlers.abort()),
+      scope -> scope.notify(new BasicCondition("")),
+      scope -> scope.call(() -> ""),
+      scope -> scope.raise(new BasicCondition(""), Object.class),
+      scope -> scope.signal(new BasicCondition(""), new Policies<>())
     );
   }
 

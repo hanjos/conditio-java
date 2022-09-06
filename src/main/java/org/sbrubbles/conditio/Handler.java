@@ -30,12 +30,15 @@ import java.util.function.Supplier;
 public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunction<Signal<? extends Condition>, Handler.Operations, Handler.Decision> {
   /**
    * The ways a handler can handle a condition. Instances are created by
-   * {@link Scope#signal(Condition, Policies, Restart[]) signal} to feed the handlers.
+   * {@link Scope#signal(Condition, Policies, Restart[]) signal} to feed the handlers. This is a resource, and its
+   * methods will fail if called outside its original {@code signal}ling context.
    */
-  class Operations {
+  class Operations implements AutoCloseable {
+    private boolean closed;
     private final Scope scope;
 
     Operations(Scope scope) {
+      this.closed = false;
       this.scope = Objects.requireNonNull(scope, "scope");
     }
 
@@ -45,9 +48,12 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
      *
      * @param option identifies which restart to run, and holds any data required for that restart's operation.
      * @return (a decision representing) the result of the selected restart's execution.
-     * @throws RestartNotFoundException if no restart compatible with {@code option} could be found.
+     * @throws RestartNotFoundException      if no restart compatible with {@code option} could be found.
+     * @throws UnsupportedOperationException if this method is called after this instance is closed.
      */
     public Handler.Decision restart(Restart.Option option) throws RestartNotFoundException {
+      ensureOpen();
+
       for (Restart<?> r : getScope().getAllRestarts()) {
         if (r.test(option)) {
           return new Handler.Decision(r.apply(option));
@@ -62,8 +68,11 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
      * stack, will have the chance instead.
      *
      * @return an object representing the decision to skip.
+     * @throws UnsupportedOperationException if this method is called after this instance is closed.
      */
     public Decision skip() {
+      ensureOpen();
+
       return Handler.Decision.SKIP;
     }
 
@@ -98,13 +107,27 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
      *
      * @return nothing, since this method always throws.
      * @throws AbortException to interrupt execution and unwind the stack.
+     * @throws UnsupportedOperationException if this method is called after this instance is closed.
      */
-    public Decision abort() throws AbortException {
+    public Decision abort() throws AbortException, UnsupportedOperationException {
+      ensureOpen();
+
       throw new AbortException();
+    }
+
+    @Override
+    public void close() {
+      this.closed = true;
     }
 
     Scope getScope() {
       return scope;
+    }
+
+    void ensureOpen() throws UnsupportedOperationException {
+      if (closed) {
+        throw new UnsupportedOperationException("Operations closed.");
+      }
     }
   }
 

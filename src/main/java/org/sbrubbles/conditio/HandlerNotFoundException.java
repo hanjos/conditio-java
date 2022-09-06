@@ -29,7 +29,7 @@ public class HandlerNotFoundException extends RuntimeException {
    *
    * @return the signal that could not be handled.
    */
-  public Signal<?> getContext() {
+  public Signal<?> getSignal() {
     return signal;
   }
 }
