@@ -11,7 +11,7 @@ import java.util.function.Supplier;
  * Handles conditions, producing the result to be returned by
  * {@link Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) signal}. A handler does so by
  * returning a {@linkplain Decision decision} object holding the result. These decision objects are unwrapped by
- * {@code signal}, and are expected to be non-{@code null}.
+ * {@code signal}, and are expected to be non-null.
  * <p>
  * A handler can do two things:
  * <ul>

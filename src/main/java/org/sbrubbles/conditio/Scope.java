@@ -105,7 +105,7 @@ public interface Scope extends AutoCloseable {
    * @param restarts some restarts, which will be available to all handlers above in the call stack.
    * @param <T> the type returned by {@code body}.
    * @return the result of calling {@code body}.
-   * @throws NullPointerException if at least one parameter is {@code null}.
+   * @throws NullPointerException if at least one parameter is null.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    */
   <T> T call(Supplier<T> body, Restart<?>... restarts) throws NullPointerException, UnsupportedOperationException;
@@ -113,7 +113,7 @@ public interface Scope extends AutoCloseable {
   /**
    * Signals a situation which the currently running code doesn't know how to deal with. This method will
    * {@linkplain #getAllHandlers() search} for a compatible {@linkplain Handler handler} and run it, interpreting the
-   * handler's {@linkplain Handler.Decision decision} (which is expected to be not {@code null}) and returning the end
+   * handler's {@linkplain Handler.Decision decision} (which is expected to be not null) and returning the end
    * result.
    * <p>
    * This method is a primitive operation. Common use cases can use other methods, with better ergonomics.
@@ -124,10 +124,11 @@ public interface Scope extends AutoCloseable {
    * @param policies  how to handle certain cases, like no compatible handlers or the expected return type.
    * @param restarts  some {@linkplain Restart restarts}, which will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
-   * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
-   * @throws HandlerNotFoundException if the policy opts to error out.
-   * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
-   * @throws AbortException           if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
+   * @throws NullPointerException          if one of the arguments, or the selected handler's decision is null.
+   * @throws HandlerNotFoundException      if the policy opts to error out.
+   * @throws ClassCastException            if the value provided by the handler isn't type-compatible with {@code T}.
+   * @throws AbortException                if the eventual handler
+   *                                       {@linkplain Handler.Operations#abort() aborts execution}.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see #notify(Condition, Restart[])
    * @see #raise(Condition, Class, Restart[])
@@ -147,7 +148,7 @@ public interface Scope extends AutoCloseable {
    *
    * @param condition a condition, which here acts as a notice that something happened.
    * @param restarts  some restarts, which, along with {@code Resume}, will be available to the eventual handler.
-   * @throws NullPointerException if one of the arguments, or the selected handler's decision is {@code null}.
+   * @throws NullPointerException if one of the arguments, or the selected handler's decision is null.
    * @throws AbortException       if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see org.sbrubbles.conditio.restarts.Resume Resume
@@ -176,7 +177,7 @@ public interface Scope extends AutoCloseable {
    * @param returnType the expected type of the result.
    * @param restarts   some restarts, which, along with {@code UseValue}, will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
-   * @throws NullPointerException     if one of the arguments, or the selected handler's decision is {@code null}.
+   * @throws NullPointerException     if one of the arguments, or the selected handler's decision is null.
    * @throws HandlerNotFoundException if no available handler was able to handle this condition.
    * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
    * @throws AbortException           if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
@@ -214,9 +215,9 @@ public interface Scope extends AutoCloseable {
   Iterable<Restart<?>> getAllRestarts() throws UnsupportedOperationException;
 
   /**
-   * The {@link Scope} instance wrapping this one. May be {@code null} if this is the topmost {@code Scope}.
+   * The {@link Scope} instance wrapping this one. May be null if this is the topmost {@code Scope}.
    *
-   * @return the {@link Scope} instance wrapping this one, or {@code null} if this is a root scope.
+   * @return the {@link Scope} instance wrapping this one, or null if this is a root scope.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    */
   Scope getParent() throws UnsupportedOperationException;

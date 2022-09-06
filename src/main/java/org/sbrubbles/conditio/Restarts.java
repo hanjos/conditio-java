@@ -58,7 +58,7 @@ public final class Restarts {
    *                   subtypes
    *                   other than {@code S}.
    * @return an instance of Restart, using a default implementation.
-   * @throws NullPointerException if one or both parameters are {@code null}.
+   * @throws NullPointerException if one or both parameters are null.
    */
   public static <R, O extends Restart.Option, S extends O> Restart<R> on(Class<S> optionType, Function<O, R> body) {
     return new RestartImpl<>(optionType, body);
@@ -77,7 +77,7 @@ class RestartImpl<R> implements Restart<R> {
    *
    * @param optionType the type of {@link Option} this restart expects.
    * @param body       a function which receives a restart option and returns a result.
-   * @throws NullPointerException if any of the arguments are {@code null}.
+   * @throws NullPointerException if any of the arguments are null.
    */
   <O extends Option, S extends O> RestartImpl(Class<S> optionType, Function<O, R> body) {
     Objects.requireNonNull(optionType, "optionType");

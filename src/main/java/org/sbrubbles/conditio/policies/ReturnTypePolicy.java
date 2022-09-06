@@ -12,19 +12,18 @@ import org.sbrubbles.conditio.Scope;
 @FunctionalInterface
 public interface ReturnTypePolicy<T> {
   /**
-   * The type {@code signal} expects to return. May be {@code null} if {@code signal} doesn't expect to return a value.
+   * The type {@code signal} expects to return. May be null if {@code signal} doesn't expect to return a value.
    *
-   * @return the type {@code signal} expects to return. May be {@code null} if {@code signal} doesn't expect to return
-   * a value.
+   * @return the type {@code signal} expects to return. May be null if {@code signal} doesn't expect to return a value.
    */
   Class<T> getExpectedType();
 
   /**
-   * Casts an object to the class or interface in this policy. Returns {@code null} if this policy doesn't define an
-   * expected type.
+   * Casts an object to the class or interface in this policy. Returns null if this policy doesn't define an expected
+   * type.
    *
    * @param value the object to be cast.
-   * @return the given value after casting, or {@code null} if this policy doesn't define an expected type.
+   * @return the given value after casting, or null if this policy doesn't define an expected type.
    * @throws ClassCastException if the given value is not null and is not assignable to {@code T}.
    */
   default T cast(Object value) {

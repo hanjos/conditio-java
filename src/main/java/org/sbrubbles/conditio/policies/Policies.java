@@ -58,7 +58,7 @@ public class Policies<T> implements HandlerNotFoundPolicy<T>, ReturnTypePolicy<T
   /**
    * Applies the set policy for {@linkplain ReturnTypePolicy expected return type}.
    *
-   * @return whatever the set policy returns. {@code null} means that there is no expected return.
+   * @return whatever the set policy returns. null means that there is no expected return.
    * @see ReturnTypePolicy#ignore()
    */
   @Override

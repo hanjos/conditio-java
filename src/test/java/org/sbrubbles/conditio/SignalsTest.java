@@ -24,13 +24,15 @@ public class SignalsTest {
   @MethodSource("conditionTypeProvider")
   @SuppressWarnings("unchecked")
   public void conditionType(boolean expected, Class<? extends Condition> conditionType, Signal<?> input) {
-    Predicate<Signal<Condition>> predicate = Signals.conditionType(conditionType);
+    Predicate predicate = Signals.conditionType(conditionType);
 
     assertEquals(expected, predicate.test((Signal) input));
   }
 
   @Test
   public void conditionTypeOnNull() {
+    Predicate<Signal<BasicCondition>> p = Signals.conditionType(BasicCondition.class).and(Signals.returnType(String.class));
+
     assertThrows(NullPointerException.class, () -> Signals.conditionType(null));
   }
 

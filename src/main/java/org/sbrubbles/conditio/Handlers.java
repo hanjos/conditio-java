@@ -20,8 +20,7 @@ public final class Handlers {
    * @param body      a (bi)function which receives a {@linkplain Signal signal} and the available operations, and
    *                  returns the result.
    * @param <C>       a subtype of {@code Condition}.
-   * @param <SubC>    a subtype of {@code C}, so that {@code body} is still compatible with {@code C} but may
-   *                  accept subtypes other than {@code SubC}.
+   * @param <SubC>    a subtype of {@code C}.
    * @throws NullPointerException if any of the arguments are null.
    */
   public static <C extends Condition, SubC extends C> Handler on(Predicate<Signal<SubC>> predicate, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body) {
