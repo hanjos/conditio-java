@@ -31,9 +31,14 @@ public class SignalsTest {
 
   @Test
   public void conditionTypeOnNull() {
-    Predicate<Signal<BasicCondition>> p = Signals.conditionType(BasicCondition.class).and(Signals.returnType(String.class));
-
     assertThrows(NullPointerException.class, () -> Signals.conditionType(null));
+  }
+
+  @Test
+  public void predicateConcatenation() {
+    // the point is just that Signals' predicates can be combined and resolve to the correct type.
+    // There's nothing to "run" here, per se; if this compiles, it's good
+    Predicate<Signal<BasicCondition>> p = Signals.conditionType(BasicCondition.class).and(Signals.returnType(String.class));
   }
 
   @ParameterizedTest
