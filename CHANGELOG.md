@@ -2,7 +2,7 @@
 
 * Instead of just a condition, a handler now takes a `Signal`, which holds data about the signal (like the condition and the scope from where it came), and a `Handler.Operations`, which provides only the available operations.
 * `HandlerNotFoundException` now takes a `Signal`, not a `Condition`.
-* `Scope` methods fail on closed scopes.
+* `Scope` and `Handler.Operations` methods fail when closed.
 * `ReturnTypePolicy` indicates the type `signal` expects to return.
 * `Policies` is now an object which implements all `*Policy` interfaces.
 * `Handler.Operations` became a class.
