@@ -30,8 +30,9 @@ import java.util.function.Supplier;
 public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunction<Signal<? extends Condition>, Handler.Operations, Handler.Decision> {
   /**
    * The ways a handler can handle a condition. Instances are created by
-   * {@link Scope#signal(Condition, Policies, Restart[]) signal} to feed the handlers. This is a resource, and its
-   * methods will fail if called outside its original {@code signal}ling context.
+   * {@link Scope#signal(Condition, Policies, Restart[]) signal} to feed the handlers.
+   * <p>
+   * This is a resource, and its methods will fail if called outside its original {@code signal}ling context.
    */
   class Operations implements AutoCloseable {
     private boolean closed;
@@ -91,14 +92,14 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
      *
      *       try(Scope c = Scopes.create()) {
      *         // signals something which may result in the interruption of c as a whole
-     *         Object result = c.raise(new SomeCondition());
+     *         Object result = c.raise(new SomeCondition(), Object.class);
      *
      *         // (execution won't reach here)
      *       }
      *
      *       // (execution won't reach here)
      *     } catch(AbortException e) {
-     *       // stops the stack unwinding here
+     *       // (stops the stack unwinding here)
      *     }
      *
      *     // (carries on in scope a)...
