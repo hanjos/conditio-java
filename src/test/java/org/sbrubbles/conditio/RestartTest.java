@@ -18,7 +18,6 @@ public class RestartTest {
 
   @Test
   public void nullParametersAreNotAllowed() {
-
     assertThrows(NullPointerException.class,
       () -> Restarts.on(null, this::body), "missing optionType");
     assertThrows(NullPointerException.class,

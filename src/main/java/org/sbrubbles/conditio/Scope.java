@@ -15,7 +15,7 @@ import java.util.function.Supplier;
  * <h3>Resource management</h3>
  * Scopes can be nested, creating a <em>stack</em>; this library's machinery is able to navigate this stack and search
  * for the relevant objects. So, to ensure proper nesting, scopes have controlled {@linkplain Scopes creation}. As a
- * consequence, {@link Scopes#create() create}ing a scope without {@link Scope#close() close}ing it will
+ * consequence, {@link Scopes#create(Restart[]) create}-ing a scope without {@link Scope#close() close}ing it will
  * <strong>break</strong> the nesting. Use it only in a {@code try}-with-resources, and you'll be fine :)
  * <p>
  * {@linkplain #close() Closing} a closed scope has no effect. Any other methods should fail with an
@@ -242,12 +242,19 @@ final class ScopeImpl implements Scope {
   private final List<Handler> handlers;
   private final List<Restart<?>> restarts;
 
-  ScopeImpl(Scope parent) {
+  ScopeImpl(Scope parent, Restart<?>... restarts) {
+    Objects.requireNonNull(restarts, "Null restarts aren't allowed");
+
     this.closed = false;
     this.parent = parent;
 
     this.handlers = new ArrayList<>();
     this.restarts = new ArrayList<>();
+
+    // validating the restarts
+    for (Restart<?> restart : restarts) {
+      this.restarts.add(Objects.requireNonNull(restart, "Null restarts aren't allowed"));
+    }
   }
 
   @Override
@@ -266,9 +273,7 @@ final class ScopeImpl implements Scope {
     Objects.requireNonNull(body, "body");
     Objects.requireNonNull(restarts, "restarts");
 
-    try (ScopeImpl scope = (ScopeImpl) Scopes.create()) {
-      scope.set(restarts);
-
+    try (Scope ignored = Scopes.create(restarts)) {
       return body.get();
     }
   }
@@ -282,10 +287,8 @@ final class ScopeImpl implements Scope {
     Objects.requireNonNull(policies, "policies");
     Objects.requireNonNull(restarts, "restarts");
 
-    try (ScopeImpl scope = (ScopeImpl) Scopes.create();
+    try (Scope scope = Scopes.create(restarts);
          Handler.Operations ops = new Handler.Operations(scope)) {
-      scope.set(restarts);
-
       Signal<? extends Condition> s = new Signal<>(condition, policies, scope);
 
       for (Handler h : scope.getAllHandlers()) {
@@ -302,21 +305,6 @@ final class ScopeImpl implements Scope {
       }
 
       return policies.onHandlerNotFound(s);
-    }
-  }
-
-  /**
-   * Sets the given restarts in this scope.
-   *
-   * @param restarts some restarts to set.
-   * @throws NullPointerException          if any of the given restarts is null.
-   * @throws UnsupportedOperationException if this method is called on a closed scope.
-   */
-  public void set(Restart<?>... restarts) throws NullPointerException, UnsupportedOperationException {
-    ensureOpen();
-
-    for (Restart<?> r : restarts) {
-      this.restarts.add(Objects.requireNonNull(r));
     }
   }
 

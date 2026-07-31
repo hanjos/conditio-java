@@ -4,12 +4,12 @@ import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.policies.Policies;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SuppressWarnings("unchecked")
 public class ScopeTest {
   @Test
   public void rootHasNullParent() {
@@ -46,6 +46,27 @@ public class ScopeTest {
           assertEquals(c.getParent(), b);
         }
       }
+    }
+  }
+
+  @Test
+  public void createRejectsNullRestarts() {
+    assertThrows(NullPointerException.class, () -> Scopes.create((Restart<?>[]) null));
+    assertThrows(NullPointerException.class, () -> Scopes.create((Restart<?>) null));
+    assertThrows(NullPointerException.class, () -> Scopes.create(Restarts.resume(), null));
+  }
+
+  @Test
+  public void createWithRestartsStoresThemOnlyDuringTheScopesLifetime() {
+    try(Scope a = Scopes.create()) {
+      assertIterableEquals(Collections.emptyList(), a.getAllRestarts());
+
+      try(Scope b = Scopes.create(Restarts.resume())) {
+        assertIterableEquals(Collections.emptyList(), a.getAllRestarts());
+        assertIterableEquals(Collections.singletonList(Restarts.resume()), b.getAllRestarts());
+      }
+
+      assertIterableEquals(Collections.emptyList(), a.getAllRestarts());
     }
   }
 
