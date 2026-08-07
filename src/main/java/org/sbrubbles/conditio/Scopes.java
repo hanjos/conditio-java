@@ -10,6 +10,12 @@ package org.sbrubbles.conditio;
  */
 public final class Scopes {
   private static Scope current;
+  private static final Scope ROOT;
+
+  static {
+    ROOT = new ScopeImpl();
+    current = ROOT;
+  }
 
   private Scopes() { /* empty */ }
 
@@ -34,10 +40,6 @@ public final class Scopes {
    * manual management; {@code try}-with-resources should do all the work :)
    */
   static void retire() {
-    if (current == null) {
-      return;
-    }
-
     current = current.getParent();
   }
 }

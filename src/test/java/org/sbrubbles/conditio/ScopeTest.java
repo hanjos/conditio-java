@@ -12,38 +12,45 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ScopeTest {
   @Test
-  public void rootHasNullParent() {
+  public void rootIsItsOwnParent() {
     try (Scope scope = Scopes.create()) {
-      assertNull(scope.getParent());
+      assertNotNull(scope.getParent());
+
+      assertSame(scope.getParent(), scope.getParent().getParent());
     }
   }
 
   @Test
-  public void everyInvocationChainHasItsOwnRoot() {
-    Scope firstTry;
+  public void everyInvocationChainIsDifferentButHasTheSameRoot() {
+    Scope root, first;
 
-    try (Scope scope = Scopes.create()) {
-      assertNull(scope.getParent());
-
-      firstTry = scope;
+    try (Scope s1 = Scopes.create()) {
+        root = s1.getParent();
+        first = s1;
     }
 
-    try (Scope scope = Scopes.create()) {
-      assertNull(scope.getParent());
-      assertNotEquals(firstTry, scope);
+    try (Scope s2 = Scopes.create()) {
+      assertSame(root, s2.getParent());
+
+      assertNotSame(first, s2);
     }
   }
 
   @Test
   public void createReflectsTheTryStack() {
+    Scope root;
+    try(Scope s = Scopes.create()) {
+      root = s.getParent();
+    }
+
     try (Scope a = Scopes.create()) {
-      assertNull(a.getParent());
+      assertSame(root, a.getParent());
 
       try (Scope b = Scopes.create()) {
-        assertEquals(b.getParent(), a);
+        assertSame(a, b.getParent());
 
         try (Scope c = Scopes.create()) {
-          assertEquals(c.getParent(), b);
+          assertSame(b, c.getParent());
         }
       }
     }

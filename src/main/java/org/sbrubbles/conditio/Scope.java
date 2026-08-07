@@ -242,11 +242,17 @@ final class ScopeImpl implements Scope {
   private final List<Handler> handlers;
   private final List<Restart<?>> restarts;
 
+  ScopeImpl(Restart<?>... restarts) {
+    this(null, restarts);
+  }
+
   ScopeImpl(Scope parent, Restart<?>... restarts) {
     Objects.requireNonNull(restarts, "Null restarts aren't allowed");
 
     this.closed = false;
-    this.parent = parent;
+
+    // A "null" parent means this is a root scope, and therefore its "parent" is itself
+    this.parent = (parent != null) ? parent : this;
 
     this.handlers = new ArrayList<>();
     this.restarts = new ArrayList<>();
@@ -339,9 +345,15 @@ final class ScopeImpl implements Scope {
     return parent;
   }
 
+  public boolean isRoot() {
+    ensureOpen();
+
+    return parent == this;
+  }
+
   @Override
   public void close() {
-    if (closed) {
+    if (closed || isRoot()) {
       return;
     }
 
@@ -387,7 +399,7 @@ abstract class FullSearchIterator<T> implements Iterator<T> {
     }
 
     do {
-      if (this.currentScope.getParent() == null) {
+      if (this.currentScope.isRoot()) {
         return false;
       }
 
