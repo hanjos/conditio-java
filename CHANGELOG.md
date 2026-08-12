@@ -1,3 +1,8 @@
+# 0.7.0
+
+* `Scopes.create` now takes restarts, so `ScopeImpl.set` was removed, and with it the need to cast to `ScopeImpl`.
+* Now there is a non-null root scope, providing a place to hang default handlers and restarts.
+
 # 0.6.0
 
 * Instead of just a condition, a handler now takes a `Signal`, which holds data about the signal (like the condition and the scope from where it came), and a `Handler.Operations`, which provides only the available operations.
