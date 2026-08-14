@@ -104,7 +104,7 @@ public final class Scope implements AutoCloseable {
    * @see #handle(Handler)
    */
   public <C extends Condition, SubC extends C> Scope handle(Class<SubC> conditionType, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body)
-    throws NullPointerException, UnsupportedOperationException {
+      throws NullPointerException, UnsupportedOperationException {
     return handle(Handlers.on(Signals.conditionType(conditionType), body));
   }
 
@@ -146,13 +146,13 @@ public final class Scope implements AutoCloseable {
    *
    * @param body     some code.
    * @param restarts some restarts, which will be available to all handlers above in the call stack.
-   * @param <T> the type returned by {@code body}.
+   * @param <T>      the type returned by {@code body}.
    * @return the result of calling {@code body}.
-   * @throws NullPointerException if at least one parameter is null.
+   * @throws NullPointerException          if at least one parameter is null.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    */
   public <T> T call(Supplier<T> body, Restart<?>... restarts)
-      throws NullPointerException, UnsupportedOperationException{
+      throws NullPointerException, UnsupportedOperationException {
     ensureOpen();
 
     Objects.requireNonNull(body, "body");
@@ -174,16 +174,16 @@ public final class Scope implements AutoCloseable {
    *
    * @param condition a condition, which here acts as a notice that something happened.
    * @param restarts  some restarts, which, along with {@code Resume}, will be available to the eventual handler.
-   * @throws NullPointerException if one of the arguments, or the selected handler's decision is null.
-   * @throws AbortException       if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
+   * @throws NullPointerException          if one of the arguments, or the selected handler's decision is null.
+   * @throws AbortException                if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see org.sbrubbles.conditio.restarts.Resume Resume
    * @see HandlerNotFoundPolicy#ignore()
    * @see ReturnTypePolicy#ignore()
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public void notify(Condition condition, Restart<?>... restarts)
-    throws NullPointerException, UnsupportedOperationException, AbortException {
+      throws NullPointerException, UnsupportedOperationException, AbortException {
     Restart[] args = new Restart<?>[restarts.length + 1];
     args[0] = Restarts.resume();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
@@ -194,27 +194,27 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition that 
-   * {@linkplain HandlerNotFoundPolicy#error() must be handled} and 
-   * {@linkplain ReturnTypePolicy#expects(Class) return a result}. This method always provides a 
+   * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition that
+   * {@linkplain HandlerNotFoundPolicy#error() must be handled} and
+   * {@linkplain ReturnTypePolicy#expects(Class) return a result}. This method always provides a
    * {@link org.sbrubbles.conditio.restarts.UseValue UseValue} restart.
    *
    * @param condition  a condition that must be handled.
    * @param returnType the expected type of the result.
    * @param restarts   some restarts, which, along with {@code UseValue}, will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
-   * @throws NullPointerException     if one of the arguments, or the selected handler's decision is null.
-   * @throws HandlerNotFoundException if no available handler was able to handle this condition.
-   * @throws ClassCastException       if the value provided by the handler isn't type-compatible with {@code T}.
-   * @throws AbortException           if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
+   * @throws NullPointerException          if one of the arguments, or the selected handler's decision is null.
+   * @throws HandlerNotFoundException      if no available handler was able to handle this condition.
+   * @throws ClassCastException            if the value provided by the handler isn't type-compatible with {@code T}.
+   * @throws AbortException                if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see org.sbrubbles.conditio.restarts.UseValue UseValue
    * @see HandlerNotFoundPolicy#error()
    * @see ReturnTypePolicy#expects(Class)
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "varargs"})
   public <T> T raise(Condition condition, Class<T> returnType, Restart<? extends T>... restarts)
-    throws NullPointerException, UnsupportedOperationException, HandlerNotFoundException, ClassCastException, AbortException {
+      throws NullPointerException, UnsupportedOperationException, HandlerNotFoundException, ClassCastException, AbortException {
     Restart<? extends T>[] args = new Restart[restarts.length + 1];
     args[0] = Restarts.useValue();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
@@ -247,7 +247,7 @@ public final class Scope implements AutoCloseable {
    * @see #notify(Condition, Restart[])
    * @see #raise(Condition, Class, Restart[])
    */
-  @SuppressWarnings({ "unchecked", "varargs" })
+  @SuppressWarnings({"unchecked", "varargs"})
   public <T> T signal(Condition condition, Policies<T> policies, Restart<? extends T>... restarts)
       throws NullPointerException, UnsupportedOperationException, HandlerNotFoundException, ClassCastException, AbortException {
     ensureOpen();
@@ -312,10 +312,11 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * The {@link Scope} instance wrapping this one. May be null if this is the topmost {@code Scope}.
+   * The {@link Scope} instance wrapping this one, or {@code this} if it's a {@linkplain #isRoot() root scope}.
    *
-   * @return the {@link Scope} instance wrapping this one, or null if this is a root scope.
+   * @return the {@link Scope} instance wrapping this one, or {@code this} if this is a root scope.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
+   * @see #isRoot()
    */
   public Scope getParent() throws UnsupportedOperationException {
     ensureOpen();
@@ -323,7 +324,13 @@ public final class Scope implements AutoCloseable {
     return parent;
   }
 
-  public boolean isRoot() {
+  /**
+   * Checks if this scope is a root scope.
+   *
+   * @return {@code true} if this is a root scope, {@code false} otherwise.
+   * @throws UnsupportedOperationException if this method is called on a closed scope.
+   */
+  public boolean isRoot() throws UnsupportedOperationException {
     ensureOpen();
 
     return parent == this;

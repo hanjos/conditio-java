@@ -21,6 +21,23 @@ public class ScopeTest {
   }
 
   @Test
+  public void shouldFailOnClosedScopes() {
+    final Scope closed = getClosedScope();
+
+    assertThrows(UnsupportedOperationException.class, closed::isRoot);
+    assertThrows(UnsupportedOperationException.class, closed::getParent);
+    assertThrows(UnsupportedOperationException.class, closed::getAllHandlers);
+    assertThrows(UnsupportedOperationException.class, closed::getAllRestarts);
+    assertThrows(UnsupportedOperationException.class, closed::getParent);
+    assertThrows(UnsupportedOperationException.class, () -> closed.call(() -> ""));
+    assertThrows(UnsupportedOperationException.class, () -> closed.raise(new BasicCondition(""), String.class));
+    assertThrows(UnsupportedOperationException.class, () -> closed.notify(new BasicCondition("")));
+    assertThrows(UnsupportedOperationException.class, () -> closed.signal(new BasicCondition(""), new Policies<>()));
+    assertThrows(UnsupportedOperationException.class, () -> closed.handle(null));
+    assertThrows(UnsupportedOperationException.class, () -> closed.handle(BasicCondition.class, (s, ops) -> ops.skip()));
+  }
+
+  @Test
   public void everyInvocationChainIsDifferentButHasTheSameRoot() {
     Scope root, first;
 
@@ -93,6 +110,12 @@ public class ScopeTest {
       a.handle(BasicCondition.class, (s, ops) -> null);
 
       assertThrows(NullPointerException.class, () -> a.signal(new BasicCondition("oops"), new Policies<>()));
+    }
+  }
+
+  private Scope getClosedScope() {
+    try(Scope a = Scopes.create()) {
+      return a;
     }
   }
 }
