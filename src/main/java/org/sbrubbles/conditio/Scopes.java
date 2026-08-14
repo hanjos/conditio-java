@@ -13,7 +13,7 @@ public final class Scopes {
   private static final Scope ROOT;
 
   static {
-    ROOT = new ScopeImpl();
+    ROOT = new Scope();
     current = ROOT;
   }
 
@@ -27,7 +27,7 @@ public final class Scopes {
    * @throws NullPointerException if either {@code restarts} or one of the given restarts is {@code null}.
    */
   public static Scope create(Restart<?>... restarts) {
-    current = new ScopeImpl(current, restarts);
+    current = new Scope(current, restarts);
 
     return current;
   }

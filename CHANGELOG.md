@@ -1,6 +1,7 @@
 # 0.7.0
 
-* `Scopes.create` now takes restarts, so `ScopeImpl.set` was removed, and with it the need to cast to `ScopeImpl`.
+* `Scope` is a class, and therefore `ScopeImpl` no longer exists.
+* `Scopes.create` now takes restarts, so (the former) `ScopeImpl.set` was removed.
 * Now there is a non-null root scope, providing a place to hang default handlers and restarts.
 
 # 0.6.0
