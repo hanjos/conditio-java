@@ -1,10 +1,12 @@
 # 0.7.0
 
 * Now there is a non-null root scope, providing a place to hang default handlers and restarts.
+* Several additions:
+  * `HandlerNotFound`: A condition which `Scope.signal` uses instead of a policy. The root scope handles it by throwing a `HandlerNotFoundException`; but any scope may handle it as they choose. `Scope.notify`, for example, handles it by resuming execution. 
 * Several removals:
   * `ScopeImpl.set`: `Scopes.create` now takes restarts, so it's no longer needed.
-  * `ScopeImpl`: `Scope` is now a class, and therefore took over.
-  * `HandlerNotFoundPolicy`: `Scope.signal` now signals a `HandlerNotFound` condition, which by default errors out, but `Scope.notify` swallows and resumes.
+  * `ScopeImpl`: `Scope` is now a class, and therefore took over its duties.
+  * `HandlerNotFoundPolicy`: Now unneeded with `HandlerNotFound`.
 
 # 0.6.0
 

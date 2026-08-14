@@ -186,7 +186,15 @@ public final class Scope implements AutoCloseable {
     Policies<?> policies = new Policies<>(ReturnTypePolicy.ignore());
 
     try (Scope scope = Scopes.create(Restarts.resume())) {
-      scope.handle(HandlerNotFound.class, (s, ops) -> ops.restart(Restarts.resume()));
+      scope.handle(HandlerNotFound.class, (s, ops) -> {
+        // if the unhandled condition is this one, then execution may be safely resumed
+        if(s.getCondition().getSignal().getCondition() == condition) {
+          return ops.restart(Restarts.resume());
+        }
+
+        // otherwise, somebody else signaled this; keep looking
+        return ops.skip();
+      });
 
       scope.signal(condition, (Policies) policies, restarts);
     }
