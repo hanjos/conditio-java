@@ -15,6 +15,10 @@ public final class Scopes {
   static {
     ROOT = new Scope();
     current = ROOT;
+
+    ROOT.handle(HandlerNotFound.class, (s, ops) -> {
+      throw new HandlerNotFoundException(s.getCondition().getSignal());
+    });
   }
 
   private Scopes() { /* empty */ }

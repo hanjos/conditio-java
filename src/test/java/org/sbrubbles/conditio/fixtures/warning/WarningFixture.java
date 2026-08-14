@@ -7,15 +7,13 @@ import org.sbrubbles.conditio.fixtures.AbstractFixture;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("unchecked")
 public class WarningFixture extends AbstractFixture {
   public void low(int i) {
     try (Scope scope = Scopes.create()) {
-      scope.signal(new IntWarning(i), new Policies<>(new WarningPolicy(), ReturnTypePolicy.ignore()), Restarts.resume());
+      scope.signal(new IntWarning(i), new Policies<>(ReturnTypePolicy.ignore()), Restarts.resume());
     }
   }
 
@@ -49,13 +47,6 @@ public class WarningFixture extends AbstractFixture {
       mid(n);
 
       return warnings;
-    }
-  }
-
-  public void noHandler(PrintStream out) {
-    try (Scope scope = Scopes.create()) {
-      scope.signal(new IntWarning(-1), new Policies<>(new WarningPolicy(out), ReturnTypePolicy.ignore()));
-      scope.signal(new IntWarning(-2), new Policies<>(new WarningPolicy(out), ReturnTypePolicy.ignore()));
     }
   }
 }

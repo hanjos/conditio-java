@@ -5,8 +5,6 @@ import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.policies.Policies;
 
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -91,16 +89,6 @@ public class ScopeTest {
       }
 
       assertIterableEquals(Collections.emptyList(), a.getAllRestarts());
-    }
-  }
-
-  @Test
-  public void theIteratorFollowsTheProperProtocol() {
-    try (Scope a = Scopes.create()) {
-      Iterator<Handler> iterator = a.getAllHandlers().iterator();
-
-      assertFalse(iterator.hasNext());
-      assertThrows(NoSuchElementException.class, iterator::next);
     }
   }
 

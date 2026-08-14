@@ -4,7 +4,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 
@@ -27,7 +26,7 @@ public class UseValueTest {
         Handlers.restart(Restarts.use(result))));
 
       try (Scope b = Scopes.create()) {
-        Object actual = b.signal(new BasicCondition(""), new Policies<>(HandlerNotFoundPolicy.error(), ReturnTypePolicy.expects(Object.class)), Restarts.useValue());
+        Object actual = b.signal(new BasicCondition(""), new Policies<>(ReturnTypePolicy.expects(Object.class)), Restarts.useValue());
 
         assertEquals(result, actual);
         assertEquals(1, trail.size());

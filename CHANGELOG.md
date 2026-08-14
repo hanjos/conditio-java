@@ -1,8 +1,10 @@
 # 0.7.0
 
-* `Scope` is a class, and therefore `ScopeImpl` no longer exists.
-* `Scopes.create` now takes restarts, so (the former) `ScopeImpl.set` was removed.
 * Now there is a non-null root scope, providing a place to hang default handlers and restarts.
+* Several removals:
+  * `ScopeImpl.set`: `Scopes.create` now takes restarts, so it's no longer needed.
+  * `ScopeImpl`: `Scope` is now a class, and therefore took over.
+  * `HandlerNotFoundPolicy`: `Scope.signal` now signals a `HandlerNotFound` condition, which by default errors out, but `Scope.notify` swallows and resumes.
 
 # 0.6.0
 

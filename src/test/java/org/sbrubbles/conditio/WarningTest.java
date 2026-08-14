@@ -4,8 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.warning.WarningFixture;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -33,19 +31,5 @@ public class WarningTest {
         "b: IntWarning", "b: IntWarning", "a: IntWarning",
         "b: IntWarning", "b: IntWarning", "a: IntWarning"),
       fixture.getHandlerTrace());
-  }
-
-  @Test
-  public void noHandler() {
-    List<String> warnings = new ArrayList<>();
-
-    fixture.noHandler(new PrintStream(System.out, true) {
-      @Override
-      public void println(String x) {
-        warnings.add(x);
-      }
-    });
-
-    assertEquals(Arrays.asList("[WARN] -1", "[WARN] -2"), warnings);
   }
 }

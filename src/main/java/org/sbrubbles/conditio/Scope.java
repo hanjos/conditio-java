@@ -1,6 +1,5 @@
 package org.sbrubbles.conditio;
 
-import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 
@@ -165,8 +164,7 @@ public final class Scope implements AutoCloseable {
 
   /**
    * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition which
-   * {@linkplain HandlerNotFoundPolicy#ignore() may go unhandled} and
-   * {@linkplain ReturnTypePolicy#ignore() returns no useful value}.
+   * may go unhandled and {@linkplain ReturnTypePolicy#ignore() returns no useful value}.
    * This method always provides a {@link org.sbrubbles.conditio.restarts.Resume Resume} restart.
    * <p>
    * This method is a way to provide hints or notifications to higher-level code, which can be safely resumed and
@@ -178,26 +176,36 @@ public final class Scope implements AutoCloseable {
    * @throws AbortException                if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see org.sbrubbles.conditio.restarts.Resume Resume
-   * @see HandlerNotFoundPolicy#ignore()
    * @see ReturnTypePolicy#ignore()
    */
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings("unchecked")
   public void notify(Condition condition, Restart<?>... restarts)
       throws NullPointerException, UnsupportedOperationException, AbortException {
-    Restart[] args = new Restart<?>[restarts.length + 1];
-    args[0] = Restarts.resume();
-    System.arraycopy(restarts, 0, args, 1, restarts.length);
+    ensureOpen();
 
-    Policies<?> policies = new Policies<>(HandlerNotFoundPolicy.ignore(), ReturnTypePolicy.ignore());
+    Policies<?> policies = new Policies<>(ReturnTypePolicy.ignore());
 
-    signal(condition, policies, args);
+    try (Scope scope = Scopes.create(Restarts.resume())) {
+      scope.handle(HandlerNotFound.class, (s, ops) -> ops.restart(Restarts.resume()));
+
+      scope.signal(condition, (Policies) policies, restarts);
+    }
   }
 
   /**
    * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition that
-   * {@linkplain HandlerNotFoundPolicy#error() must be handled} and
-   * {@linkplain ReturnTypePolicy#expects(Class) return a result}. This method always provides a
-   * {@link org.sbrubbles.conditio.restarts.UseValue UseValue} restart.
+   * must be handled and {@linkplain ReturnTypePolicy#expects(Class) return a result}.
+   *
+   * <p>
+   * <b>Provides:</b>
+   * <ul>
+   *   <li>{@link org.sbrubbles.conditio.restarts.UseValue UseValue}, for handlers to provide the value to use.</li>
+   * </ul>
+   *
+   * <b>Signals:</b>
+   * <ul>
+   *   <li>{@link HandlerNotFound}, when no handler is found for the given condition.</li>
+   * </ul>
    *
    * @param condition  a condition that must be handled.
    * @param returnType the expected type of the result.
@@ -209,7 +217,7 @@ public final class Scope implements AutoCloseable {
    * @throws AbortException                if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see org.sbrubbles.conditio.restarts.UseValue UseValue
-   * @see HandlerNotFoundPolicy#error()
+   * @see HandlerNotFound
    * @see ReturnTypePolicy#expects(Class)
    */
   @SuppressWarnings({"unchecked", "varargs"})
@@ -219,7 +227,7 @@ public final class Scope implements AutoCloseable {
     args[0] = Restarts.useValue();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
 
-    Policies<T> policies = new Policies<>(HandlerNotFoundPolicy.error(), ReturnTypePolicy.expects(returnType));
+    Policies<T> policies = new Policies<>(ReturnTypePolicy.expects(returnType));
 
     return signal(condition, policies, args);
   }
@@ -273,7 +281,7 @@ public final class Scope implements AutoCloseable {
         return policies.cast(result.get());
       }
 
-      return policies.onHandlerNotFound(s);
+      return scope.signal(new HandlerNotFound(s), policies);
     }
   }
 

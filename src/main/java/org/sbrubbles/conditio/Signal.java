@@ -52,4 +52,13 @@ public class Signal<C extends Condition> {
   public Scope getScope() {
     return scope;
   }
+
+  @Override
+  public String toString() {
+    return "Signal{" +
+        "condition=" + condition +
+        ", policies=" + policies +
+        ", scope=" + scope +
+        '}';
+  }
 }

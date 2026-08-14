@@ -8,7 +8,6 @@ import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.Entry;
 import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
-import org.sbrubbles.conditio.policies.HandlerNotFoundPolicy;
 import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 import org.sbrubbles.conditio.restarts.Resume;
@@ -49,10 +48,10 @@ public class BasicOperationsTest {
         assertOptionsDontMatch(Collections.singletonList(u), b.getAllRestarts(), "before signal");
 
         assertEquals(
-          TEST_VALUE,
-          b.signal(new MalformedLogEntry(""),
-            new Policies<>(HandlerNotFoundPolicy.error(), ReturnTypePolicy.expects(Entry.class)),
-            USE_VALUE));
+            TEST_VALUE,
+            b.signal(new MalformedLogEntry(""),
+                new Policies<>(ReturnTypePolicy.expects(Entry.class)),
+                USE_VALUE));
 
         // no restart after either...
         assertOptionsDontMatch(Collections.singletonList(u), b.getAllRestarts(), "after signal");
@@ -76,18 +75,18 @@ public class BasicOperationsTest {
       });
 
       assertEquals(TEST_VALUE,
-        a.call(
-          () -> {
-            try (Scope b = Scopes.create()) {
-              assertOptionsMatch(Arrays.asList(u, r), b.getAllRestarts(), "inside call");
+          a.call(
+              () -> {
+                try (Scope b = Scopes.create()) {
+                  assertOptionsMatch(Arrays.asList(u, r), b.getAllRestarts(), "inside call");
 
-              return b.signal(
-                new MalformedLogEntry(""),
-                new Policies<>(HandlerNotFoundPolicy.error(), ReturnTypePolicy.expects(Entry.class))); // the use value comes from call
-            }
-          },
-          Restarts.useValue(),
-          Restarts.resume()));
+                  return b.signal(
+                      new MalformedLogEntry(""),
+                      new Policies<>(ReturnTypePolicy.expects(Entry.class))); // the use value comes from call
+                }
+              },
+              Restarts.useValue(),
+              Restarts.resume()));
 
       assertOptionsDontMatch(Arrays.asList(u, r), a.getAllRestarts(), "after handle");
     }
@@ -102,19 +101,19 @@ public class BasicOperationsTest {
 
     try (Scope a = Scopes.create()) {
       a.handle(BasicCondition.class, trace(trail, "a",
-        Handlers.restart(Restarts.use(EXPECTED_RESULT))));
+          Handlers.restart(Restarts.use(EXPECTED_RESULT))));
 
       try (Scope b = Scopes.create()) {
         b.handle(BasicCondition.class, trace(trail, "b",
-          Handlers.skip()));
+            Handlers.skip()));
 
         try (Scope c = Scopes.create()) {
           String actual = c.raise(condition, String.class);
 
           assertEquals(EXPECTED_RESULT, actual);
           assertLinesMatch(
-            Arrays.asList("b", "a"),
-            trail);
+              Arrays.asList("b", "a"),
+              trail);
         }
       }
     }
@@ -127,23 +126,23 @@ public class BasicOperationsTest {
 
     try (Scope a = Scopes.create()) {
       a.handle(PleaseSignalSomethingElse.class,
-        trace(trail, "a", (s, ops) -> {
-          try (Scope scope = Scopes.create()) {
-            return ops.restart(Restarts.use(scope.raise(new BasicCondition(null), s.getPolicies().getExpectedType())));
-          }
-        }));
+          trace(trail, "a", (s, ops) -> {
+            try (Scope scope = Scopes.create()) {
+              return ops.restart(Restarts.use(scope.raise(new BasicCondition(null), s.getPolicies().getExpectedType())));
+            }
+          }));
 
       try (Scope b = Scopes.create()) {
         b.handle(BasicCondition.class, trace(trail, "b",
-          Handlers.restart(Restarts.use(FIXED_RESULT))));
+            Handlers.restart(Restarts.use(FIXED_RESULT))));
 
         try (Scope c = Scopes.create()) {
           Object actual = c.raise(new PleaseSignalSomethingElse(), Object.class);
 
           assertEquals(FIXED_RESULT, actual);
           assertLinesMatch(
-            Arrays.asList("a", "b"),
-            trail);
+              Arrays.asList("a", "b"),
+              trail);
         }
       }
     }
@@ -154,45 +153,12 @@ public class BasicOperationsTest {
     BasicCondition condition = new BasicCondition("test");
 
     try (Scope a = Scopes.create()) {
-      a.signal(condition, new Policies<>(HandlerNotFoundPolicy.error(), ReturnTypePolicy.ignore()));
+      a.signal(condition, new Policies<>(ReturnTypePolicy.ignore()));
 
       fail();
     } catch (HandlerNotFoundException e) {
       assertEquals(condition, e.getSignal().getCondition());
     }
-  }
-
-  @Test
-  public void signallingWithNoHandlersAndAnIgnorePolicyNopesOut() {
-    try (Scope a = Scopes.create()) {
-      a.signal(new BasicCondition("test"), new Policies<>(HandlerNotFoundPolicy.ignore(), ReturnTypePolicy.ignore()));
-    }
-
-    // nothing happens, and the returned result is meaningless, so nothing to assert
-  }
-
-  @Test
-  public void notifyIsTheSameAsSignallingWithAnIgnorePolicyAndResume() {
-    List<String> trail = new ArrayList<>();
-
-    try (Scope a = Scopes.create()) {
-      a.handle(BasicCondition.class, (s, ops) -> {
-        trail.add(s.getCondition().getValue());
-
-        assertOptionsMatch(
-          Collections.singletonList(Restarts.resume()),
-          s.getScope().getAllRestarts());
-
-        return ops.skip(); // no handling provided
-      });
-
-      try (Scope b = Scopes.create()) {
-        b.notify(new BasicCondition("notify"));
-        b.signal(new BasicCondition("signal"), new Policies<>(HandlerNotFoundPolicy.ignore(), ReturnTypePolicy.ignore()), Restarts.resume());
-      }
-    }
-
-    assertLinesMatch(Arrays.asList("notify", "signal"), trail);
   }
 
   @Test
@@ -206,8 +172,8 @@ public class BasicOperationsTest {
         trail.add(s.getCondition().getValue());
 
         assertOptionsMatch(
-          Collections.singletonList(u),
-          s.getScope().getAllRestarts());
+            Collections.singletonList(u),
+            s.getScope().getAllRestarts());
 
         return ops.restart(Restarts.use(TEST_VALUE));
       });
@@ -233,6 +199,7 @@ public class BasicOperationsTest {
     }
   }
 
+  // XXX HandlerNotFoundPolicy.ignore()
   @Test
   public void signalTakesRestartsAndPoliciesWithCompatibleTypes() {
     try (Scope scope = Scopes.create()) {
@@ -240,9 +207,9 @@ public class BasicOperationsTest {
 
       final ArrayList<?> expected = new ArrayList<>();
       final List<?> actual = scope.signal(
-        new BasicCondition(""),
-        new Policies<>(HandlerNotFoundPolicy.ignore(), ReturnTypePolicy.expects(AbstractList.class)),
-        Restarts.on(BasicRestartOption.class, args -> expected));
+          new BasicCondition(""),
+          new Policies<>(ReturnTypePolicy.expects(AbstractList.class)),
+          Restarts.on(BasicRestartOption.class, args -> expected));
 
       assertSame(expected, actual);
     }
@@ -255,9 +222,9 @@ public class BasicOperationsTest {
 
       final ArrayList<?> expected = new ArrayList<>();
       final List<?> actual = scope.raise(
-        new BasicCondition(""),
-        AbstractList.class,
-        Restarts.on(BasicRestartOption.class, args -> expected));
+          new BasicCondition(""),
+          AbstractList.class,
+          Restarts.on(BasicRestartOption.class, args -> expected));
 
       assertSame(expected, actual);
     }
@@ -272,7 +239,8 @@ public class BasicOperationsTest {
     assertThrows(UnsupportedOperationException.class, () -> consumer.accept(shouldFail));
   }
 
-  static class BasicRestartOption implements Restart.Option { }
+  static class BasicRestartOption implements Restart.Option {
+  }
 
   static boolean matches(List<Restart.Option> options, Iterable<Restart<?>> iterable) {
     return options.stream().allMatch(o -> {
@@ -300,22 +268,22 @@ public class BasicOperationsTest {
 
   static Stream<Function<String, Condition>> skipHandlingProvider() {
     return Stream.of(
-      BasicCondition::new,
-      SonOfBasicCondition::new
+        BasicCondition::new,
+        SonOfBasicCondition::new
     );
   }
 
   static Stream<Consumer<Scope>> closedScopeProvider() {
     return Stream.of(
-      scope -> scope.getParent(),
-      scope -> scope.getAllRestarts(),
-      scope -> scope.getAllHandlers(),
-      scope -> scope.handle(Handlers.on(Signals.conditionType(BasicCondition.class), Handlers.abort())),
-      scope -> scope.handle(BasicCondition.class, Handlers.abort()),
-      scope -> scope.notify(new BasicCondition("")),
-      scope -> scope.call(() -> ""),
-      scope -> scope.raise(new BasicCondition(""), Object.class),
-      scope -> scope.signal(new BasicCondition(""), new Policies<>())
+        Scope::getParent,
+        Scope::getAllRestarts,
+        Scope::getAllHandlers,
+        scope -> scope.handle(Handlers.on(Signals.conditionType(BasicCondition.class), Handlers.abort())),
+        scope -> scope.handle(BasicCondition.class, Handlers.abort()),
+        scope -> scope.notify(new BasicCondition("")),
+        scope -> scope.call(() -> ""),
+        scope -> scope.raise(new BasicCondition(""), Object.class),
+        scope -> scope.signal(new BasicCondition(""), new Policies<>())
     );
   }
 
