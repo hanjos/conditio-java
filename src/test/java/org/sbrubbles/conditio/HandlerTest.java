@@ -9,7 +9,9 @@ import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
 import org.sbrubbles.conditio.policies.Policies;
+import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -69,6 +71,23 @@ public class HandlerTest {
     assertThrows(UnsupportedOperationException.class, () -> consumer.accept(ops));
   }
 
+  @Test
+  public void handlerNotFoundIsSignalledWhenThereIsNoHandler() {
+    AtomicInteger INTERCEPTED = new AtomicInteger();
+
+    try(Scope a = Scopes.create()) {
+      a.handle(HandlerNotFound.class, (s, ops) -> {
+        INTERCEPTED.set(1);
+
+        return ops.restart(Restarts.resume());
+      });
+
+      a.signal(new BasicCondition(""), new Policies<>(ReturnTypePolicy.ignore()), Restarts.resume());
+    }
+
+    assertEquals(1, INTERCEPTED.get(), "Should've been set by the HandlerNotFound handler!");
+  }
+
   private Handler.Decision body(Signal<BasicCondition> s, Handler.Operations ops) {
     if (s == null) {
       return new Handler.Decision(null);
@@ -104,8 +123,8 @@ public class HandlerTest {
   static Stream<Consumer<Handler.Operations>> closedOperationsProvider() {
     return Stream.of(
       ops -> ops.restart(Restarts.resume()),
-      ops -> ops.skip(),
-      ops -> ops.abort()
+        Handler.Operations::skip,
+        Handler.Operations::abort
     );
   }
 }
