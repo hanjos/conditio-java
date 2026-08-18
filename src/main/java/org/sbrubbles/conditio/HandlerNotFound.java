@@ -7,9 +7,9 @@ import org.sbrubbles.conditio.policies.Policies;
  * available handler could {@linkplain Handler#test(Object) handle} the condition, or when the ones that could opt
  * to {@linkplain Handler.Operations#skip() skip} instead.
  * <p>
- * The root scope has a default handler for this condition, which throws {@link HandlerNotFoundException}. But by
- * signalling a condition, {@link Scope#signal(Condition, Policies, Restart[]) signal} enables programmers to adopt
- * different strategies, like {@link Scope#notify(Condition, Restart[]) notify}.
+ * The root scope has a default handler for this condition, which throws {@link HandlerNotFoundException}. But
+ * signalling a condition enables programmers to adopt different strategies, like
+ * {@link Scope#notify(Condition, Restart[]) notify}.
  *
  * @see Scope#signal(Condition, Policies, Restart[])
  * @see Scope#notify(Condition, Restart[])

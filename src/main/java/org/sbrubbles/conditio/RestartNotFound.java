@@ -1,12 +1,15 @@
 package org.sbrubbles.conditio;
 
 /**
- * Thrown when no working restart for a given restart option was found.
+ * A condition signalled when no working restart for a given restart option was found.
+ * <p>
+ * The root scope has a default handler for this condition, which throws {@link RestartNotFoundException}. But
+ * signalling a condition enables programmers to adopt different strategies.
  *
  * @see Restart
  * @see Restart.Option
  */
-public class RestartNotFoundException extends RuntimeException {
+public class RestartNotFound implements Condition {
   private final Restart.Option option;
 
   /**
@@ -14,9 +17,7 @@ public class RestartNotFoundException extends RuntimeException {
    *
    * @param option the option that could not be handled.
    */
-  public RestartNotFoundException(Restart.Option option) {
-    super("No restart found for option " + option);
-
+  public RestartNotFound(Restart.Option option) {
     this.option = option;
   }
 

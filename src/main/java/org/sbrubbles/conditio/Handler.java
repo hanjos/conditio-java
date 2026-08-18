@@ -1,6 +1,7 @@
 package org.sbrubbles.conditio;
 
 import org.sbrubbles.conditio.policies.Policies;
+import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -46,13 +47,17 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
     /**
      * Invokes a previously set recovery strategy. This method will search for a compatible
      * {@linkplain Restart restart} and run it, returning the result.
+     * <p>
+     * <b>Signals:</b>
+     * <ul>
+     *   <li>{@link RestartNotFound}, if no restart was found for the given option.</li>
+     * </ul>
      *
      * @param option identifies which restart to run, and holds any data required for that restart's operation.
      * @return (a decision representing) the result of the selected restart's execution.
-     * @throws RestartNotFoundException      if no restart compatible with {@code option} could be found.
      * @throws UnsupportedOperationException if this method is called after this instance is closed.
      */
-    public Handler.Decision restart(Restart.Option option) throws RestartNotFoundException {
+    public Handler.Decision restart(Restart.Option option) {
       ensureOpen();
 
       for (Restart<?> r : scope.getAllRestarts()) {
@@ -61,7 +66,10 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
         }
       }
 
-      throw new RestartNotFoundException(option);
+      Restart<?> r = this.scope.signal(new RestartNotFound(option),
+          new Policies<>(ReturnTypePolicy.expects(Restart.class)));
+
+      return new Handler.Decision(r.apply(option));
     }
 
     /**

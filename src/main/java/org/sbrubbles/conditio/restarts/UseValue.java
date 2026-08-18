@@ -4,8 +4,12 @@ import org.sbrubbles.conditio.Condition;
 import org.sbrubbles.conditio.Restart;
 import org.sbrubbles.conditio.Restarts;
 
+import java.util.Objects;
+
 /**
  * A restart option holding the value to be returned.
+ * <p>
+ * It is a data class, and so implements {@code equals} and {@code hashCode}.
  *
  * @param <R> the type of the value to return.
  * @see Restarts
@@ -30,5 +34,17 @@ public class UseValue<R> implements Restart.Option {
    */
   public R getValue() {
     return value;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof UseValue)) return false;
+    UseValue<?> useValue = (UseValue<?>) o;
+    return Objects.equals(getValue(), useValue.getValue());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(getValue());
   }
 }

@@ -15,8 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.sbrubbles.conditio.Signals.conditionType;
 
@@ -69,6 +68,20 @@ public class HandlerTest {
     scope.close();
 
     assertThrows(UnsupportedOperationException.class, () -> consumer.accept(ops));
+  }
+
+  @Test
+  public void handlerNotFoundExceptionIsThrownByDefault() {
+    Condition c = new BasicCondition("");
+    try(Scope a = Scopes.create()) {
+      a.signal(c, new Policies<>(ReturnTypePolicy.ignore()), Restarts.resume());
+    } catch (HandlerNotFoundException e) {
+      assertEquals(c, e.getSignal().getCondition());
+
+      return;
+    }
+
+    fail("Should've thrown earlier!");
   }
 
   @Test

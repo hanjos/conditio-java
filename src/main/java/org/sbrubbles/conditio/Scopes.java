@@ -4,6 +4,9 @@ package org.sbrubbles.conditio;
  * Manages the stack of nested {@linkplain Scope scopes}. Works as a {@code Scope} factory,
  * {@linkplain #create(Restart[]) pushing} and popping scopes as needed.
  * <p>
+ * Provides a root scope with default handlers for {@link HandlerNotFound} and {@link RestartNotFound}, which both
+ * throw exceptions. Child scopes may provide handlers of their own, enabling different strategies.
+ * <p>
  * This class is not intended to be instanced or subclassed.
  *
  * @see Scope
@@ -17,8 +20,11 @@ public final class Scopes {
     current = ROOT;
 
     ROOT.handle(HandlerNotFound.class, (s, ops) -> {
-      throw new HandlerNotFoundException(s.getCondition().getSignal());
-    });
+          throw new HandlerNotFoundException(s.getCondition().getSignal());
+        })
+        .handle(RestartNotFound.class, (s, ops) -> {
+          throw new RestartNotFoundException(s.getCondition().getOption());
+        });
   }
 
   private Scopes() { /* empty */ }

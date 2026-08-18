@@ -118,7 +118,7 @@ public class LoggingTest {
       fixture.logAnalyzer(BAD_LOG);
       fail();
     } catch (RestartNotFoundException e) {
-      assertNull(e.getRestartOption());
+      assertNull(e.getOption());
 
       assertLinesMatch(Collections.singletonList("logAnalyzer: " + MalformedLogEntry.class.getSimpleName()), fixture.getHandlerTrace());
       assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
@@ -136,7 +136,7 @@ public class LoggingTest {
       fixture.logAnalyzer(BAD_LOG);
       fail();
     } catch (RestartNotFoundException e) {
-      assertEquals(UNKNOWN_RESTART_OPTION, e.getRestartOption());
+      assertEquals(UNKNOWN_RESTART_OPTION, e.getOption());
 
       assertLinesMatch(Collections.singletonList("logAnalyzer: " + MalformedLogEntry.class.getSimpleName()), fixture.getHandlerTrace());
       assertLinesMatch(Collections.emptyList(), fixture.getRestartTrace());
@@ -148,7 +148,7 @@ public class LoggingTest {
     return new Entry(String.format("%04d OK", line));
   }
 
-  enum ExpectedHandler {
+  public enum ExpectedHandler {
     LOG_ANALYZER("logAnalyzer"), ANALYZE_LOG("analyzeLog");
 
     private final String methodName;
@@ -162,7 +162,7 @@ public class LoggingTest {
     }
   }
 
-  enum ExpectedRestart {
+  public enum ExpectedRestart {
     USE_VALUE("UseValue"), RETRY_WITH("RetryWith"), SKIP_ENTRY("SkipEntry");
 
     private final String restartName;
