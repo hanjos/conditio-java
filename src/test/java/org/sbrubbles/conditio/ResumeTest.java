@@ -23,7 +23,8 @@ public class ResumeTest {
     assertTrue(r.test(new Resume<>()));
 
     assertFalse(r.test(null));
-    assertFalse(r.test(new Restart.Option() { }));
+    assertFalse(r.test(new Restart.Option() {
+    }));
   }
 
   @Test
@@ -34,6 +35,7 @@ public class ResumeTest {
     assertNull(r.apply(new Resume<>()));
 
     assertThrows(ClassCastException.class, () -> r.apply(null));
-    assertThrows(ClassCastException.class, () -> r.apply(new Restart.Option() { }));
+    assertThrows(ClassCastException.class, () -> r.apply(new Restart.Option() {
+    }));
   }
 }

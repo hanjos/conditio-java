@@ -1,8 +1,7 @@
 package org.sbrubbles.conditio;
 
-import org.sbrubbles.conditio.policies.Policies;
-
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Holds data about a specific {@code signal} invocation, including the condition.
@@ -11,20 +10,21 @@ import java.util.Objects;
  */
 public class Signal<C extends Condition> {
   private final C condition;
-  private final Policies<?> policies;
+  private final Optional<Class> returnType;
   private final Scope scope;
 
   /**
    * Creates a new instance.
    *
-   * @param condition the condition signalled.
-   * @param policies  the policies in effect.
-   * @param scope     the scope where the condition was signalled.
+   * @param condition  the condition signalled.
+   * @param returnType the expected type of the result of {@code signal}, or {@code Optional.empty()} if no return is
+   *                   expected.
+   * @param scope      the scope where the condition was signalled.
    * @throws NullPointerException if one or more arguments are null.
    */
-  public Signal(C condition, Policies<?> policies, Scope scope) {
+  public Signal(C condition, Optional<Class> returnType, Scope scope) {
     this.condition = Objects.requireNonNull(condition, "condition");
-    this.policies = Objects.requireNonNull(policies, "policies");
+    this.returnType = Objects.requireNonNull(returnType, "returnType");
     this.scope = Objects.requireNonNull(scope, "scope");
   }
 
@@ -38,11 +38,13 @@ public class Signal<C extends Condition> {
   }
 
   /**
-   * The policies in effect.
+   * The expected return type, wrapped in an {@link Optional}.
    *
-   * @return the policies in effect.
+   * @return a class with the expected return type, or {@code None} if no return type is expected.
    */
-  public Policies<?> getPolicies() { return policies; }
+  public Optional<Class> getReturnType() {
+    return returnType;
+  }
 
   /**
    * The scope where the condition was emitted.
@@ -55,9 +57,9 @@ public class Signal<C extends Condition> {
 
   @Override
   public String toString() {
-    return "Signal{" +
+    return super.toString() + "{" +
         "condition=" + condition +
-        ", policies=" + policies +
+        ", returnType=" + returnType +
         ", scope=" + scope +
         '}';
   }

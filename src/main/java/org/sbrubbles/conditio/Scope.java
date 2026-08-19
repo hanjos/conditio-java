@@ -1,7 +1,6 @@
 package org.sbrubbles.conditio;
 
-import org.sbrubbles.conditio.policies.Policies;
-import org.sbrubbles.conditio.policies.ReturnTypePolicy;
+import org.sbrubbles.conditio.restarts.Resume;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -21,7 +20,7 @@ import java.util.function.Supplier;
  * {@link UnsupportedOperationException}.
  *
  * <h3>Core mechanics</h3>
- * The core operation is {@link #signal(Condition, Policies, Restart[]) signal}, which is called when
+ * The core operation is {@link #signal(Condition, Optional, Restart[]) signal}, which is called when
  * lower-level code doesn't know how to handle a {@linkplain Condition condition}. {@code signal} looks
  * for something that can {@linkplain #handle(Class, BiFunction) handle} the given condition in the scope stack. The
  * chosen {@linkplain Handler handler} then decides {@linkplain Signal what to do}, like
@@ -165,12 +164,16 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition which
-   * may go unhandled and {@linkplain ReturnTypePolicy#ignore() returns no useful value}.
-   * This method always provides a {@link org.sbrubbles.conditio.restarts.Resume Resume} restart.
+   * {@linkplain #signal(Condition, Optional, Restart[]) Signals} a condition which may go unhandled and returns no
+   * useful value. This method always provides a {@link org.sbrubbles.conditio.restarts.Resume Resume} restart.
    * <p>
    * This method is a way to provide hints or notifications to higher-level code, which can be safely resumed and
    * maybe trigger some useful side effects.
+   * <p>
+   * <b>Provides:</b>
+   * <ul>
+   *   <li>{@link Resume}, so that handlers may indicate that the signal was handled and execution may resume.</li>
+   * </ul>
    *
    * @param condition a condition, which here acts as a notice that something happened.
    * @param restarts  some restarts, which, along with {@code Resume}, will be available to the eventual handler.
@@ -178,19 +181,15 @@ public final class Scope implements AutoCloseable {
    * @throws AbortException                if the eventual handler {@linkplain Handler.Operations#abort() aborts execution}.
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see org.sbrubbles.conditio.restarts.Resume Resume
-   * @see ReturnTypePolicy#ignore()
    */
-  @SuppressWarnings("unchecked")
   public void notify(Condition condition, Restart<?>... restarts)
       throws NullPointerException, UnsupportedOperationException, AbortException {
     ensureOpen();
 
-    Policies<?> policies = new Policies<>(ReturnTypePolicy.ignore());
-
     try (Scope scope = Scopes.create(Restarts.resume())) {
       scope.handle(HandlerNotFound.class, (s, ops) -> {
         // if the unhandled condition is this one, then execution may be safely resumed
-        if(s.getCondition().getSignal().getCondition() == condition) {
+        if (s.getCondition().getSignal().getCondition() == condition) {
           return ops.restart(Restarts.resume());
         }
 
@@ -198,13 +197,12 @@ public final class Scope implements AutoCloseable {
         return ops.skip();
       });
 
-      scope.signal(condition, (Policies) policies, restarts);
+      scope.signal(condition, Optional.empty(), restarts);
     }
   }
 
   /**
-   * {@linkplain #signal(Condition, Policies, Restart[]) Signals} a condition that
-   * must be handled and {@linkplain ReturnTypePolicy#expects(Class) return a result}.
+   * {@linkplain #signal(Condition, Optional, Restart[]) Signals} a condition that must be handled and return a result.
    *
    * <p>
    * <b>Provides:</b>
@@ -228,7 +226,6 @@ public final class Scope implements AutoCloseable {
    * @throws UnsupportedOperationException if this method is called on a closed scope.
    * @see org.sbrubbles.conditio.restarts.UseValue UseValue
    * @see HandlerNotFound
-   * @see ReturnTypePolicy#expects(Class)
    */
   @SuppressWarnings({"unchecked", "varargs"})
   public <T> T raise(Condition condition, Class<T> returnType, Restart<? extends T>... restarts)
@@ -237,9 +234,7 @@ public final class Scope implements AutoCloseable {
     args[0] = Restarts.useValue();
     System.arraycopy(restarts, 0, args, 1, restarts.length);
 
-    Policies<T> policies = new Policies<>(ReturnTypePolicy.expects(returnType));
-
-    return signal(condition, policies, args);
+    return signal(condition, Optional.of(returnType), args);
   }
 
   /**
@@ -249,15 +244,20 @@ public final class Scope implements AutoCloseable {
    * result.
    * <p>
    * This method is a primitive operation. Common use cases can use other methods, with better ergonomics.
+   * <p>
+   * <b>Signals:</b>
+   * <ul>
+   *   <li>{@link HandlerNotFound}, when no handler is found for the given condition.</li>
+   * </ul>
    *
-   * @param <T>       the expected type of the object to be returned.
-   * @param condition a condition, representing a situation which {@linkplain #handle(Class, BiFunction)
-   *                  higher-level code} will decide how to handle.
-   * @param policies  how to handle certain cases, like no compatible handlers or the expected return type.
-   * @param restarts  some {@linkplain Restart restarts}, which will be available to the eventual handler.
+   * @param <T>        the expected type of the object to be returned.
+   * @param condition  a condition, representing a situation which {@linkplain #handle(Class, BiFunction)
+   *                   higher-level code} will decide how to handle.
+   * @param returnType whether there is an expected return type to return, or {@link Optional#empty()} if not.
+   * @param restarts   some {@linkplain Restart restarts}, which will be available to the eventual handler.
    * @return the end result, as provided by the selected handler.
    * @throws NullPointerException          if one of the arguments, or the selected handler's decision is null.
-   * @throws HandlerNotFoundException      if the policy opts to error out.
+   * @throws HandlerNotFoundException      if `HandlerNotFound` isn't handled.
    * @throws ClassCastException            if the value provided by the handler isn't type-compatible with {@code T}.
    * @throws AbortException                if the eventual handler
    *                                       {@linkplain Handler.Operations#abort() aborts execution}.
@@ -266,17 +266,17 @@ public final class Scope implements AutoCloseable {
    * @see #raise(Condition, Class, Restart[])
    */
   @SuppressWarnings({"unchecked", "varargs"})
-  public <T> T signal(Condition condition, Policies<T> policies, Restart<? extends T>... restarts)
+  public <T> T signal(Condition condition, Optional<Class<T>> returnType, Restart<? extends T>... restarts)
       throws NullPointerException, UnsupportedOperationException, HandlerNotFoundException, ClassCastException, AbortException {
     ensureOpen();
 
     Objects.requireNonNull(condition, "condition");
-    Objects.requireNonNull(policies, "policies");
+    Objects.requireNonNull(returnType, "returnType");
     Objects.requireNonNull(restarts, "restarts");
 
     try (Scope scope = Scopes.create(restarts);
          Handler.Operations ops = new Handler.Operations(scope)) {
-      Signal<? extends Condition> s = new Signal<>(condition, policies, scope);
+      Signal<? extends Condition> s = new Signal<>(condition, (Optional) returnType, scope);
 
       for (Handler h : scope.getAllHandlers()) {
         if (!h.test(s)) {
@@ -288,10 +288,12 @@ public final class Scope implements AutoCloseable {
           continue;
         }
 
-        return policies.cast(result.get());
+        return returnType
+            .map(type -> type.cast(result.get()))
+            .orElse(null);
       }
 
-      return scope.signal(new HandlerNotFound(s), policies);
+      return scope.signal(new HandlerNotFound(s), returnType);
     }
   }
 

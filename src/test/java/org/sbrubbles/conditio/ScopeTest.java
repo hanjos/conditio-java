@@ -3,10 +3,10 @@ package org.sbrubbles.conditio;
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
-import org.sbrubbles.conditio.policies.Policies;
 import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,7 +32,7 @@ public class ScopeTest {
     assertThrows(UnsupportedOperationException.class, () -> closed.call(() -> ""));
     assertThrows(UnsupportedOperationException.class, () -> closed.raise(new BasicCondition(""), String.class));
     assertThrows(UnsupportedOperationException.class, () -> closed.notify(new BasicCondition("")));
-    assertThrows(UnsupportedOperationException.class, () -> closed.signal(new BasicCondition(""), new Policies<>()));
+    assertThrows(UnsupportedOperationException.class, () -> closed.signal(new BasicCondition(""), Optional.empty()));
     assertThrows(UnsupportedOperationException.class, () -> closed.handle(null));
     assertThrows(UnsupportedOperationException.class, () -> closed.handle(BasicCondition.class, (s, ops) -> ops.skip()));
   }
@@ -99,7 +99,7 @@ public class ScopeTest {
     try (Scope a = Scopes.create()) {
       a.handle(BasicCondition.class, (s, ops) -> null);
 
-      assertThrows(NullPointerException.class, () -> a.signal(new BasicCondition("oops"), new Policies<>()));
+      assertThrows(NullPointerException.class, () -> a.signal(new BasicCondition("oops"), Optional.empty()));
     }
   }
 
@@ -107,7 +107,7 @@ public class ScopeTest {
   public void notifyHandlesHandlerNotFoundByResuming() {
     try (Scope a = Scopes.create()) {
       // signal throws...
-      assertThrows(HandlerNotFoundException.class, () -> a.signal(new BasicCondition(""), new Policies<>()));
+      assertThrows(HandlerNotFoundException.class, () -> a.signal(new BasicCondition(""), Optional.empty()));
 
       // notify doesn't
       a.notify(new BasicCondition(""));

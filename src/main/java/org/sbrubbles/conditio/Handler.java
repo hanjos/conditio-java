@@ -1,8 +1,5 @@
 package org.sbrubbles.conditio;
 
-import org.sbrubbles.conditio.policies.Policies;
-import org.sbrubbles.conditio.policies.ReturnTypePolicy;
-
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -10,7 +7,7 @@ import java.util.function.Supplier;
 
 /**
  * Handles conditions, producing the result to be returned by
- * {@link Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) signal}. A handler does so by
+ * {@link Scope#signal(Condition, java.util.Optional, Restart[]) signal}. A handler does so by
  * returning a {@linkplain Decision decision} object holding the result. These decision objects are unwrapped by
  * {@code signal}, and are expected to be non-null.
  * <p>
@@ -31,7 +28,7 @@ import java.util.function.Supplier;
 public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunction<Signal<? extends Condition>, Handler.Operations, Handler.Decision> {
   /**
    * The ways a handler can handle a condition. Instances are created by
-   * {@link Scope#signal(Condition, Policies, Restart[]) signal} to feed the handlers.
+   * {@link Scope#signal(Condition, java.util.Optional, Restart[]) signal} to feed the handlers.
    * <p>
    * This is a resource, and its methods will fail if called outside its original {@code signal}ling context.
    */
@@ -66,8 +63,7 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
         }
       }
 
-      Restart<?> r = this.scope.signal(new RestartNotFound(option),
-          new Policies<>(ReturnTypePolicy.expects(Restart.class)));
+      Restart<?> r = this.scope.raise(new RestartNotFound(option), Restart.class);
 
       return new Handler.Decision(r.apply(option));
     }
@@ -115,7 +111,7 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
      * </pre>
      *
      * @return nothing, since this method always throws.
-     * @throws AbortException to interrupt execution and unwind the stack.
+     * @throws AbortException                to interrupt execution and unwind the stack.
      * @throws UnsupportedOperationException if this method is called after this instance is closed.
      */
     public Decision abort() throws AbortException, UnsupportedOperationException {
@@ -132,7 +128,9 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
       this.closed = true;
     }
 
-    /** Errors out if this resource is closed. */
+    /**
+     * Errors out if this resource is closed.
+     */
     private void ensureOpen() throws UnsupportedOperationException {
       if (closed) {
         throw new UnsupportedOperationException("Operations closed.");
@@ -142,7 +140,7 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
 
   /**
    * How a handler decided to handle a condition. Instances are produced by {@linkplain Signal operations}, and
-   * consumed by {@link Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) signal}.
+   * consumed by {@link Scope#signal(Condition, java.util.Optional, Restart[]) signal}.
    */
   class Decision implements Supplier<Object> {
     static final Decision SKIP = new Decision(null);
@@ -150,7 +148,9 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
     private final Object result;
 
     // Only classes in this package should create instances
-    Decision(Object result) { this.result = result; }
+    Decision(Object result) {
+      this.result = result;
+    }
 
     /**
      * The value produced.
@@ -158,6 +158,8 @@ public interface Handler extends Predicate<Signal<? extends Condition>>, BiFunct
      * @return the value produced.
      */
     @Override
-    public Object get() { return result; }
+    public Object get() {
+      return result;
+    }
   }
 }

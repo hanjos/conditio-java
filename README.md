@@ -4,19 +4,32 @@ A simple condition system for Java, without dynamic variables or reflection wiza
 
 ## What
 
-Exception systems divide responsibilities in two parts: _signalling_ the exception (like `throw`), and _handling_ it (like `try/catch`), unwinding the call stack until a handler is found. The problem is, by the time the error reaches the right handler, the context that signalled the exception is mostly gone. This limits the recovery options available.
+Exception systems divide responsibilities in two parts: _signalling_ the exception (like `throw`), and _handling_ it
+(like `try/catch`), unwinding the call stack until a handler is found. The problem is, by the time the error reaches the
+right handler, the context that signalled the exception is mostly gone. This limits the recovery options available.
 
-A condition system, like the one in Common Lisp, provides a more general solution by splitting responsibilities in _three_ parts: _signalling_ the condition, _handling_ it, and _restarting_ execution. The call stack is unwound only if that was the handling strategy chosen; it doesn't have to be. This enables novel recovery strategies and protocols, and can be used for things other than error handling.
+A condition system, like the one in Common Lisp, provides a more general solution by splitting responsibilities in
+_three_ parts: _signalling_ the condition, _handling_ it, and _restarting_ execution. The call stack is unwound only if
+that was the handling strategy chosen; it doesn't have to be. This enables novel recovery strategies and protocols, and
+can be used for things other than error handling.
 
-[Beyond Exception Handling: Conditions and Restarts][beh-cl], chapter 19 of Peter Seibel's [Practical Common Lisp][pract-cl], informs much of the descriptions (as one can plainly see; I hope he doesn't mind :grin:), terminology and tests.
+[Beyond Exception Handling: Conditions and Restarts][beh-cl], chapter 19 of Peter
+Seibel's [Practical Common Lisp][pract-cl], informs much of the descriptions (as one can plainly see; I hope he doesn't
+mind :grin:), terminology and tests.
 
 ## Why
 
-Although Common Lisp and at least [some](https://github.com/clojureman/special) [Clojure](https://github.com/pangloss/pure-conditioning) [libraries](https://github.com/bwo/conditions) use dynamic variables, Java has nothing of the sort. But it occurred to me one day that Java's [`try`-with-resources](https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html) would be enough for a simple condition/restart system. So I gave it a shot :shrug:
+Although Common Lisp and at
+least [some](https://github.com/clojureman/special) [Clojure](https://github.com/pangloss/pure-conditioning) [libraries](https://github.com/bwo/conditions)
+use dynamic variables, Java has nothing of the sort. But it occurred to me one day that Java's [
+`try`-with-resources](https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html) would be
+enough for a simple condition/restart system. So I gave it a shot :shrug:
 
 ## How
 
-`try`-with-resources for the win: `Scope` is a resource which nests and closes scopes as execution enters and leaves `try` clauses, and provides a place to hang the signalling, handling and restarting machinery. In practice, the end result looks something like this:
+`try`-with-resources for the win: `Scope` is a resource which nests and closes scopes as execution enters and leaves
+`try` clauses, and provides a place to hang the signalling, handling and restarting machinery. In practice, the end
+result looks something like this:
 
 ```java
 public void analyzeLog(String filename) throws Exception {
@@ -73,13 +86,18 @@ public Entry parseLogEntry(String text) throws Exception {
 
 ## Using
 
-Basically, Maven (or Gradle; anything compatible with Maven repos, really) and [GitHub Packages](https://docs.github.com/en/packages/guides/configuring-apache-maven-for-use-with-github-packages) for the actual [repo](https://github.com/hanjos/conditio-java/packages/1543701).
+Basically, Maven (or Gradle; anything compatible with Maven repos, really)
+and [GitHub Packages](https://docs.github.com/en/packages/guides/configuring-apache-maven-for-use-with-github-packages)
+for the actual [repo](https://github.com/hanjos/conditio-java/packages/1543701).
 
 ## Caveats and stuff to mull over
 
 * There is no attempt whatsoever to make this thread-safe; to be honest, I'm not even sure what that'd look like.
-* As far as I can tell, a _full_ condition system would [need continuations](https://news.ycombinator.com/item?id=20496043), or some form of nonlocal transfer of control without stack unwinding. Which in Java is... [complicated](https://stackoverflow.com/questions/1456083/continuations-in-java). So, I'll punt on fullness for the moment. Let's see how far I get...
-
+* As far as I can tell, a _full_ condition system
+  would [need continuations](https://news.ycombinator.com/item?id=20496043), or some form of nonlocal transfer of
+  control without stack unwinding. Which in Java
+  is... [complicated](https://stackoverflow.com/questions/1456083/continuations-in-java). So, I'll punt on fullness for
+  the moment. Let's see how far I get...
 
 [beh-cl]: https://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html
 [pract-cl]: https://gigamonkeys.com/book/

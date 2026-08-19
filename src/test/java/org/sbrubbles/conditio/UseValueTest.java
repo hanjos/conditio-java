@@ -4,11 +4,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.policies.Policies;
-import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
@@ -23,10 +22,10 @@ public class UseValueTest {
 
     try (Scope a = Scopes.create()) {
       a.handle(BasicCondition.class, trace(trail, message,
-        Handlers.restart(Restarts.use(result))));
+          Handlers.restart(Restarts.use(result))));
 
       try (Scope b = Scopes.create()) {
-        Object actual = b.signal(new BasicCondition(""), new Policies<>(ReturnTypePolicy.expects(Object.class)), Restarts.useValue());
+        Object actual = b.signal(new BasicCondition(""), Optional.of(Object.class), Restarts.useValue());
 
         assertEquals(result, actual);
         assertEquals(1, trail.size());
@@ -45,9 +44,9 @@ public class UseValueTest {
 
   static Stream<Arguments> valuesProvider() {
     return Stream.of(
-      arguments("<result>", "a"),
-      arguments("<result>", ""),
-      arguments("<result>", null)
+        arguments("<result>", "a"),
+        arguments("<result>", ""),
+        arguments("<result>", null)
     );
   }
 }

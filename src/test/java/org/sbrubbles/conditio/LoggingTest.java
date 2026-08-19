@@ -35,10 +35,10 @@ public class LoggingTest {
   @Test
   public void readGoodLog() {
     List<AnalyzedEntry> expected = Arrays.asList(
-      new AnalyzedEntry(goodLine(1), GOOD_LOG),
-      new AnalyzedEntry(goodLine(2), GOOD_LOG),
-      new AnalyzedEntry(goodLine(3), GOOD_LOG),
-      new AnalyzedEntry(goodLine(4), GOOD_LOG));
+        new AnalyzedEntry(goodLine(1), GOOD_LOG),
+        new AnalyzedEntry(goodLine(2), GOOD_LOG),
+        new AnalyzedEntry(goodLine(3), GOOD_LOG),
+        new AnalyzedEntry(goodLine(4), GOOD_LOG));
 
     List<AnalyzedEntry> actual = fixture.logAnalyzer(GOOD_LOG);
 
@@ -68,11 +68,11 @@ public class LoggingTest {
 
     assertEquals(expectedEntries, actual);
     assertLinesMatch( // the handler gets called once for each bad line in the log; in bad.txt, there's two
-      Arrays.asList(handlerTrace, handlerTrace),
-      fixture.getHandlerTrace());
+        Arrays.asList(handlerTrace, handlerTrace),
+        fixture.getHandlerTrace());
     assertLinesMatch(
-      Arrays.asList(restartOptionTrace, restartOptionTrace),
-      fixture.getRestartTrace());
+        Arrays.asList(restartOptionTrace, restartOptionTrace),
+        fixture.getRestartTrace());
   }
 
   @Test
@@ -178,74 +178,74 @@ public class LoggingTest {
 
   static Stream<Arguments> handleBadLogProvider() {
     return Stream.of(
-      arguments(
-        ExpectedHandler.LOG_ANALYZER,
-        ExpectedRestart.USE_VALUE,
-        Arrays.asList(
-          new AnalyzedEntry(goodLine(1), BAD_LOG),
-          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
-          new AnalyzedEntry(goodLine(3), BAD_LOG),
-          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
-        new UseValue<>(USE_VALUE_ENTRY)),
-      arguments(
-        ExpectedHandler.ANALYZE_LOG,
-        ExpectedRestart.USE_VALUE,
-        Arrays.asList(
-          new AnalyzedEntry(goodLine(1), BAD_LOG),
-          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
-          new AnalyzedEntry(goodLine(3), BAD_LOG),
-          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
-        new UseValue<>(USE_VALUE_ENTRY)),
-      arguments(
-        ExpectedHandler.LOG_ANALYZER,
-        ExpectedRestart.USE_VALUE,
-        Arrays.asList(
-          new AnalyzedEntry(goodLine(1), BAD_LOG),
-          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
-          new AnalyzedEntry(goodLine(3), BAD_LOG),
-          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
-        new SonOfUseValue<>(USE_VALUE_ENTRY)),
-      arguments(
-        ExpectedHandler.ANALYZE_LOG,
-        ExpectedRestart.USE_VALUE,
-        Arrays.asList(
-          new AnalyzedEntry(goodLine(1), BAD_LOG),
-          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
-          new AnalyzedEntry(goodLine(3), BAD_LOG),
-          new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
-        new SonOfUseValue<>(USE_VALUE_ENTRY)),
-      arguments(
-        ExpectedHandler.LOG_ANALYZER,
-        ExpectedRestart.RETRY_WITH,
-        Arrays.asList(
-          new AnalyzedEntry(goodLine(1), BAD_LOG),
-          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG),
-          new AnalyzedEntry(goodLine(3), BAD_LOG),
-          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG)),
-        new RetryWith(FIXED_TEXT)),
-      arguments(
-        ExpectedHandler.ANALYZE_LOG,
-        ExpectedRestart.RETRY_WITH,
-        Arrays.asList(
-          new AnalyzedEntry(goodLine(1), BAD_LOG),
-          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG),
-          new AnalyzedEntry(goodLine(3), BAD_LOG),
-          new AnalyzedEntry(FIXED_ENTRY, BAD_LOG)),
-        new RetryWith(FIXED_TEXT)),
-      arguments(
-        ExpectedHandler.LOG_ANALYZER,
-        ExpectedRestart.SKIP_ENTRY,
-        Arrays.asList(
-          new AnalyzedEntry(goodLine(1), BAD_LOG),
-          new AnalyzedEntry(goodLine(3), BAD_LOG)),
-        new SkipEntry()),
-      arguments(
-        ExpectedHandler.ANALYZE_LOG,
-        ExpectedRestart.SKIP_ENTRY,
-        Arrays.asList(
-          new AnalyzedEntry(goodLine(1), BAD_LOG),
-          new AnalyzedEntry(goodLine(3), BAD_LOG)),
-        new SkipEntry())
+        arguments(
+            ExpectedHandler.LOG_ANALYZER,
+            ExpectedRestart.USE_VALUE,
+            Arrays.asList(
+                new AnalyzedEntry(goodLine(1), BAD_LOG),
+                new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
+                new AnalyzedEntry(goodLine(3), BAD_LOG),
+                new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
+            new UseValue<>(USE_VALUE_ENTRY)),
+        arguments(
+            ExpectedHandler.ANALYZE_LOG,
+            ExpectedRestart.USE_VALUE,
+            Arrays.asList(
+                new AnalyzedEntry(goodLine(1), BAD_LOG),
+                new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
+                new AnalyzedEntry(goodLine(3), BAD_LOG),
+                new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
+            new UseValue<>(USE_VALUE_ENTRY)),
+        arguments(
+            ExpectedHandler.LOG_ANALYZER,
+            ExpectedRestart.USE_VALUE,
+            Arrays.asList(
+                new AnalyzedEntry(goodLine(1), BAD_LOG),
+                new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
+                new AnalyzedEntry(goodLine(3), BAD_LOG),
+                new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
+            new SonOfUseValue<>(USE_VALUE_ENTRY)),
+        arguments(
+            ExpectedHandler.ANALYZE_LOG,
+            ExpectedRestart.USE_VALUE,
+            Arrays.asList(
+                new AnalyzedEntry(goodLine(1), BAD_LOG),
+                new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG),
+                new AnalyzedEntry(goodLine(3), BAD_LOG),
+                new AnalyzedEntry(USE_VALUE_ENTRY, BAD_LOG)),
+            new SonOfUseValue<>(USE_VALUE_ENTRY)),
+        arguments(
+            ExpectedHandler.LOG_ANALYZER,
+            ExpectedRestart.RETRY_WITH,
+            Arrays.asList(
+                new AnalyzedEntry(goodLine(1), BAD_LOG),
+                new AnalyzedEntry(FIXED_ENTRY, BAD_LOG),
+                new AnalyzedEntry(goodLine(3), BAD_LOG),
+                new AnalyzedEntry(FIXED_ENTRY, BAD_LOG)),
+            new RetryWith(FIXED_TEXT)),
+        arguments(
+            ExpectedHandler.ANALYZE_LOG,
+            ExpectedRestart.RETRY_WITH,
+            Arrays.asList(
+                new AnalyzedEntry(goodLine(1), BAD_LOG),
+                new AnalyzedEntry(FIXED_ENTRY, BAD_LOG),
+                new AnalyzedEntry(goodLine(3), BAD_LOG),
+                new AnalyzedEntry(FIXED_ENTRY, BAD_LOG)),
+            new RetryWith(FIXED_TEXT)),
+        arguments(
+            ExpectedHandler.LOG_ANALYZER,
+            ExpectedRestart.SKIP_ENTRY,
+            Arrays.asList(
+                new AnalyzedEntry(goodLine(1), BAD_LOG),
+                new AnalyzedEntry(goodLine(3), BAD_LOG)),
+            new SkipEntry()),
+        arguments(
+            ExpectedHandler.ANALYZE_LOG,
+            ExpectedRestart.SKIP_ENTRY,
+            Arrays.asList(
+                new AnalyzedEntry(goodLine(1), BAD_LOG),
+                new AnalyzedEntry(goodLine(3), BAD_LOG)),
+            new SkipEntry())
     );
   }
 
@@ -275,5 +275,6 @@ public class LoggingTest {
     }
   }
 
-  static class UnknownEntryCondition implements Condition { }
+  static class UnknownEntryCondition implements Condition {
+  }
 }

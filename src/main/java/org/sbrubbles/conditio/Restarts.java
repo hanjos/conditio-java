@@ -12,7 +12,8 @@ import java.util.function.Function;
  * This class acts as a namespace, and isn't meant to be inherited or instantiated.
  */
 public final class Restarts {
-  private Restarts() { }
+  private Restarts() {
+  }
 
   @SuppressWarnings("rawtypes")
   private static final Resume RESUME = new Resume<>();
@@ -37,7 +38,9 @@ public final class Restarts {
    * @return a restart option.
    * @see #useValue()
    */
-  public static <R> UseValue<R> use(R value) { return new UseValue<>(value); }
+  public static <R> UseValue<R> use(R value) {
+    return new UseValue<>(value);
+  }
 
   /**
    * A restart which matches {@link UseValue}, extracting its value.
@@ -45,7 +48,9 @@ public final class Restarts {
    * @return a restart matching {@code UseValue}.
    * @see #use(Object)
    */
-  public static <R> Restart<R> useValue() { return on(UseValue.class, UseValue<R>::getValue); }
+  public static <R> Restart<R> useValue() {
+    return on(UseValue.class, UseValue<R>::getValue);
+  }
 
   /**
    * Creates and returns a new restart, with a default implementation.

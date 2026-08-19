@@ -10,7 +10,8 @@ import java.util.function.Predicate;
  * This class acts as a namespace, and isn't meant to be inherited or instantiated.
  */
 public final class Handlers {
-  private Handlers() { }
+  private Handlers() {
+  }
 
   /**
    * Creates and returns a new handler, with a default implementation. Ensures statically that the given parameters

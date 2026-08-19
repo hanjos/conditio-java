@@ -2,8 +2,6 @@ package org.sbrubbles.conditio.fixtures.logging;
 
 import org.sbrubbles.conditio.*;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
-import org.sbrubbles.conditio.policies.Policies;
-import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.io.BufferedReader;
@@ -11,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -35,15 +34,15 @@ public class LoggingFixture extends AbstractFixture {
       } else {
         // useful for tracing
         final Restart<Entry> USE_VALUE = Restarts.on(UseValue.class,
-          traceRestart("UseValue", UseValue<Entry>::getValue));
+            traceRestart("UseValue", UseValue<Entry>::getValue));
         final Restart<Entry> RETRY_WITH = Restarts.on(RetryWith.class,
-          traceRestart("RetryWith", r -> parseLogEntry(r.getText())));
+            traceRestart("RetryWith", r -> parseLogEntry(r.getText())));
 
         return scope.signal(
-          getConditionProvider().apply(text),
-          new Policies<>(ReturnTypePolicy.expects(Entry.class)),
-          USE_VALUE,
-          RETRY_WITH);
+            getConditionProvider().apply(text),
+            Optional.of(Entry.class),
+            USE_VALUE,
+            RETRY_WITH);
       }
     } catch (RuntimeException e) {
       throw e;
@@ -60,7 +59,7 @@ public class LoggingFixture extends AbstractFixture {
 
       // skips malformed entries by returning a predefined "Entry", which can be checked and skipped
       final Restart<?> SKIP_ENTRY = Restarts.on(SkipEntry.class,
-        traceRestart("SkipEntry", r -> SKIP_ENTRY_MARKER));
+          traceRestart("SkipEntry", r -> SKIP_ENTRY_MARKER));
 
       for (String line : lines) {
         // provides an extra restart for the handlers
@@ -86,7 +85,7 @@ public class LoggingFixture extends AbstractFixture {
       // this isn't a language construct, handlers can be established dynamically
       if (isAnalyzeLog()) {
         scope.handle(MalformedLogEntry.class,
-          traceHandler("analyzeLog", Handlers.restart(getRestartOptionToUse())));
+            traceHandler("analyzeLog", Handlers.restart(getRestartOptionToUse())));
       }
 
       InputStream in = LoggingFixture.class.getResourceAsStream(filename);
@@ -105,7 +104,7 @@ public class LoggingFixture extends AbstractFixture {
     try (Scope scope = Scopes.create()) {
       if (isLogAnalyzer()) {
         scope.handle(MalformedLogEntry.class,
-          traceHandler("logAnalyzer", Handlers.restart(getRestartOptionToUse())));
+            traceHandler("logAnalyzer", Handlers.restart(getRestartOptionToUse())));
       }
 
       List<AnalyzedEntry> logs = new ArrayList<>();

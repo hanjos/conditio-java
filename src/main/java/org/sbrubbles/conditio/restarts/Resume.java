@@ -8,8 +8,9 @@ import org.sbrubbles.conditio.Scope;
 /**
  * A restart which indicates that execution may proceed "without" returning a value.
  * <p>
- * This is meant for situations where the result of {@link Scope#signal(Condition, org.sbrubbles.conditio.policies.Policies, Restart[]) Scope.signal} isn't
- * used, and the handler means only to acknowledge the condition (and maybe do a side effect or two), like
+ * This is meant for situations where the result of
+ * {@link Scope#signal(Condition, java.util.Optional, Restart[]) Scope.signal} isn't used, and the handler means only
+ * to acknowledge the condition (and maybe do a side effect or two), like
  * <pre>
  *   try(Scope scope = Scopes.create()) {
  *     scope.handle(Progress.class, (s, ops) -&gt; {
@@ -21,7 +22,7 @@ import org.sbrubbles.conditio.Scope;
  *     });
  *
  *     // note that result of signal() is ignored and thrown away
- *     scope.signal(new Progress(0.6), new Policies&lt;&gt;(), Restarts.resume());
+ *     scope.signal(new Progress(0.6), Optional.empty(), Restarts.resume());
  *
  *     // ...
  *   }
@@ -76,7 +77,7 @@ public class Resume<R> implements Restart.Option, Restart<R> {
   @Override
   public boolean equals(Object o) {
     return (this == o) ||
-      (o != null && getClass() == o.getClass());
+        (o != null && getClass() == o.getClass());
   }
 
   /**

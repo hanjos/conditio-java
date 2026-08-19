@@ -25,11 +25,11 @@ public class WarningTest {
     // even numbers were muzzled by b
     assertEquals(Arrays.asList("1", "3", "5", "7", "9"), actual);
     assertLinesMatch(
-      Arrays.asList("b: IntWarning", "b: IntWarning", "a: IntWarning",
-        "b: IntWarning", "b: IntWarning", "a: IntWarning",
-        "b: IntWarning", "b: IntWarning", "a: IntWarning",
-        "b: IntWarning", "b: IntWarning", "a: IntWarning",
-        "b: IntWarning", "b: IntWarning", "a: IntWarning"),
-      fixture.getHandlerTrace());
+        Arrays.asList("b: IntWarning", "b: IntWarning", "a: IntWarning",
+            "b: IntWarning", "b: IntWarning", "a: IntWarning",
+            "b: IntWarning", "b: IntWarning", "a: IntWarning",
+            "b: IntWarning", "b: IntWarning", "a: IntWarning",
+            "b: IntWarning", "b: IntWarning", "a: IntWarning"),
+        fixture.getHandlerTrace());
   }
 }

@@ -3,13 +3,12 @@ package org.sbrubbles.conditio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
-import org.sbrubbles.conditio.policies.Policies;
-import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 import org.sbrubbles.conditio.restarts.UseValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -94,8 +93,8 @@ public class RestartTest {
     try (Scope a = Scopes.create()) {
       a.handle(BasicCondition.class, (s, ops) -> ops.restart(new UseValue<>(1)));
 
-      a.signal(new BasicCondition(""), new Policies<>(ReturnTypePolicy.ignore()));
-    } catch(RestartNotFoundException r) {
+      a.signal(new BasicCondition(""), Optional.empty());
+    } catch (RestartNotFoundException r) {
       assertEquals(new UseValue<>(1), r.getOption());
 
       return;
@@ -120,8 +119,8 @@ public class RestartTest {
         return ops.abort();
       });
 
-      a.signal(new BasicCondition(""), new Policies<>(ReturnTypePolicy.ignore()));
-    } catch(AbortException a) {
+      a.signal(new BasicCondition(""), Optional.empty());
+    } catch (AbortException a) {
       assertLinesMatch(Arrays.asList("BasicCondition", "RestartNotFound"), trail);
 
       return;

@@ -8,8 +8,6 @@ import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
 import org.sbrubbles.conditio.fixtures.logging.Entry;
 import org.sbrubbles.conditio.fixtures.logging.MalformedLogEntry;
-import org.sbrubbles.conditio.policies.Policies;
-import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 import org.sbrubbles.conditio.restarts.Resume;
 import org.sbrubbles.conditio.restarts.UseValue;
 
@@ -50,7 +48,7 @@ public class BasicOperationsTest {
         assertEquals(
             TEST_VALUE,
             b.signal(new MalformedLogEntry(""),
-                new Policies<>(ReturnTypePolicy.expects(Entry.class)),
+                Optional.of(Entry.class),
                 USE_VALUE));
 
         // no restart after either...
@@ -82,7 +80,7 @@ public class BasicOperationsTest {
 
                   return b.signal(
                       new MalformedLogEntry(""),
-                      new Policies<>(ReturnTypePolicy.expects(Entry.class))); // the use value comes from call
+                      Optional.of(Entry.class)); // the use value comes from call
                 }
               },
               Restarts.useValue(),
@@ -128,7 +126,7 @@ public class BasicOperationsTest {
       a.handle(PleaseSignalSomethingElse.class,
           trace(trail, "a", (s, ops) -> {
             try (Scope scope = Scopes.create()) {
-              return ops.restart(Restarts.use(scope.raise(new BasicCondition(null), s.getPolicies().getExpectedType())));
+              return ops.restart(Restarts.use(scope.raise(new BasicCondition(null), s.getReturnType().get())));
             }
           }));
 
@@ -149,11 +147,11 @@ public class BasicOperationsTest {
   }
 
   @Test
-  public void signallingAConditionWithNoHandlersAndAErrorPolicyErrorsOut() {
+  public void signallingAConditionWithNoHandlersErrorsOut() {
     Condition condition = new BasicCondition("test");
 
     try (Scope a = Scopes.create()) {
-      a.signal(condition, new Policies<>(ReturnTypePolicy.ignore()));
+      a.signal(condition, Optional.empty());
 
       fail();
     } catch (HandlerNotFoundException e) {
@@ -187,7 +185,7 @@ public class BasicOperationsTest {
   }
 
   @Test
-  public void raiseUsesAnErrorPolicy() {
+  public void raiseThrowsOnUnhandledHandlerNotFound() {
     Condition condition = new BasicCondition("raise");
 
     try (Scope a = Scopes.create()) {
@@ -199,16 +197,15 @@ public class BasicOperationsTest {
     }
   }
 
-  // XXX HandlerNotFoundPolicy.ignore()
   @Test
-  public void signalTakesRestartsAndPoliciesWithCompatibleTypes() {
+  public void signalTakesCompatibleRestartsAndReturnTypes() {
     try (Scope scope = Scopes.create()) {
       scope.handle(BasicCondition.class, Handlers.restart(new BasicRestartOption()));
 
       final ArrayList<?> expected = new ArrayList<>();
       final List<?> actual = scope.signal(
           new BasicCondition(""),
-          new Policies<>(ReturnTypePolicy.expects(AbstractList.class)),
+          Optional.of(AbstractList.class),
           Restarts.on(BasicRestartOption.class, args -> expected));
 
       assertSame(expected, actual);
@@ -283,7 +280,7 @@ public class BasicOperationsTest {
         scope -> scope.notify(new BasicCondition("")),
         scope -> scope.call(() -> ""),
         scope -> scope.raise(new BasicCondition(""), Object.class),
-        scope -> scope.signal(new BasicCondition(""), new Policies<>())
+        scope -> scope.signal(new BasicCondition(""), Optional.empty())
     );
   }
 

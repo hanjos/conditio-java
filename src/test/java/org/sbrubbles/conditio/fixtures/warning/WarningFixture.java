@@ -4,29 +4,28 @@ import org.sbrubbles.conditio.Restarts;
 import org.sbrubbles.conditio.Scope;
 import org.sbrubbles.conditio.Scopes;
 import org.sbrubbles.conditio.fixtures.AbstractFixture;
-import org.sbrubbles.conditio.policies.Policies;
-import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class WarningFixture extends AbstractFixture {
   public void low(int i) {
     try (Scope scope = Scopes.create()) {
-      scope.signal(new IntWarning(i), new Policies<>(ReturnTypePolicy.ignore()), Restarts.resume());
+      scope.signal(new IntWarning(i), Optional.empty(), Restarts.resume());
     }
   }
 
   public void mid(int n) {
     try (Scope scope = Scopes.create()) {
       scope.handle(IntWarning.class,
-        traceHandler("b", (s, ops) -> {
-          if (s.getCondition().getNumber() % 2 == 0) {
-            return ops.restart(Restarts.resume()); // ignore pair warnings
-          } else {
-            return ops.skip();
-          }
-        }));
+          traceHandler("b", (s, ops) -> {
+            if (s.getCondition().getNumber() % 2 == 0) {
+              return ops.restart(Restarts.resume()); // ignore pair warnings
+            } else {
+              return ops.skip();
+            }
+          }));
 
       for (int i = 0; i < n; i++) {
         low(i);
@@ -39,10 +38,10 @@ public class WarningFixture extends AbstractFixture {
       List<String> warnings = new ArrayList<>();
 
       scope.handle(IntWarning.class,
-        traceHandler("a", (s, ops) -> {
-          warnings.add(s.getCondition().getMessage());
-          return ops.restart(Restarts.resume());
-        }));
+          traceHandler("a", (s, ops) -> {
+            warnings.add(s.getCondition().getMessage());
+            return ops.restart(Restarts.resume());
+          }));
 
       mid(n);
 

@@ -9,6 +9,5 @@
  * <p>
  * This package provides the core abstractions and machinery.
  * The {@link org.sbrubbles.conditio.restarts} package supplies some general use restarts and restart options.
- * The {@link org.sbrubbles.conditio.policies} package has policies to handle corner cases, such as missing handlers.
  */
 package org.sbrubbles.conditio;

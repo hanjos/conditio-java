@@ -1,7 +1,5 @@
 package org.sbrubbles.conditio;
 
-import org.sbrubbles.conditio.policies.Policies;
-
 /**
  * A condition signalled when no working handler for a given condition was found. This may happen either when no
  * available handler could {@linkplain Handler#test(Object) handle} the condition, or when the ones that could opt
@@ -11,7 +9,7 @@ import org.sbrubbles.conditio.policies.Policies;
  * signalling a condition enables programmers to adopt different strategies, like
  * {@link Scope#notify(Condition, Restart[]) notify}.
  *
- * @see Scope#signal(Condition, Policies, Restart[])
+ * @see Scope#signal(Condition, java.util.Optional, Restart[])
  * @see Scope#notify(Condition, Restart[])
  */
 public class HandlerNotFound implements Condition {

@@ -8,9 +8,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.sbrubbles.conditio.fixtures.BasicCondition;
 import org.sbrubbles.conditio.fixtures.PleaseSignalSomethingElse;
 import org.sbrubbles.conditio.fixtures.SonOfBasicCondition;
-import org.sbrubbles.conditio.policies.Policies;
-import org.sbrubbles.conditio.policies.ReturnTypePolicy;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -38,8 +37,8 @@ public class HandlerTest {
   public void test(Condition condition, boolean expected) {
     try (Scope scope = Scopes.create()) {
       final Signal<Condition> s = (condition != null) ?
-        new Signal<>(condition, new Policies<>(), scope) :
-        null;
+          new Signal<>(condition, Optional.empty(), scope) :
+          null;
 
       assertEquals(expected, h.test(s));
     }
@@ -51,8 +50,8 @@ public class HandlerTest {
     try (Scope scope = Scopes.create();
          Handler.Operations ops = new Handler.Operations(scope)) {
       final Signal<Condition> s = (condition != null) ?
-        new Signal<>(condition, new Policies<>(), scope) :
-        null;
+          new Signal<>(condition, Optional.empty(), scope) :
+          null;
 
       assertEquals(expected, h.apply(s, ops).get());
     }
@@ -72,8 +71,8 @@ public class HandlerTest {
   @Test
   public void handlerNotFoundExceptionIsThrownByDefault() {
     Condition c = new BasicCondition("");
-    try(Scope a = Scopes.create()) {
-      a.signal(c, new Policies<>(ReturnTypePolicy.ignore()), Restarts.resume());
+    try (Scope a = Scopes.create()) {
+      a.signal(c, Optional.empty(), Restarts.resume());
     } catch (HandlerNotFoundException e) {
       assertEquals(c, e.getSignal().getCondition());
 
@@ -87,14 +86,14 @@ public class HandlerTest {
   public void handlerNotFoundIsSignalledWhenThereIsNoHandler() {
     AtomicInteger INTERCEPTED = new AtomicInteger();
 
-    try(Scope a = Scopes.create()) {
+    try (Scope a = Scopes.create()) {
       a.handle(HandlerNotFound.class, (s, ops) -> {
         INTERCEPTED.set(1);
 
         return ops.restart(Restarts.resume());
       });
 
-      a.signal(new BasicCondition(""), new Policies<>(ReturnTypePolicy.ignore()), Restarts.resume());
+      a.signal(new BasicCondition(""), Optional.empty(), Restarts.resume());
     }
 
     assertEquals(1, INTERCEPTED.get(), "Should've been set by the HandlerNotFound handler!");
@@ -116,25 +115,25 @@ public class HandlerTest {
 
   static Stream<Arguments> testProvider() {
     return Stream.of(
-      arguments(null, false),
-      arguments(new BasicCondition("string"), true),
-      arguments(new PleaseSignalSomethingElse(), false),
-      arguments(new SonOfBasicCondition("stringsson"), true)
+        arguments(null, false),
+        arguments(new BasicCondition("string"), true),
+        arguments(new PleaseSignalSomethingElse(), false),
+        arguments(new SonOfBasicCondition("stringsson"), true)
     );
   }
 
   static Stream<Arguments> applyProvider() {
     return Stream.of(
-      arguments(new BasicCondition("OMGWTFBBQ"), "OK: OMGWTFBBQ"),
-      arguments(new BasicCondition("FAIL"), "FAIL!"),
-      arguments(new BasicCondition(null), "OK: null"),
-      arguments(null, null)
+        arguments(new BasicCondition("OMGWTFBBQ"), "OK: OMGWTFBBQ"),
+        arguments(new BasicCondition("FAIL"), "FAIL!"),
+        arguments(new BasicCondition(null), "OK: null"),
+        arguments(null, null)
     );
   }
 
   static Stream<Consumer<Handler.Operations>> closedOperationsProvider() {
     return Stream.of(
-      ops -> ops.restart(Restarts.resume()),
+        ops -> ops.restart(Restarts.resume()),
         Handler.Operations::skip,
         Handler.Operations::abort
     );

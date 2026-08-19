@@ -15,7 +15,7 @@ public class AbortTest {
 
     assertEquals(AbortingFixture.HANDLE, fixture.handle());
     assertLinesMatch(
-      Arrays.asList("signal: AbortException", "passThrough: AbortException", "handle: AbortException"),
-      fixture.getTrace());
+        Arrays.asList("signal: AbortException", "passThrough: AbortException", "handle: AbortException"),
+        fixture.getTrace());
   }
 }

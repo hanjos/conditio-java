@@ -33,6 +33,7 @@ public interface Restart<R> extends Predicate<Restart.Option>, Function<Restart.
    *
    * @see Restarts
    */
-  interface Option { }
+  interface Option {
+  }
 
 }
