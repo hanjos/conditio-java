@@ -150,7 +150,7 @@ public class BasicOperationsTest {
 
   @Test
   public void signallingAConditionWithNoHandlersAndAErrorPolicyErrorsOut() {
-    BasicCondition condition = new BasicCondition("test");
+    Condition condition = new BasicCondition("test");
 
     try (Scope a = Scopes.create()) {
       a.signal(condition, new Policies<>(ReturnTypePolicy.ignore()));
@@ -165,7 +165,7 @@ public class BasicOperationsTest {
   public void raiseProvidesAUseValueRestart() {
     final List<String> trail = new ArrayList<>();
     final String TEST_VALUE = "<test>";
-    final UseValue<String> u = new UseValue<>(TEST_VALUE);
+    final Restart.Option u = new UseValue<>(TEST_VALUE);
 
     try (Scope a = Scopes.create()) {
       a.handle(BasicCondition.class, (s, ops) -> {
@@ -188,7 +188,7 @@ public class BasicOperationsTest {
 
   @Test
   public void raiseUsesAnErrorPolicy() {
-    BasicCondition condition = new BasicCondition("raise");
+    Condition condition = new BasicCondition("raise");
 
     try (Scope a = Scopes.create()) {
       a.raise(condition, Void.class);
@@ -278,7 +278,7 @@ public class BasicOperationsTest {
         Scope::getParent,
         Scope::getAllRestarts,
         Scope::getAllHandlers,
-        scope -> scope.handle(Handlers.on(Signals.conditionType(BasicCondition.class), Handlers.abort())),
+        scope -> scope.handle(Handlers.on(s -> s != null && s.getCondition() instanceof BasicCondition, Handlers.abort())),
         scope -> scope.handle(BasicCondition.class, Handlers.abort()),
         scope -> scope.notify(new BasicCondition("")),
         scope -> scope.call(() -> ""),

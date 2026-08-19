@@ -104,7 +104,9 @@ public final class Scope implements AutoCloseable {
    */
   public <C extends Condition, SubC extends C> Scope handle(Class<SubC> conditionType, BiFunction<Signal<C>, Handler.Operations, Handler.Decision> body)
       throws NullPointerException, UnsupportedOperationException {
-    return handle(Handlers.on(Signals.conditionType(conditionType), body));
+    Objects.requireNonNull(conditionType, "conditionType");
+
+    return handle(Handlers.on(s -> s != null && conditionType.isInstance(s.getCondition()), body));
   }
 
   /**

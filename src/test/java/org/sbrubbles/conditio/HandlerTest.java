@@ -17,20 +17,19 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.sbrubbles.conditio.Signals.conditionType;
 
 public class HandlerTest {
   private Handler h;
 
   @BeforeEach
   public void setUp() {
-    h = Handlers.on(conditionType(BasicCondition.class), this::body);
+    h = Handlers.on(s -> s != null && s.getCondition() instanceof BasicCondition, this::body);
   }
 
   @Test
   public void nullParametersAreNotAllowed() {
     assertThrows(NullPointerException.class, () -> Handlers.on(null, this::body), "missing conditionType");
-    assertThrows(NullPointerException.class, () -> Handlers.on(conditionType(BasicCondition.class), null), "missing body");
+    assertThrows(NullPointerException.class, () -> Handlers.on(s -> s.getCondition() instanceof BasicCondition, null), "missing body");
     assertThrows(NullPointerException.class, () -> Handlers.on(null, null), "missing both");
   }
 

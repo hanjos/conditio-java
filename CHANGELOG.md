@@ -8,6 +8,7 @@
   * `ScopeImpl.set`: `Scopes.create` now takes restarts, so it's no longer needed.
   * `ScopeImpl`: `Scope` is now a class, and therefore took over its duties.
   * `HandlerNotFoundPolicy`: Now unneeded with `HandlerNotFound`.
+  * `Signals`: Had little use.
 
 # 0.6.0
 
