@@ -62,6 +62,12 @@ public final class Scope implements AutoCloseable {
   private boolean closed;
 
   /* The constructors are package-private; instantiation should be handled by Scopes.create */
+  /**
+   * Creates a new scope with the given parent. A {@code null} parent means that this is a
+   * {@linkplain #isRoot() root} scope.
+   *
+   * @param parent this scope's parent.
+   */
   Scope(Scope parent) {
     this.closed = false;
     this.parent = (parent != null) ? parent : this;
@@ -70,16 +76,28 @@ public final class Scope implements AutoCloseable {
     this.restarts = new ArrayList<>();
   }
 
+  /**
+   * Creates a {@linkplain #isRoot() root} scope with the given restarts available.
+   *
+   * @param restarts the restarts made available.
+   * @throws NullPointerException if {@code null} restarts are given.
+   */
   Scope(Restart<?>... restarts) {
     this(null, restarts);
   }
 
+  /**
+   * Creates a new scope with the given parent and the given restarts available. A {@code null} parent means that this
+   * is a {@linkplain #isRoot() root} scope.
+   *
+   * @param parent this scope's parent.
+   * @param restarts the restarts made available.
+   * @throws NullPointerException if {@code null} restarts are given.
+   */
   Scope(Scope parent, Restart<?>... restarts) {
     this(parent);
 
     Objects.requireNonNull(restarts, "Null restarts aren't allowed");
-
-    // A "null" parent means this is a root scope, and therefore its "parent" is itself
 
     // validating the restarts
     for (Restart<?> restart : restarts) {
