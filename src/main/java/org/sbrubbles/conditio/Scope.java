@@ -59,45 +59,51 @@ public final class Scope implements AutoCloseable {
   private final Scope parent;
   private final List<Handler> handlers;
   private final List<Restart<?>> restarts;
+  private final String tag;
   private boolean closed;
 
   /* The constructors are package-private; instantiation should be handled by Scopes.create */
   /**
-   * Creates a new scope with the given parent. A {@code null} parent means that this is a
-   * {@linkplain #isRoot() root} scope.
+   * Creates a {@linkplain #isRoot() root} scope with the given tag and restarts. A {@code null} tag gets stored
+   * as the empty string.
    *
-   * @param parent this scope's parent.
-   */
-  Scope(Scope parent) {
-    this.closed = false;
-    this.parent = (parent != null) ? parent : this;
-
-    this.handlers = new ArrayList<>();
-    this.restarts = new ArrayList<>();
-  }
-
-  /**
-   * Creates a {@linkplain #isRoot() root} scope with the given restarts available.
-   *
+   * @param tag a tag to help identify this scope.
    * @param restarts the restarts made available.
    * @throws NullPointerException if {@code null} restarts are given.
    */
-  Scope(Restart<?>... restarts) {
-    this(null, restarts);
+  Scope(String tag, Restart<?>... restarts) {
+    this(null, tag, restarts);
   }
 
   /**
-   * Creates a new scope with the given parent and the given restarts available. A {@code null} parent means that this
+   * Creates a new scope with no tag, and the given parent and restarts. A {@code null} parent means that this
    * is a {@linkplain #isRoot() root} scope.
    *
-   * @param parent this scope's parent.
+   * @param parent   this scope's parent.
    * @param restarts the restarts made available.
    * @throws NullPointerException if {@code null} restarts are given.
    */
   Scope(Scope parent, Restart<?>... restarts) {
-    this(parent);
+    this(parent, null, restarts);
+  }
 
+  /**
+   * Creates a new scope with the given parent, tag and restarts. A {@code null} parent means that this
+   * is a {@linkplain #isRoot() root} scope. A {@code null} tag gets stored as the empty string.
+   *
+   * @param parent this scope's parent.
+   * @param tag a tag to help identify this scope.
+   * @param restarts the restarts made available.
+   * @throws NullPointerException if {@code null} restarts are given.
+   */
+  Scope(Scope parent, String tag, Restart<?>... restarts) {
     Objects.requireNonNull(restarts, "Null restarts aren't allowed");
+
+    this.closed = false;
+    this.parent = (parent != null) ? parent : this;
+    this.handlers = new ArrayList<>();
+    this.restarts = new ArrayList<>();
+    this.tag = (tag != null) ? tag : "";
 
     // validating the restarts
     for (Restart<?> restart : restarts) {
@@ -204,7 +210,7 @@ public final class Scope implements AutoCloseable {
       throws NullPointerException, UnsupportedOperationException, AbortException {
     ensureOpen();
 
-    try (Scope scope = Scopes.create(Restarts.resume())) {
+    try (Scope scope = Scopes.create("notify", Restarts.resume())) {
       scope.handle(HandlerNotFound.class, (s, ops) -> {
         // if the unhandled condition is this one, then execution may be safely resumed
         if (s.getCondition().getSignal().getCondition() == condition) {
@@ -292,7 +298,7 @@ public final class Scope implements AutoCloseable {
     Objects.requireNonNull(returnType, "returnType");
     Objects.requireNonNull(restarts, "restarts");
 
-    try (Scope scope = Scopes.create(restarts);
+    try (Scope scope = Scopes.create("signal", restarts);
          Handler.Operations ops = new Handler.Operations(scope)) {
       Signal<? extends Condition> s = new Signal<>(condition, (Optional) returnType, scope);
 
@@ -372,6 +378,20 @@ public final class Scope implements AutoCloseable {
     ensureOpen();
 
     return parent == this;
+  }
+
+  /**
+   * Returns a tag to help identify this scope. May be empty.
+   *
+   * @return a tag for this scope. May be empty.
+   */
+  public String getTag() {
+    return tag;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("Scope[%s]@%s", getTag(), Integer.toHexString(hashCode()));
   }
 
   /**

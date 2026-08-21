@@ -16,7 +16,7 @@ public final class Scopes {
   private static final Scope ROOT;
 
   static {
-    ROOT = new Scope();
+    ROOT = new Scope("ROOT");
     current = ROOT;
 
     ROOT.handle(HandlerNotFound.class, (s, ops) -> {
@@ -37,7 +37,19 @@ public final class Scopes {
    * @throws NullPointerException if either {@code restarts} or one of the given restarts is {@code null}.
    */
   public static Scope create(Restart<?>... restarts) {
-    current = new Scope(current, restarts);
+    return create(null, restarts);
+  }
+
+  /**
+   * Creates and returns a new instance, nested in the (now former) current scope, with the given restarts available.
+   *
+   * @param tag      to help identify this scope. May be {@code null}.
+   * @param restarts The restarts available inside the newly created scope. They all must be non-{@code null}.
+   * @return a new instance of {@code Scope}.
+   * @throws NullPointerException if either {@code restarts} or one of the given restarts is {@code null}.
+   */
+  public static Scope create(String tag, Restart<?>... restarts) {
+    current = new Scope(current, tag, restarts);
 
     return current;
   }
