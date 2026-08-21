@@ -4,7 +4,7 @@
 * `HandlerNotFound` and `RestartNotFound`: instead of throwing errors directly or using policies, these situations now
   signal conditions. The root scope provides default handlers as a backstop, which throw the same old exception; but now
   they may be handled anywhere in the scope stack.
-* `Scopes.create` now takes restarts.
+* `Scopes.create` now takes restarts and tags.
 * `Scope` is now a class, so `ScopeImpl` is no longer needed.
 * No more policies, replaced by judicious use of `Optional`s and `HandlerNotFound`.
 * Some removals:

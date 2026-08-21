@@ -239,6 +239,7 @@ public final class Scope implements AutoCloseable {
    *   <li>{@link HandlerNotFound}, when no handler is found for the given condition.</li>
    * </ul>
    *
+   * @param <T>        the expected type of the object to be returned.
    * @param condition  a condition that must be handled.
    * @param returnType the expected type of the result.
    * @param restarts   some restarts, which, along with {@code UseValue}, will be available to the eventual handler.
@@ -254,11 +255,11 @@ public final class Scope implements AutoCloseable {
   @SuppressWarnings({"unchecked", "varargs"})
   public <T> T raise(Condition condition, Class<T> returnType, Restart<? extends T>... restarts)
       throws NullPointerException, UnsupportedOperationException, HandlerNotFoundException, ClassCastException, AbortException {
-    Restart<? extends T>[] args = new Restart[restarts.length + 1];
-    args[0] = Restarts.useValue();
-    System.arraycopy(restarts, 0, args, 1, restarts.length);
+    ensureOpen();
 
-    return signal(condition, Optional.of(returnType), args);
+    try (Scope scope = Scopes.create("raise", Restarts.useValue())) {
+      return scope.signal(condition, Optional.of(returnType), restarts);
+    }
   }
 
   /**
@@ -289,7 +290,7 @@ public final class Scope implements AutoCloseable {
    * @see #notify(Condition, Restart[])
    * @see #raise(Condition, Class, Restart[])
    */
-  @SuppressWarnings({"unchecked", "varargs"})
+  @SuppressWarnings({"unchecked", "varargs", "rawtypes"})
   public <T> T signal(Condition condition, Optional<Class<T>> returnType, Restart<? extends T>... restarts)
       throws NullPointerException, UnsupportedOperationException, HandlerNotFoundException, ClassCastException, AbortException {
     ensureOpen();
