@@ -76,18 +76,6 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * Creates a new scope with no tag, and the given parent and restarts. A {@code null} parent means that this
-   * is a {@linkplain #isRoot() root} scope.
-   *
-   * @param parent   this scope's parent.
-   * @param restarts the restarts made available.
-   * @throws NullPointerException if {@code null} restarts are given.
-   */
-  Scope(Scope parent, Restart<?>... restarts) {
-    this(parent, null, restarts);
-  }
-
-  /**
    * Creates a new scope with the given parent, tag and restarts. A {@code null} parent means that this
    * is a {@linkplain #isRoot() root} scope. A {@code null} tag gets stored as the empty string.
    *
@@ -382,14 +370,22 @@ public final class Scope implements AutoCloseable {
   }
 
   /**
-   * Returns a tag to help identify this scope. May be empty.
-   *
-   * @return a tag for this scope. May be empty.
+   * @return if this scope is closed.
+   */
+  public boolean isClosed() {
+    return closed;
+  }
+
+  /**
+   * @return a tag to help identify this scope. May be empty.
    */
   public String getTag() {
     return tag;
   }
 
+  /**
+   * @return a string representation of this scope, including its {@link #getTag() tag}, if any.
+   */
   @Override
   public String toString() {
     return String.format("Scope[%s]@%s", getTag(), Integer.toHexString(hashCode()));

@@ -38,6 +38,24 @@ public class ScopeTest {
   }
 
   @Test
+  public void shouldWorkOnClosedScopes() {
+    final Scope closed = getClosedScope();
+
+    closed.close(); // closing a closed scope doesn't do anything
+  }
+
+  @Test
+  public void rootScopes() {
+    final Scope root = getRootScope();
+
+    assertTrue(root.isRoot());
+    assertFalse(root.isClosed(), "The root scope is never closed");
+
+    root.close();
+    assertFalse(root.isClosed(), "The root scope is never closed");
+  }
+
+  @Test
   public void everyInvocationChainIsDifferentButHasTheSameRoot() {
     Scope root, first;
 
@@ -132,6 +150,12 @@ public class ScopeTest {
   private Scope getClosedScope() {
     try (Scope a = Scopes.create()) {
       return a;
+    }
+  }
+
+  private Scope getRootScope() {
+    try (Scope a = Scopes.create()) {
+      return a.getParent();
     }
   }
 }
