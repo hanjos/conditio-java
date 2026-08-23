@@ -1,19 +1,19 @@
 # 0.7.0
 
 * Now there is a non-null root scope, providing a place to hang default handlers and restarts. That enables...
-* `HandlerNotFound` and `RestartNotFound`: instead of throwing errors directly or using policies, these situations now
-  signal conditions. The root scope provides default handlers as a backstop, which throw the same old exception; but now
-  they may be handled anywhere in the scope stack.
-* `Scopes.create` now takes restarts.
-* `Scope` is now a class, so `ScopeImpl` is no longer needed.
-* No more policies, replaced by judicious use of `Optional`s and `HandlerNotFound`.
+* `HandlerNotFound` and `RestartNotFound`: instead of throwing errors directly or using policies, these situations now signal conditions. The root scope provides default handlers as a backstop, which throw the same old exception; but now they may be handled anywhere in the scope stack. Such as with...
+* `Scope.notify`, which now handles `HandlerNotFound` by `Resume`-ing it, instead of using a policy. 
+* `Scopes.create` now takes restarts. Turns out, the moment when restarts apply can be well represented with... a scope :) The difference from `Scope.on` in v0.3.0 is that restarts now can be set only at scope creation. So all signalling methods (`call`, `raise`, `notify` and `signal`) use strategically placed scopes to delimit the lifetime of their restarts.
+* `Scope` is now a class.
+* `Scope`s now may have tags, which can facilitate identifying where the scope comes from.
 * Some removals:
-    * `Signals`: Had little use.
+  * All policies: Replaced by judicious use of `Optional`s and `HandlerNotFound`. 
+  * `ScopeImpl`: Unneeded with `Scope` becoming a class.
+  * `Signals`: Had little use.
 
 # 0.6.0
 
-* Instead of just a condition, a handler now takes a `Signal`, which holds data about the signal (like the condition and
-  the scope from where it came), and a `Handler.Operations`, which provides only the available operations.
+* Instead of just a condition, a handler now takes a `Signal`, which holds data about the signal (like the condition and the scope from where it came), and a `Handler.Operations`, which provides only the available operations.
 * `HandlerNotFoundException` now takes a `Signal`, not a `Condition`.
 * `Scope` and `Handler.Operations` methods fail when closed.
 * `ReturnTypePolicy` indicates the type `signal` expects to return.
@@ -24,36 +24,31 @@
 # 0.5.0
 
 * Several substitutions:
-    * `Resume.INSTANCE` became a method in `Restarts`.
-    * `Handler.Operations.use()` became a restart, `UseValue`.
-    * `Condition.onHandlerNotFound` no longer exists; now `Scope.signal` takes a _policy_ as an extra parameter. So
-      `Notice`s and `Warning`s are no more as well.
-    * `Abort` became a method, `Handler.Operations.abort()`.
+  * `Resume.INSTANCE` became a method in `Restarts`.
+  * `Handler.Operations.use()` became a restart, `UseValue`.
+  * `Condition.onHandlerNotFound` no longer exists; now `Scope.signal` takes a _policy_ as an extra parameter. So `Notice`s and `Warning`s are no more as well.
+  * `Abort` became a method, `Handler.Operations.abort()`.
 * `Scope.signal` is now generic, and so is `Restart`.
 * `Handlers` provides handler bodies for common uses.
-* `Scope.notify` and `Scope.raise` cover common `Scope.signal` uses, with better ergonomics. `Scope.signal` works better
-  as a primitive operation, backing the others.
+* `Scope.notify` and `Scope.raise` cover common `Scope.signal` uses, with better ergonomics. `Scope.signal` works better as a primitive operation, backing the others.
 
 # 0.4.0
 
 * Handlers now take a `Handler.Operations` instead of a scope, which delimits the operations available.
 * Handlers now return a `Handler.Decision`, which `Scope.signal` knows how to unwrap.
 * `Scope` is now an interface, with the `Scopes` class managing the stack.
-* `Condition` is now a class which provides a callback for `signal`, paving the way for `Notice` (the `RuntimeException`
-  to `Condition`'s `Exception`), `Warning` and other possible subtype protocols.
+* `Condition` is now a class which provides a callback for `signal`, paving the way for `Notice` (the `RuntimeException` to `Condition`'s `Exception`), `Warning` and other possible subtype protocols.
 * There's some general use restart options, like `Resume`.
 * Reorganizing the tests to improve legibility, and adding some possible usages.
 
 # 0.3.0
 
-* Restarts only apply for specific calls and signals, so scope-wide restarts don't really make sense. Therefore,
-  `Scope.on` no longer exists; in its place there's `Scope.call`, and `Scope.signal` now takes restarts too.
+* Restarts only apply for specific calls and signals, so scope-wide restarts don't really make sense. Therefore, `Scope.on` no longer exists; in its place there's `Scope.call`, and `Scope.signal` now takes restarts too.
 * `Restart.on` provides a default implementation for restarts without having to expose `RestartImpl`.
 
 # 0.2.0
 
-* Handlers are now ultimately responsible for returning a value to signal. A restart is merely an option for doing so,
-  and `Scope` offers a `restart()` method for that.
+* Handlers are now ultimately responsible for returning a value to signal. A restart is merely an option for doing so, and `Scope` offers a `restart()` method for that.
 * Handlers now take a condition and a scope (where `signal()` was called) as parameters.
 * Conditions no longer hold their scope of origin, and are now merely marker interfaces.
 
